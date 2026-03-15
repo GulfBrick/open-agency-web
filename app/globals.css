@@ -1,22 +1,33 @@
 @import "tailwindcss";
 
 :root {
+  --bg: #0A0B14;
   --bg-primary: #0A0B14;
   --bg-secondary: #12131E;
-  --bg-card: #161724;
+  --bg-card: #0F1623;
   --bg-elevated: #1C1D2E;
   --bg-input: #1A1B2E;
+  --card-border: rgba(124, 58, 237, 0.08);
+  --card-hover-border: rgba(124, 58, 237, 0.30);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-medium: rgba(255, 255, 255, 0.1);
-  --text-primary: #FFFFFF;
+  --text-primary: #F1F5F9;
   --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-muted: rgba(255, 255, 255, 0.35);
+  --text-dim: #94A3B8;
+  --text-muted: #475569;
+  --violet: #7C3AED;
+  --violet-dim: rgba(124, 58, 237, 0.6);
+  --violet-glow: rgba(124, 58, 237, 0.15);
+  --violet-subtle: rgba(124, 58, 237, 0.08);
+  --green: #10B981;
+  --blue: #3B82F6;
+  --rose: #F43F5E;
+  --amber: #F59E0B;
   --accent-blue: #3B82F6;
   --accent-purple: #8B5CF6;
   --accent-green: #10B981;
   --accent-amber: #F59E0B;
   --accent-rose: #F43F5E;
-  --accent-cyan: #06B6D4;
   --glow-blue: rgba(59, 130, 246, 0.15);
   --glow-purple: rgba(139, 92, 246, 0.15);
   --glow-green: rgba(16, 185, 129, 0.15);
@@ -36,32 +47,94 @@
 }
 
 body {
-  background: var(--bg-primary);
+  background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* ─── Top Rainbow Gradient Bar ─────────────────────── */
+.top-gradient-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  z-index: 9999;
+  background: linear-gradient(90deg, var(--violet), var(--blue), var(--green), var(--rose), var(--amber), var(--violet));
+  background-size: 300% 100%;
+  animation: gradientSlide 4s linear infinite;
 }
 
-/* Animations */
+@keyframes gradientSlide {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* ─── Animated Dot Grid Background ─────────────────── */
+.bg-grid {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-grid::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(124, 58, 237, 0.10) 1px, transparent 0);
+  background-size: 32px 32px;
+  animation: gridDrift 25s linear infinite;
+}
+
+.bg-grid::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.025) 0%, transparent 50%);
+  animation: ambientGlow 20s ease-in-out infinite alternate;
+}
+
+@keyframes gridDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(32px, 32px); }
+}
+
+@keyframes ambientGlow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-2%, -1%) scale(1.05); }
+}
+
+/* ─── Scanline + Noise Overlays ────────────────────── */
+.scanline-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* ─── Animations ───────────────────────────────────── */
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+  50% { opacity: 0.5; box-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
 }
 
 @keyframes float {
@@ -79,33 +152,85 @@ body {
   to { opacity: 1; }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+@keyframes buildingBreathe {
+  0%, 100% { box-shadow: 0 0 60px rgba(124, 58, 237, 0.06), 0 0 120px rgba(124, 58, 237, 0.03); }
+  50% { box-shadow: 0 0 80px rgba(124, 58, 237, 0.10), 0 0 160px rgba(124, 58, 237, 0.05); }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
+@keyframes agentBreathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+@keyframes bubbleFade {
+  0%, 100% { opacity: 0; transform: translateY(4px); }
+  10%, 85% { opacity: 1; transform: translateY(0); }
+  95% { opacity: 0; transform: translateY(-2px); }
 }
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-120px) translateX(30px); opacity: 0; }
+}
+
+@keyframes particleTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.8); }
+}
+
+@keyframes ceoAvatarShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+.animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
 
 /* Glass effect */
 .glass {
-  background: rgba(22, 23, 36, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
+  background: rgba(15, 22, 35, 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6, #06B6D4);
+  background: linear-gradient(135deg, #fff 0%, #A78BFA 50%, #7C3AED 100%);
+  background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+/* ─── Rooftop Particles ────────────────────────────── */
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: rgba(167, 139, 250, 0.8);
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+.particle.star {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.8), 0 0 12px rgba(124, 58, 237, 0.3);
+}
+
+.particle.twinkle {
+  animation: particleTwinkle 3s ease-in-out infinite;
 }
