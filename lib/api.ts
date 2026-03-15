@@ -17,11 +17,13 @@ export async function fetchAgency(
 
 export async function getStatus() {
   const res = await fetchAgency("/api/status");
+  if (!res.ok) throw new Error(`Status API error: ${res.status}`);
   return res.json();
 }
 
 export async function getAgents() {
   const res = await fetchAgency("/api/agents");
+  if (!res.ok) throw new Error(`Agents API error: ${res.status}`);
   return res.json();
 }
 

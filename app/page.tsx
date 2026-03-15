@@ -24,22 +24,43 @@ interface StatusData {
 
 // ─── Agent Config ────────────────────────────────────────────────────────────
 
-const FLOOR_ORDER = ["CEO", "Creative", "Sales", "Dev", "C-Suite"] as const;
+const FLOOR_ORDER = ["CEO", "C-Suite", "Dev", "Sales", "Creative"] as const;
 
-const FLOOR_COLORS: Record<string, { from: string; to: string; glow: string }> = {
-  CEO: { from: "#8B5CF6", to: "#6D28D9", glow: "rgba(139, 92, 246, 0.25)" },
-  Creative: { from: "#F43F5E", to: "#E11D48", glow: "rgba(244, 63, 94, 0.25)" },
-  Sales: { from: "#F59E0B", to: "#D97706", glow: "rgba(245, 158, 11, 0.25)" },
-  Dev: { from: "#3B82F6", to: "#2563EB", glow: "rgba(59, 130, 246, 0.25)" },
-  "C-Suite": { from: "#06B6D4", to: "#0891B2", glow: "rgba(6, 182, 212, 0.25)" },
+const FLOOR_COLORS: Record<string, { border: string; from: string; to: string; glow: string }> = {
+  CEO:        { border: "linear-gradient(180deg, #8B5CF6, #F59E0B)", from: "#8B5CF6", to: "#F59E0B", glow: "rgba(139, 92, 246, 0.25)" },
+  "C-Suite":  { border: "linear-gradient(180deg, #8B5CF6, #6D28D9)", from: "#8B5CF6", to: "#6D28D9", glow: "rgba(139, 92, 246, 0.25)" },
+  Dev:        { border: "linear-gradient(180deg, #3B82F6, #2563EB)", from: "#3B82F6", to: "#2563EB", glow: "rgba(59, 130, 246, 0.25)" },
+  Sales:      { border: "linear-gradient(180deg, #F59E0B, #D97706)", from: "#F59E0B", to: "#D97706", glow: "rgba(245, 158, 11, 0.25)" },
+  Creative:   { border: "linear-gradient(180deg, #F43F5E, #E11D48)", from: "#F43F5E", to: "#E11D48", glow: "rgba(244, 63, 94, 0.25)" },
 };
 
 const DEFAULT_AGENTS: Agent[] = [
-  { id: "nikita", name: "Nikita", role: "CEO & Strategist", status: "standing-by", floor: "CEO" },
-  { id: "mira", name: "Mira", role: "Creative Director", status: "standing-by", floor: "Creative" },
-  { id: "ravi", name: "Ravi", role: "Sales Lead", status: "standing-by", floor: "Sales" },
-  { id: "zane", name: "Zane", role: "Developer", status: "standing-by", floor: "Dev" },
-  { id: "oracle", name: "Oracle", role: "C-Suite Advisor", status: "standing-by", floor: "C-Suite" },
+  // CEO Floor
+  { id: "nikita",          name: "Nikita",         role: "CEO",                status: "standing-by", floor: "CEO" },
+  // C-Suite Floor
+  { id: "marcus",          name: "Marcus",         role: "CFO",                status: "standing-by", floor: "C-Suite" },
+  { id: "zara",            name: "Zara",           role: "CTO",                status: "standing-by", floor: "C-Suite" },
+  { id: "priya",           name: "Priya",          role: "CMO",                status: "standing-by", floor: "C-Suite" },
+  // Dev Floor
+  { id: "kai",             name: "Kai",            role: "Dev Lead",           status: "standing-by", floor: "Dev" },
+  { id: "architect",       name: "Architect",      role: "Architect",          status: "standing-by", floor: "Dev" },
+  { id: "frontend",        name: "Frontend",       role: "Frontend Dev",       status: "standing-by", floor: "Dev" },
+  { id: "backend",         name: "Backend",        role: "Backend Dev",        status: "standing-by", floor: "Dev" },
+  { id: "fullstack",       name: "Fullstack",      role: "Fullstack Dev",      status: "standing-by", floor: "Dev" },
+  { id: "qa",              name: "QA",             role: "QA Engineer",        status: "standing-by", floor: "Dev" },
+  { id: "code-reviewer",   name: "Code Reviewer",  role: "Code Reviewer",      status: "standing-by", floor: "Dev" },
+  // Sales Floor
+  { id: "jordan",          name: "Jordan",         role: "Sales Lead",         status: "standing-by", floor: "Sales" },
+  { id: "closer",          name: "Closer",         role: "Closer",             status: "standing-by", floor: "Sales" },
+  { id: "lead-qualifier",  name: "Lead Qualifier", role: "Lead Qualifier",     status: "standing-by", floor: "Sales" },
+  { id: "follow-up",       name: "Follow-Up",      role: "Follow-Up",          status: "standing-by", floor: "Sales" },
+  { id: "proposal",        name: "Proposal",       role: "Proposal Writer",    status: "standing-by", floor: "Sales" },
+  // Creative Floor
+  { id: "nova",            name: "Nova",           role: "Creative Director",  status: "standing-by", floor: "Creative" },
+  { id: "iris",            name: "Iris",           role: "Designer",           status: "standing-by", floor: "Creative" },
+  { id: "finn",            name: "Finn",           role: "Video Producer",     status: "standing-by", floor: "Creative" },
+  { id: "jade",            name: "Jade",           role: "Social Media",       status: "standing-by", floor: "Creative" },
+  { id: "ash",             name: "Ash",            role: "Copywriter",         status: "standing-by", floor: "Creative" },
 ];
 
 // ─── Components ──────────────────────────────────────────────────────────────
@@ -64,7 +85,7 @@ function AgentAvatar({ agent }: { agent: Agent }) {
   const colors = FLOOR_COLORS[agent.floor] || FLOOR_COLORS.Dev;
   return (
     <div
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0"
+      className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
       style={{
         background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
         boxShadow: `0 4px 12px ${colors.glow}`,
@@ -75,41 +96,72 @@ function AgentAvatar({ agent }: { agent: Agent }) {
   );
 }
 
-function FloorRow({ agent, index }: { agent: Agent; index: number }) {
+function AgentRow({ agent, index }: { agent: Agent; index: number }) {
   const colors = FLOOR_COLORS[agent.floor] || FLOOR_COLORS.Dev;
   const isActive = agent.status === "active" || agent.status === "working";
 
   return (
     <div
-      className="animate-slide-up flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
+      className="animate-slide-up flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:brightness-110"
       style={{
-        animationDelay: `${index * 80}ms`,
-        background: "var(--bg-card)",
-        border: `1px solid ${isActive ? colors.glow : "var(--border-subtle)"}`,
-        boxShadow: isActive ? `0 0 20px ${colors.glow}` : "none",
+        animationDelay: `${index * 40}ms`,
+        background: isActive ? `rgba(255,255,255,0.04)` : "rgba(255,255,255,0.02)",
+        border: `1px solid ${isActive ? colors.glow : "transparent"}`,
+        boxShadow: isActive ? `0 0 16px ${colors.glow}` : "none",
       }}
     >
       <AgentAvatar agent={agent} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">{agent.name}</span>
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}>
-            {agent.floor}
-          </span>
-        </div>
-        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <span className="text-sm font-semibold text-white">{agent.name}</span>
+        <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
           {agent.role}
         </p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         <div
           className={`w-1.5 h-1.5 rounded-full ${isActive ? "animate-pulse-glow" : ""}`}
-          style={{ background: isActive ? colors.from : "rgba(255,255,255,0.2)" }}
+          style={{ background: isActive ? colors.from : "rgba(255,255,255,0.15)" }}
         />
-        <span className="text-[11px] font-medium" style={{ color: isActive ? colors.from : "rgba(255,255,255,0.3)" }}>
-          {agent.status === "active" || agent.status === "working" ? "Active" : "Standing by"}
+        <span className="text-[10px] font-medium" style={{ color: isActive ? colors.from : "rgba(255,255,255,0.25)" }}>
+          {isActive ? "Active" : "Standby"}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function FloorSection({ floorName, agents, startIndex }: { floorName: string; agents: Agent[]; startIndex: number }) {
+  const colors = FLOOR_COLORS[floorName] || FLOOR_COLORS.Dev;
+
+  return (
+    <div className="flex gap-0 rounded-2xl overflow-hidden" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+      {/* Floor label strip */}
+      <div
+        className="relative flex items-center justify-center shrink-0"
+        style={{
+          width: "44px",
+          background: colors.border,
+          minHeight: "100%",
+        }}
+      >
+        <span
+          className="text-[10px] font-extrabold tracking-widest uppercase text-white/90"
+          style={{
+            writingMode: "vertical-lr",
+            textOrientation: "mixed",
+            transform: "rotate(180deg)",
+            letterSpacing: "0.15em",
+          }}
+        >
+          {floorName}
+        </span>
+      </div>
+
+      {/* Agents list */}
+      <div className="flex-1 flex flex-col gap-1 p-2">
+        {agents.map((agent, i) => (
+          <AgentRow key={agent.id} agent={agent} index={startIndex + i} />
+        ))}
       </div>
     </div>
   );
@@ -266,6 +318,8 @@ export default function Dashboard() {
       if (statusRes.status === "fulfilled" && statusRes.value) {
         setStatus(statusRes.value);
         setApiOnline(true);
+      } else {
+        setApiOnline(false);
       }
 
       if (agentsRes.status === "fulfilled" && Array.isArray(agentsRes.value)) {
@@ -297,7 +351,6 @@ export default function Dashboard() {
       const reply = res.reply || res.message || res.response || JSON.stringify(res);
       setChatReply(reply);
 
-      // Speak via browser TTS as fallback
       if ("speechSynthesis" in window) {
         const utterance = new SpeechSynthesisUtterance(reply);
         utterance.rate = 1;
@@ -311,19 +364,29 @@ export default function Dashboard() {
     }
   };
 
-  // Sort agents by floor order
-  const sortedAgents = [...agents].sort((a, b) => {
-    const aIdx = FLOOR_ORDER.indexOf(a.floor as typeof FLOOR_ORDER[number]);
-    const bIdx = FLOOR_ORDER.indexOf(b.floor as typeof FLOOR_ORDER[number]);
-    return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
-  });
+  // Group agents by floor in floor order
+  const floorGroups: { floor: string; agents: Agent[] }[] = [];
+  for (const floor of FLOOR_ORDER) {
+    const floorAgents = agents.filter((a) => a.floor === floor);
+    if (floorAgents.length > 0) {
+      floorGroups.push({ floor, agents: floorAgents });
+    }
+  }
+  // Catch any agents with floors not in FLOOR_ORDER
+  const knownFloors = new Set<string>(FLOOR_ORDER);
+  const extraAgents = agents.filter((a) => !knownFloors.has(a.floor));
+  if (extraAgents.length > 0) {
+    floorGroups.push({ floor: "Other", agents: extraAgents });
+  }
 
   const stats = [
     { label: "Agents", value: status?.agents ?? agents.length, accent: "#8B5CF6", icon: "◆" },
     { label: "Pipeline", value: status?.pipeline ?? 0, accent: "#3B82F6", icon: "◈" },
     { label: "Revenue", value: status?.revenue ?? "$0", accent: "#10B981", icon: "◇" },
-    { label: "Boot", value: status?.bootTime ?? status?.uptime ?? "—", accent: "#F59E0B", icon: "◎" },
+    { label: "Boot", value: status?.bootTime ?? status?.uptime ?? 0, accent: "#F59E0B", icon: "◎" },
   ];
+
+  let runningIndex = 0;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-primary)" }}>
@@ -376,15 +439,24 @@ export default function Dashboard() {
             Open Agency HQ
           </h2>
           <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Five autonomous agents. One agency. Zero humans.
+            21 autonomous agents. Five floors. One agency. Zero humans.
           </p>
         </div>
 
-        {/* Agent Floors */}
-        <div className="flex flex-col gap-3 mb-10">
-          {sortedAgents.map((agent, i) => (
-            <FloorRow key={agent.id} agent={agent} index={i} />
-          ))}
+        {/* Building Floors */}
+        <div className="flex flex-col gap-4 mb-10">
+          {floorGroups.map((group) => {
+            const section = (
+              <FloorSection
+                key={group.floor}
+                floorName={group.floor}
+                agents={group.agents}
+                startIndex={runningIndex}
+              />
+            );
+            runningIndex += group.agents.length;
+            return section;
+          })}
         </div>
 
         {/* Stats Grid */}
