@@ -54,10 +54,23 @@ interface ChatMessage {
   id: number
   role: 'user' | 'assistant' | 'typing'
   text: string
+  time?: string
+}
+
+interface AgentReport {
+  id: string
+  agentId: string
+  description: string
+  status: 'completed' | 'failed' | 'pending' | 'in_progress'
+  createdAt?: string
+}
+
+function chatTimeStr() {
+  return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 const INITIAL_MESSAGES: ChatMessage[] = [
-  { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?" },
+  { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?", time: chatTimeStr() },
 ]
 
 function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
@@ -81,10 +94,11 @@ export default function Home() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [agentReports, setAgentReports] = useState<AgentReport[]>([])
+  const [reportsExpanded, setReportsExpanded] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Fade out loading overlay after a short delay
     const t = setTimeout(() => setLoaded(true), 1200)
     return () => clearTimeout(t)
   }, [])
@@ -95,14 +109,32 @@ export default function Home() {
     }
   }, [messages, chatOpen])
 
+  // Poll agent reports when chat is open
+  useEffect(() => {
+    if (!chatOpen) return
+    const fetchReports = async () => {
+      try {
+        const res = await fetch('/api/tasks/results?limit=5')
+        const data = await res.json()
+        if (data.results && Array.isArray(data.results)) {
+          setAgentReports(data.results)
+        }
+      } catch { /* offline */ }
+    }
+    fetchReports()
+    const interval = setInterval(fetchReports, 8000)
+    return () => clearInterval(interval)
+  }, [chatOpen])
+
   async function sendMessage() {
     if (!input.trim() || sending) return
     const userMsg = input.trim()
     setInput('')
     setSending(true)
 
+    const now = chatTimeStr()
     setMessages(prev => [...prev,
-      { id: Date.now(), role: 'user', text: userMsg },
+      { id: Date.now(), role: 'user', text: userMsg, time: now },
       { id: Date.now() + 1, role: 'typing', text: 'Nikita is thinking...' }
     ])
 
@@ -115,12 +147,18 @@ export default function Home() {
       const data = await res.json()
       setMessages(prev => {
         const filtered = prev.filter(m => m.role !== 'typing')
-        return [...filtered, { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it." }]
+        return [...filtered, { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() }]
       })
+      // Refresh reports after message
+      try {
+        const rr = await fetch('/api/tasks/results?limit=5')
+        const rd = await rr.json()
+        if (rd.results && Array.isArray(rd.results)) setAgentReports(rd.results)
+      } catch { /* offline */ }
     } catch {
       setMessages(prev => {
         const filtered = prev.filter(m => m.role !== 'typing')
-        return [...filtered, { id: Date.now() + 2, role: 'assistant', text: "Something went wrong. Check back in a sec." }]
+        return [...filtered, { id: Date.now() + 2, role: 'assistant', text: "Connection issue. I might be offline — try again in a moment.", time: chatTimeStr() }]
       })
     }
     setSending(false)
@@ -550,7 +588,7 @@ export default function Home() {
 
       {/* Nikita Chat — Slide-out Sidebar */}
       <div className={`nikita-chat ${chatOpen ? 'open' : ''}`}>
-        <button className="nikita-chat-close" onClick={() => setChatOpen(false)}>✕</button>
+        <button className="nikita-chat-close" onClick={() => setChatOpen(false)} title="Close chat">✕</button>
         <div className="nikita-chat-header">
           <div className="nikita-avatar">N</div>
           <div>
@@ -564,10 +602,49 @@ export default function Home() {
               key={msg.id}
               className={`chat-msg ${msg.role === 'user' ? 'user' : msg.role === 'typing' ? 'typing' : 'nikita'}`}
             >
-              {msg.text}
+              {msg.role === 'typing' ? (
+                <div className="chat-msg-text typing-text">{msg.text}</div>
+              ) : (
+                <>
+                  <div className="chat-msg-text">{msg.text}</div>
+                  {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                </>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* Agent Reports Panel */}
+        <div className="agent-reports-panel">
+          <div
+            className="agent-reports-header"
+            onClick={() => setReportsExpanded(e => !e)}
+          >
+            <span>Agent Reports</span>
+            <span className="agent-reports-badge">{agentReports.length}</span>
+            <span style={{ marginLeft: 'auto', fontSize: 10 }}>{reportsExpanded ? '▲' : '▼'}</span>
+          </div>
+          {reportsExpanded && (
+            <div className="agent-reports-list">
+              {agentReports.length === 0 ? (
+                <div className="agent-reports-empty">No reports yet — agents standing by.</div>
+              ) : (
+                agentReports.map(r => (
+                  <div key={r.id} className="agent-report-item">
+                    <div className="report-agent">{r.agentId}</div>
+                    <div className="report-desc">{r.description}</div>
+                    <div className="report-meta">
+                      <span className={`report-status ${r.status}`}>{r.status}</span>
+                      {r.createdAt && (
+                        <span>{new Date(r.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
         <div className="nikita-chat-bar">
           <div className="nikita-chat-bar-inner">
@@ -585,8 +662,12 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <button className="nikita-chat-toggle" onClick={() => setChatOpen(o => !o)}>
-        {chatOpen ? '✕' : '👩‍💼'}
+      <button
+        className={`nikita-chat-toggle${chatOpen ? ' hidden' : ''}`}
+        onClick={() => setChatOpen(true)}
+        title="Chat with Nikita"
+      >
+        💬
       </button>
     </>
   )
