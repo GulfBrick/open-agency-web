@@ -204,6 +204,61 @@ function getBubbleText(agentId: string, status: string) {
   return "Standing by";
 }
 
+// ─── Animated Counter ────────────────────────────────────────────────────────
+
+function AnimatedCounter({
+  value,
+  prefix = "",
+  suffix = "",
+  isCurrency = false,
+  duration = 1200,
+  className,
+}: {
+  value: number | null | undefined;
+  prefix?: string;
+  suffix?: string;
+  isCurrency?: boolean;
+  duration?: number;
+  className?: string;
+}) {
+  const [displayed, setDisplayed] = useState(0);
+  const animatedRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (value == null || isNaN(value)) return;
+    if (animatedRef.current === value) return;
+    animatedRef.current = value;
+    const target = value;
+    const startTime = performance.now();
+
+    function update(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(target * eased);
+      setDisplayed(current);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(update);
+      } else {
+        setDisplayed(target);
+      }
+    }
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(update);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [value, duration]);
+
+  if (value == null) return <span className={className}>—</span>;
+
+  const formatted = isCurrency
+    ? `£${displayed.toLocaleString()}`
+    : `${prefix}${displayed.toLocaleString()}${suffix}`;
+
+  return <span className={className}>{formatted}</span>;
+}
+
 // ─── Rooftop Star Particles ──────────────────────────────────────────────────
 
 function RooftopParticles() {
@@ -946,33 +1001,40 @@ export default function Dashboard() {
               return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} />;
             })}
 
-            {/* GROUND FLOOR — STATS (6 live cards) */}
+            {/* GROUND FLOOR — STATS (6 live cards with animated counters) */}
             <div className="ground-floor">
               <div className="ground-stat">
                 <div className="ground-stat-icon color-violet">&#9679;</div>
                 <div className="ground-stat-value color-violet">
-                  {status ? (status.systemHealth?.registeredAgents ?? agents.length) : "\u2014"}
+                  <AnimatedCounter
+                    value={status ? (status.systemHealth?.registeredAgents ?? agents.length) : null}
+                  />
                 </div>
                 <div className="ground-stat-label">Agents</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-green">&#9670;</div>
-                <div className="ground-stat-value color-green">{status ? (status.pipeline?.total ?? 0) : "\u2014"}</div>
+                <div className="ground-stat-value color-green">
+                  <AnimatedCounter value={status ? (status.pipeline?.total ?? 0) : null} />
+                </div>
                 <div className="ground-stat-label">Pipeline</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-purple">&#163;</div>
                 <div className="ground-stat-value color-purple">
-                  {status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u2014"}
+                  <AnimatedCounter
+                    value={status?.finances?.revenue ?? null}
+                    isCurrency
+                  />
                 </div>
                 <div className="ground-stat-label">Revenue</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-blue">&#9889;</div>
                 <div className="ground-stat-value color-blue">
-                  {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length > 0
-                    ? taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length
-                    : status ? taskQueue.length : "\u2014"}
+                  <AnimatedCounter
+                    value={status ? taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length : null}
+                  />
                 </div>
                 <div className="ground-stat-label">Active Tasks</div>
               </div>
@@ -981,14 +1043,14 @@ export default function Dashboard() {
                 <div className="ground-stat-value color-green" style={{ fontSize: "18px", letterSpacing: "-0.5px" }}>
                   {status?.systemHealth?.uptimeFormatted
                     ? status.systemHealth.uptimeFormatted.split(" ")[0]
-                    : "\u2014"}
+                    : "—"}
                 </div>
                 <div className="ground-stat-label">Uptime</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-amber">&#9889;</div>
                 <div className="ground-stat-value color-amber">
-                  {status ? (status.systemHealth?.bootCount ?? 0) : "\u2014"}
+                  <AnimatedCounter value={status ? (status.systemHealth?.bootCount ?? 0) : null} />
                 </div>
                 <div className="ground-stat-label">Boots</div>
               </div>
@@ -1292,31 +1354,61 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Activity Log */}
+          {/* Activity Log — shows recent agent task completions + chat */}
           <div className="dash-card card-activity">
             <div className="dash-card-title">
               <span className="card-icon">&#128196;</span> Activity Log
-              <span className="card-badge">{chatMessages.filter(m => m.type === "agent" || m.type === "nikita").length || "--"}</span>
+              <span className="card-badge">{agentReports.length + chatMessages.filter(m => m.type === "agent" || m.type === "nikita").length || "--"}</span>
             </div>
             <div className="activity-ticker">
-              {chatMessages.length === 0 ? (
-                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-                  {apiOnline ? "Agents standing by" : "Loading..."}
-                </div>
-              ) : (
-                [...chatMessages]
-                  .filter(m => m.type === "nikita" || m.type === "agent")
-                  .slice(-6)
-                  .reverse()
-                  .map((msg, i) => (
-                    <div key={i} className="activity-item">
-                      <span className={`activity-dot ${msg.type === "agent" ? "color-blue" : "color-violet"}`}>●</span>
-                      <span className="activity-agent">{msg.type === "agent" ? (msg.agentName || "Agent") : "Nikita"}</span>
-                      <span className="activity-text">{msg.text.length > 48 ? msg.text.slice(0, 48) + "…" : msg.text}</span>
-                      <span className="activity-time">{msg.time}</span>
+              {(() => {
+                // Build unified activity items: agent reports + chat messages
+                type ActivityItem = { dot: string; agent: string; text: string; time: string; key: string };
+                const items: ActivityItem[] = [];
+
+                // Add agent task reports (most recent completed tasks)
+                for (const r of agentReports.slice(0, 4)) {
+                  const cfg = FLOOR_CONFIG[r.agentId || r.agent || ""];
+                  const agentName = cfg?.name || r.agent || r.agentId || "Agent";
+                  const dept = r.agentId ? deptFromAgent(r.agentId) : "dev";
+                  const dotColor = dept === "dev" ? "color-blue" : dept === "sales" ? "color-amber" : dept === "creative" ? "color-rose" : dept === "cfo" || dept === "csuite" ? "color-violet" : "color-green";
+                  const text = r.result
+                    ? typeof r.result === "string" ? r.result : JSON.stringify(r.result)
+                    : r.description || "Task complete";
+                  const timeStr = r.completedAt
+                    ? new Date(r.completedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    : "--:--";
+                  items.push({ dot: dotColor, agent: agentName, text, time: timeStr, key: `report-${r.agentId}-${r.completedAt}` });
+                }
+
+                // Add recent chat messages
+                for (const msg of [...chatMessages].filter(m => m.type === "nikita" || m.type === "agent").slice(-3).reverse()) {
+                  items.push({
+                    dot: msg.type === "agent" ? "color-blue" : "color-violet",
+                    agent: msg.type === "agent" ? (msg.agentName || "Agent") : "Nikita",
+                    text: msg.text,
+                    time: msg.time,
+                    key: `chat-${msg.timestamp}`,
+                  });
+                }
+
+                if (items.length === 0) {
+                  return (
+                    <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                      {apiOnline ? "Agents standing by" : "Loading..."}
                     </div>
-                  ))
-              )}
+                  );
+                }
+
+                return items.slice(0, 8).map((item) => (
+                  <div key={item.key} className="activity-item">
+                    <span className={`activity-dot ${item.dot}`}>●</span>
+                    <span className="activity-agent">{item.agent}</span>
+                    <span className="activity-text">{item.text.length > 48 ? item.text.slice(0, 48) + "…" : item.text}</span>
+                    <span className="activity-time">{item.time}</span>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
 
