@@ -349,9 +349,11 @@ export default function Home() {
 
         {/* Dashboard Grid */}
         <div className="dashboard-grid">
+
+          {/* Financials */}
           <div className="dash-card card-financials">
             <div className="dash-card-title">
-              <span>💰</span> Financials
+              <span className="card-icon">£</span> Financials
             </div>
             <div className="finance-grid">
               <div className="finance-item">
@@ -373,72 +375,167 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Sales Pipeline — visual bar chart */}
           <div className="dash-card card-pipeline">
             <div className="dash-card-title">
-              <span>🔥</span> Pipeline
+              <span className="card-icon">💼</span> Sales Pipeline
             </div>
-            <ul className="dash-card-list">
-              <li>
-                <span>Clearline Markets</span>
-                <span className="badge badge-green">Active</span>
-              </li>
-              <li>
-                <span>Prospect A</span>
-                <span className="badge badge-amber">Outreach</span>
-              </li>
-            </ul>
+            <div className="pipeline-list">
+              <div className="pipeline-row">
+                <div className="pipeline-label">Hot</div>
+                <div className="pipeline-bar-track">
+                  <div className="pipeline-bar-fill rose" style={{ width: '0%' }} />
+                </div>
+                <div className="pipeline-count color-rose">0</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Warm</div>
+                <div className="pipeline-bar-track">
+                  <div className="pipeline-bar-fill amber" style={{ width: '15%' }} />
+                </div>
+                <div className="pipeline-count color-amber">1</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Cold</div>
+                <div className="pipeline-bar-track">
+                  <div className="pipeline-bar-fill violet" style={{ width: '0%' }} />
+                </div>
+                <div className="pipeline-count color-violet">0</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Won</div>
+                <div className="pipeline-bar-track">
+                  <div className="pipeline-bar-fill green" style={{ width: '100%' }} />
+                </div>
+                <div className="pipeline-count color-green">1</div>
+              </div>
+            </div>
           </div>
 
+          {/* Active Sprint */}
           <div className="dash-card card-sprint">
             <div className="dash-card-title">
-              <span>🚀</span> Current Sprint
+              <span className="card-icon">🚀</span> Active Sprint
+              <span className="card-badge">Sprint 1</span>
             </div>
-            <ul className="dash-card-list">
-              <li>
-                <span>oagencyconsulting.com</span>
-                <span className="badge badge-blue">In Progress</span>
-              </li>
-              <li>
-                <span>Agent memory system</span>
-                <span className="badge badge-violet">Planned</span>
-              </li>
-            </ul>
+            <div className="sprint-pct">Website build · 40% complete</div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: '40%' }} />
+            </div>
+            <div className="sprint-stats">
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-green">4</div>
+                <div className="sprint-stat-label">Done</div>
+              </div>
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-blue">2</div>
+                <div className="sprint-stat-label">Active</div>
+              </div>
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-amber">6</div>
+                <div className="sprint-stat-label">Todo</div>
+              </div>
+            </div>
           </div>
 
+          {/* Live Task Queue — spans 2 columns */}
+          <div className="dash-card card-tasks dash-card-wide">
+            <div className="dash-card-title">
+              <span className="card-icon">⚡</span> Live Task Queue
+              <span className="card-badge">0</span>
+            </div>
+            <div className="task-status-row">
+              <div className="task-status-cell" style={{ background: 'rgba(245,158,11,0.10)' }}>
+                <div className="task-status-val color-amber">0</div>
+                <div className="task-status-lbl">Pending</div>
+              </div>
+              <div className="task-status-cell" style={{ background: 'rgba(59,130,246,0.10)' }}>
+                <div className="task-status-val color-blue">0</div>
+                <div className="task-status-lbl">In Progress</div>
+              </div>
+              <div className="task-status-cell" style={{ background: 'rgba(16,185,129,0.10)' }}>
+                <div className="task-status-val color-green">0</div>
+                <div className="task-status-lbl">Completed</div>
+              </div>
+              <div className="task-status-cell" style={{ background: 'rgba(244,63,94,0.10)' }}>
+                <div className="task-status-val color-rose">0</div>
+                <div className="task-status-lbl">Failed</div>
+              </div>
+            </div>
+            <div className="task-feed-empty">No tasks yet — agents standing by.</div>
+          </div>
+
+          {/* Workflows */}
+          <div className="dash-card card-workflows">
+            <div className="dash-card-title">
+              <span className="card-icon">🔧</span> Workflows
+              <span className="card-badge">0</span>
+            </div>
+            <div className="dash-card-empty">No active workflows</div>
+          </div>
+
+          {/* Clients */}
           <div className="dash-card card-clients">
             <div className="dash-card-title">
-              <span>🏢</span> Clients
+              <span className="card-icon">👤</span> Clients
             </div>
-            <div className="dash-card-value color-violet">1</div>
-            <div className="dash-card-sub">Clearline Markets · Active</div>
+            <div className="client-list">
+              <div className="client-card">
+                <div className="client-avatar">C</div>
+                <div>
+                  <div className="client-name">Clearline Markets</div>
+                  <div className="client-meta">Prop trading · Active</div>
+                </div>
+                <span className="badge badge-green" style={{ marginLeft: 'auto' }}>Active</span>
+              </div>
+            </div>
           </div>
 
+          {/* Schedules */}
           <div className="dash-card card-schedules">
             <div className="dash-card-title">
-              <span>📅</span> Schedules
+              <span className="card-icon">🕐</span> Scheduled Tasks
             </div>
-            <ul className="dash-card-list">
-              <li>
-                <span>UI Builder heartbeat</span>
-                <span className="badge badge-green">Every 10m</span>
-              </li>
-              <li>
-                <span>Daily brief</span>
-                <span className="badge badge-blue">08:00</span>
-              </li>
-            </ul>
+            <div className="schedule-list">
+              <div className="schedule-item">
+                <div className="schedule-info">
+                  <div className="schedule-name">UI Builder heartbeat</div>
+                  <div className="schedule-time">Every 10 minutes</div>
+                </div>
+                <span className="badge badge-green">Running</span>
+              </div>
+              <div className="schedule-item">
+                <div className="schedule-info">
+                  <div className="schedule-name">Daily brief</div>
+                  <div className="schedule-time">08:00 daily</div>
+                </div>
+                <span className="badge badge-blue">Scheduled</span>
+              </div>
+            </div>
           </div>
 
+          {/* Activity Log */}
           <div className="dash-card card-activity">
             <div className="dash-card-title">
-              <span>⚡</span> Live Activity
+              <span className="card-icon">📄</span> Activity Log
+              <span className="card-badge">3</span>
             </div>
-            <ul className="dash-card-list">
-              <li><span>Nikita shipped website</span><span className="badge badge-green">Now</span></li>
-              <li><span>Kai reviewed PR #47</span><span className="badge badge-blue">2m ago</span></li>
-              <li><span>Priya drafted tweet</span><span className="badge badge-violet">5m ago</span></li>
-            </ul>
+            <div className="activity-ticker">
+              <div className="log-entry">
+                <div className="log-time">09:57</div>
+                <div className="log-text"><span className="log-agent log-agent--dev">Kai</span> <span className="log-action">shipped website update</span></div>
+              </div>
+              <div className="log-entry">
+                <div className="log-time">09:47</div>
+                <div className="log-text"><span className="log-agent log-agent--csuite">Priya</span> <span className="log-action">posted to Twitter</span></div>
+              </div>
+              <div className="log-entry">
+                <div className="log-time">09:37</div>
+                <div className="log-text"><span className="log-agent log-agent--default">Nikita</span> <span className="log-action">issued morning brief</span></div>
+              </div>
+            </div>
           </div>
+
         </div>
       </main>
 

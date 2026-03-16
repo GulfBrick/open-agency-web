@@ -1583,6 +1583,289 @@ body {
   box-shadow: none;
 }
 
+/* ─── Pipeline bars ─── */
+.pipeline-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pipeline-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 30px;
+  align-items: center;
+  gap: 10px;
+}
+
+.pipeline-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pipeline-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pipeline-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+.pipeline-bar-fill.rose { background: linear-gradient(90deg, var(--rose), rgba(244,63,94,0.6)); box-shadow: 0 0 8px rgba(244,63,94,0.15); }
+.pipeline-bar-fill.amber { background: linear-gradient(90deg, var(--amber), rgba(245,158,11,0.6)); box-shadow: 0 0 8px rgba(245,158,11,0.15); }
+.pipeline-bar-fill.violet { background: linear-gradient(90deg, var(--violet), rgba(124,58,237,0.6)); box-shadow: 0 0 8px rgba(124,58,237,0.15); }
+.pipeline-bar-fill.green { background: linear-gradient(90deg, var(--green), rgba(16,185,129,0.6)); box-shadow: 0 0 8px rgba(16,185,129,0.15); }
+
+.pipeline-count {
+  font-family: var(--heading);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ─── Sprint card ─── */
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--violet), var(--green));
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
+}
+
+.sprint-pct {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  margin-bottom: 10px;
+}
+
+.sprint-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sprint-stat {
+  text-align: center;
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 8px;
+}
+
+.sprint-stat-value {
+  font-family: var(--heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sprint-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ─── Task Queue (wide card) ─── */
+.dash-card-wide {
+  grid-column: span 2;
+}
+
+.task-status-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.task-status-cell {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.task-status-val {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--heading);
+}
+
+.task-status-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.task-feed-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 12px 0;
+  font-family: var(--mono);
+}
+
+.dash-card-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--mono);
+  padding: 8px 0;
+}
+
+/* ─── Clients card ─── */
+.client-list {
+  display: grid;
+  gap: 8px;
+}
+
+.client-card {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.client-avatar {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--violet), #A78BFA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.client-name {
+  font-family: var(--heading);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.client-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ─── Schedule list ─── */
+.schedule-list {
+  display: grid;
+  gap: 6px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.025);
+  transition: all 0.2s;
+}
+
+.schedule-item:hover {
+  background: rgba(124, 58, 237, 0.03);
+}
+
+.schedule-info { flex: 1; min-width: 0; }
+
+.schedule-name {
+  font-family: var(--heading);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.schedule-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+/* ─── Activity Ticker ─── */
+.activity-ticker {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.15) transparent;
+}
+
+.activity-ticker::-webkit-scrollbar { width: 3px; }
+.activity-ticker::-webkit-scrollbar-track { background: transparent; }
+.activity-ticker::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 3px; }
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  font-family: var(--mono);
+  font-size: 11px;
+  transition: background 0.15s;
+  border-radius: 4px;
+}
+
+.log-entry:hover {
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.log-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.log-text { color: var(--text); line-height: 1.5; }
+
+.log-agent { font-weight: 600; }
+
+.log-agent.log-agent--creative { color: var(--rose); }
+.log-agent.log-agent--sales { color: var(--amber); }
+.log-agent.log-agent--dev { color: var(--blue); }
+.log-agent.log-agent--csuite { color: var(--violet); }
+.log-agent.log-agent--default { color: var(--violet); }
+
+.log-action { color: var(--text-dim); }
+
+/* ─── Dash card card-icon and card-badge ─── */
+.card-icon {
+  font-size: 14px;
+  filter: saturate(1.2);
+}
+
+.card-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ─── Card accent lines (missing ones) ─── */
+.dash-card.card-tasks::before { background: linear-gradient(180deg, var(--blue), rgba(59, 130, 246, 0.2)); }
+.dash-card.card-workflows::before { background: linear-gradient(180deg, #A78BFA, rgba(167, 139, 250, 0.2)); }
+
 /* ─── Footer ─── */
 .footer {
   position: fixed;
