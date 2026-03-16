@@ -28,15 +28,20 @@ export async function getAgents() {
 }
 
 export async function getNikitaHistory() {
-  const res = await fetchAgency("/api/nikita/history");
+  // Route through Next.js proxy to keep API key server-side
+  const res = await fetch("/api/chat/history");
+  if (!res.ok) return [];
   return res.json();
 }
 
 export async function sendNikitaMessage(message: string) {
-  const res = await fetchAgency("/api/nikita/message", {
+  // Route through Next.js proxy to keep API key server-side and avoid CORS
+  const res = await fetch("/api/chat", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
   });
+  if (!res.ok) throw new Error(`Chat API error: ${res.status}`);
   return res.json();
 }
 

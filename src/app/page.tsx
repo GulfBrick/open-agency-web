@@ -163,6 +163,15 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?", time: chatTimeStr() },
 ]
 
+const QUICK_PROMPTS = [
+  { label: '📊 Status update', text: 'Give me a full agency status update.' },
+  { label: '💰 Financials', text: 'What are the current financials?' },
+  { label: '🚀 What are devs building?', text: 'What is the dev team working on right now?' },
+  { label: '📋 Brief the team', text: 'Send a morning brief to all departments.' },
+  { label: '🔥 Sales pipeline', text: 'What\'s in the sales pipeline?' },
+  { label: '👤 New client', text: 'I want to onboard a new client — walk me through it.' },
+]
+
 // Static per-agent "stats" for the popup — tasks done, tasks running
 const AGENT_STATS: Record<string, { done: number; active: number; rank: string }> = {
   nikita:  { done: 247, active: 3,  rank: 'CEO · Owner' },
@@ -1580,6 +1589,64 @@ export default function Home() {
           })}
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Quick Prompt Chips — shown when chat is mostly empty */}
+        {messages.filter(m => m.role === 'user').length === 0 && (
+          <div className="chat-quick-prompts">
+            <div className="chat-quick-label">Quick actions</div>
+            <div className="chat-quick-chips">
+              {QUICK_PROMPTS.map((qp, i) => (
+                <button
+                  key={i}
+                  className="chat-quick-chip"
+                  onClick={() => {
+                    setInput(qp.text)
+                    // auto-send after short delay so user sees it
+                    setTimeout(() => {
+                      setInput('')
+                      setSending(true)
+                      const now = chatTimeStr()
+                      setMessages(prev => [...prev,
+                        { id: Date.now(), role: 'user', text: qp.text, time: now },
+                        { id: Date.now() + 1, role: 'typing', text: 'Nikita is thinking...' }
+                      ])
+                      fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: qp.text }),
+                      })
+                        .then(r => r.json())
+                        .then(data => {
+                          setMessages(prev => {
+                            const filtered = prev.filter(m => m.role !== 'typing')
+                            const next: ChatMessage[] = [
+                              ...filtered,
+                              { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() },
+                            ]
+                            if (data.dispatched && Array.isArray(data.agents) && data.agents.length > 0) {
+                              next.push({ id: Date.now() + 3, role: 'dispatch', text: '', time: chatTimeStr(), dispatchedAgents: data.agents as string[] })
+                            }
+                            return next
+                          })
+                          setSending(false)
+                        })
+                        .catch(() => {
+                          setMessages(prev => {
+                            const filtered = prev.filter(m => m.role !== 'typing')
+                            return [...filtered, { id: Date.now() + 2, role: 'assistant', text: "Connection issue — try again in a moment.", time: chatTimeStr() }]
+                          })
+                          setSending(false)
+                        })
+                    }, 80)
+                  }}
+                  disabled={sending}
+                >
+                  {qp.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Agent Reports Panel */}
         <div className="agent-reports-panel">
