@@ -927,6 +927,63 @@ function NikitaChat({
   );
 }
 
+// ─── Onboarding Welcome Panel ────────────────────────────────────────────────
+
+function OnboardingPanel() {
+  const [visible, setVisible] = useState(false);
+  const [hiding, setHiding] = useState(false);
+
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem("oa_onboarding_dismissed");
+      if (!dismissed) setVisible(true);
+    } catch {
+      // localStorage unavailable (SSR guard)
+    }
+  }, []);
+
+  const dismiss = () => {
+    setHiding(true);
+    setTimeout(() => {
+      setVisible(false);
+      try { localStorage.setItem("oa_onboarding_dismissed", "1"); } catch { /* noop */ }
+    }, 350);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div className={`onboarding-panel${hiding ? " hiding" : ""}`} role="complementary" aria-label="Welcome to Open Agency">
+      <button className="onboarding-close" onClick={dismiss} title="Dismiss">&#10005;</button>
+      <div className="onboarding-header">
+        <span className="onboarding-icon">🏢</span>
+        <div>
+          <div className="onboarding-title">Welcome to Open Agency</div>
+          <div className="onboarding-subtitle">An AI-powered agency — fully autonomous, always on.</div>
+        </div>
+      </div>
+      <div className="onboarding-cards">
+        <div className="onboarding-card">
+          <div className="onboarding-card-icon">👥</div>
+          <div className="onboarding-card-title">The Building</div>
+          <div className="onboarding-card-text">This is your agency HQ. Each floor is a department — Sales, Dev, Creative, C-Suite. Agents live at their desks and work 24/7.</div>
+        </div>
+        <div className="onboarding-card">
+          <div className="onboarding-card-icon">💬</div>
+          <div className="onboarding-card-title">Talk to Nikita</div>
+          <div className="onboarding-card-text">Hit the chat bubble to message Nikita, the CEO. She briefs you, dispatches agents, and handles requests in real time.</div>
+        </div>
+        <div className="onboarding-card">
+          <div className="onboarding-card-icon">📊</div>
+          <div className="onboarding-card-title">Live Dashboard</div>
+          <div className="onboarding-card-text">Scroll down to see live financials, pipeline, tasks, workflows, and scheduled jobs — all pulling from the agency API.</div>
+        </div>
+      </div>
+      <button className="onboarding-cta" onClick={dismiss}>Got it — let&apos;s go ↓</button>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
 export default function Dashboard() {
@@ -1250,6 +1307,9 @@ export default function Dashboard() {
         </div>
         <div className="hero-scroll">Scroll</div>
       </section>
+
+      {/* First-Visit Onboarding Panel */}
+      <OnboardingPanel />
 
       {/* Header */}
       <header className="header">
