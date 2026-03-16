@@ -256,6 +256,26 @@ export default function Home() {
               <div className="ground-stat-label">Uptime</div>
             </div>
           </div>
+
+          {/* Building Foundation */}
+          <div className="building-foundation">
+            <div className="building-foundation-texture" />
+            <div className="building-footer">
+              <span>Open Agency</span> &copy; 2026 &middot; Intelligence at work.
+            </div>
+          </div>
+        </div>
+
+        {/* CEO Brief */}
+        <div className="ceo-brief">
+          <div className="ceo-brief-header">
+            <div className="ceo-brief-avatar">N</div>
+            <div className="ceo-brief-label">CEO Briefing</div>
+          </div>
+          <div className="ceo-brief-text">
+            Agency is live. Building is up. Dev team is shipping the website every 10 minutes. Clearline Markets is our first active client — Aquas Trading integration in progress. No blockers. All systems green.
+          </div>
+          <div className="ceo-brief-time">Monday, 16 March 2026 — 09:27 AM</div>
         </div>
 
         {/* Dashboard Grid */}
@@ -264,8 +284,24 @@ export default function Home() {
             <div className="dash-card-title">
               <span>💰</span> Financials
             </div>
-            <div className="dash-card-value color-green">£0</div>
-            <div className="dash-card-sub">Revenue this month</div>
+            <div className="finance-grid">
+              <div className="finance-item">
+                <div className="finance-label">Revenue</div>
+                <div className="finance-value color-green">£0</div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Expenses</div>
+                <div className="finance-value color-rose">£0</div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Profit</div>
+                <div className="finance-value">£0</div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Cash Position</div>
+                <div className="finance-value color-violet">£0</div>
+              </div>
+            </div>
           </div>
 
           <div className="dash-card card-pipeline">

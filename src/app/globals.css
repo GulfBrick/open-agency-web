@@ -661,6 +661,28 @@ body {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), 0 0 16px rgba(16, 185, 129, 0.15);
 }
 
+.desk-avatar.offline {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+  box-shadow: none;
+}
+
+.status-indicator.offline {
+  background: var(--text-muted);
+}
+
+/* Room divider between agents */
+.agent-desk + .agent-desk::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
+}
+
 .status-indicator {
   position: absolute;
   bottom: 0; right: 0;
@@ -751,6 +773,182 @@ body {
 .color-amber { color: var(--amber); }
 .color-rose { color: var(--rose); }
 .color-blue { color: var(--blue); }
+
+/* ─── Building Foundation ─── */
+.building-foundation {
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.6) 0%, rgba(10, 11, 20, 0.95) 100%);
+  border-top: 3px solid rgba(124, 58, 237, 0.12);
+  padding: 6px 0 0;
+  position: relative;
+  z-index: 1;
+}
+
+.building-foundation::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.15), transparent);
+}
+
+.building-foundation-texture {
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 20px,
+    rgba(255, 255, 255, 0.01) 20px,
+    rgba(255, 255, 255, 0.01) 40px
+  );
+}
+
+.building-footer {
+  text-align: center;
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(10, 11, 20, 0.8);
+  position: relative;
+  z-index: 1;
+}
+
+.building-footer span {
+  color: var(--violet-dim);
+}
+
+/* ─── CEO Brief Panel ─── */
+.ceo-brief {
+  background: linear-gradient(135deg, rgba(15, 22, 35, 0.9), rgba(124, 58, 237, 0.06));
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  border-radius: 16px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  margin-top: 32px;
+}
+
+.ceo-brief::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--violet), rgba(124, 58, 237, 0.15));
+  border-radius: 4px 0 0 4px;
+}
+
+.ceo-brief::after {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ceo-brief-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.ceo-brief-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--heading);
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.ceo-brief-label {
+  font-family: var(--heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--violet);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.ceo-brief-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text);
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+
+.ceo-brief-text.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.ceo-brief-time {
+  margin-top: 12px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Finance Grid (inside dash card) ─── */
+.finance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.finance-item {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.finance-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.finance-value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* ─── Ground stat hover/glow ─── */
+.ground-stat::after {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.ground-stat:nth-child(1)::after { background: var(--violet); }
+.ground-stat:nth-child(2)::after { background: var(--green); }
+.ground-stat:nth-child(3)::after { background: #A78BFA; }
+.ground-stat:nth-child(4)::after { background: var(--amber); }
 
 /* ─── Dashboard Grid ─── */
 .dashboard-grid {
