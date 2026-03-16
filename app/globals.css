@@ -1900,6 +1900,22 @@ body {
   word-wrap: break-word;
 }
 
+/* ─── Chat Dispatch Badge ───────────────────────────────────────────────── */
+.chat-dispatch-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-dim);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-family: var(--mono);
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+  animation: unreadPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ─── Agents Working Indicator ─────────────────────────────────────────── */
 
 .agents-working-indicator {

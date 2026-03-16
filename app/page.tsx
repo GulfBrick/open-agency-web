@@ -465,6 +465,7 @@ interface ChatMessage {
   agentName?: string;
   agentRole?: string;
   department?: string;
+  dispatched?: boolean;
 }
 
 const DEPT_COLORS: Record<string, string> = {
@@ -647,7 +648,12 @@ function NikitaChat({
                 <AgentBubble key={i} msg={msg} />
               ) : (
                 <div key={i} className={`chat-msg ${msg.type}`}>
-                  <div className="chat-msg-text">{msg.text}</div>
+                  <div className="chat-msg-text">
+                    {msg.text}
+                    {msg.dispatched && (
+                      <span className="chat-dispatch-badge">→ agents dispatched</span>
+                    )}
+                  </div>
                   <div className="chat-msg-time">{msg.time}</div>
                 </div>
               )
@@ -943,7 +949,7 @@ export default function Dashboard() {
       const res = await sendNikitaMessage(message);
       const reply = res.reply || res.message || res.response || JSON.stringify(res);
       const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setChatMessages((prev) => [...prev, { type: "nikita", text: reply, timestamp: Date.now(), time: replyTime }]);
+      setChatMessages((prev) => [...prev, { type: "nikita", text: reply, timestamp: Date.now(), time: replyTime, dispatched: true }]);
 
       // Start polling for agent results
       startPolling(sentAt);
