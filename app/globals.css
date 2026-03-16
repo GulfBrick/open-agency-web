@@ -2123,6 +2123,51 @@ body {
   box-shadow: none;
 }
 
+/* ─── Quick Prompt Chips ─────────────────────────────── */
+.chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.chat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  background: rgba(124, 58, 237, 0.07);
+  color: var(--text-dim);
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.chat-chip:hover {
+  background: rgba(124, 58, 237, 0.18);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--text);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+  transform: translateY(-1px);
+}
+
+.chat-chip:active {
+  transform: translateY(0);
+  background: rgba(124, 58, 237, 0.25);
+}
+
+.chat-chip-icon {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
 /* ─── Live Task Queue Card ───────────────────────────── */
 .sprint-badge {
   background: rgba(59, 130, 246, 0.15);

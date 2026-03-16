@@ -779,7 +779,21 @@ function NikitaChat({
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [chipsVisible, setChipsVisible] = useState(true);
   const threadRef = useRef<HTMLDivElement>(null);
+
+  const QUICK_CHIPS = [
+    { icon: "📊", label: "Status report" },
+    { icon: "🚀", label: "What's in the pipeline?" },
+    { icon: "💰", label: "Financials update" },
+    { icon: "🔧", label: "Any blockers?" },
+    { icon: "🧠", label: "What's Kai working on?" },
+  ];
+
+  const handleChip = (label: string) => {
+    setChipsVisible(false);
+    onSend(label);
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -869,6 +883,23 @@ function NikitaChat({
         </div>
         {/* Agent Reports Panel — matches local dashboard exactly */}
         <AgentReportsPanel reports={agentReports} />
+
+        {/* Quick Prompt Chips — visible until user sends first message */}
+        {chipsVisible && messages.length <= 1 && (
+          <div className="chat-chips">
+            {QUICK_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                className="chat-chip"
+                onClick={() => handleChip(chip.label)}
+                disabled={isLoading}
+              >
+                <span className="chat-chip-icon">{chip.icon}</span>
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="nikita-chat-bar">
           <form onSubmit={handleSubmit} className="nikita-chat-bar-inner">
