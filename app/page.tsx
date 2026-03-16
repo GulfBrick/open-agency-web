@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule } from "@/lib/api";
+import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule, getElevenLabsKey } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

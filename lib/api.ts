@@ -82,3 +82,14 @@ export async function runSchedule(key: string) {
   });
   return res.json();
 }
+
+export async function getElevenLabsKey(): Promise<string | null> {
+  try {
+    const res = await fetchAgency("/api/config/elevenlabs");
+    if (!res.ok) return null;
+    const cfg = await res.json();
+    return cfg.apiKey || null;
+  } catch {
+    return null;
+  }
+}
