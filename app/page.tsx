@@ -349,7 +349,7 @@ function AnimatedCounter({
   if (value == null) return <span className={className}>—</span>;
 
   const formatted = isCurrency
-    ? `£${displayed.toLocaleString()}`
+    ? `$${displayed.toLocaleString()}`
     : `${prefix}${displayed.toLocaleString()}${suffix}`;
 
   return <span className={className}>{formatted}</span>;
@@ -1126,7 +1126,7 @@ function OnboardingPanel() {
 const DEMO_STATUS: StatusData = {
   agents: DEFAULT_AGENTS.map(a => ({ id: a.id, name: a.name, role: a.role, status: "standing-by" })),
   pipeline: { total: 24, hot: 7, warm: 11, cold: 4, won: 2 },
-  finances: { revenue: 48200, expenses: 12400, profit: 35800, cashPosition: 91500 },
+  finances: { revenue: 48200, expenses: 12400, profit: 35800, cashPosition: 91500 }, // USD
   systemHealth: { uptime: 99.97, uptimeFormatted: "14d 6h 22m", bootCount: 3, registeredAgents: 21 },
 };
 
@@ -1350,8 +1350,8 @@ export default function Dashboard() {
       setWorkflows(DEMO_WORKFLOWS);
       setSchedules(DEMO_SCHEDULES);
       setAgentReports([
-        { agent: "Marcus", agentId: "cfo", description: "Q2 financial forecast completed", status: "completed", completedAt: new Date(Date.now() - 900000).toISOString(), result: "Revenue on track at £48.2k. Expenses 25.7% of revenue. Cash position healthy." },
-        { agent: "Jordan", agentId: "sales-lead", description: "Qualified 3 inbound leads", status: "completed", completedAt: new Date(Date.now() - 5400000).toISOString(), result: "2 hot leads, 1 warm. Total pipeline value ~£18k." },
+        { agent: "Marcus", agentId: "cfo", description: "Q2 financial forecast completed", status: "completed", completedAt: new Date(Date.now() - 900000).toISOString(), result: "Revenue on track at $48.2k. Expenses 25.7% of revenue. Cash position healthy." },
+        { agent: "Jordan", agentId: "sales-lead", description: "Qualified 3 inbound leads", status: "completed", completedAt: new Date(Date.now() - 5400000).toISOString(), result: "2 hot leads, 1 warm. Total pipeline value ~$18k." },
         { agent: "Iris", agentId: "designer", description: "Clearline pitch deck v2", status: "completed", completedAt: new Date(Date.now() - 12600000).toISOString(), result: "Deck delivered. 12 slides, brand aligned. Client review booked." },
       ]);
     }
@@ -1477,7 +1477,7 @@ export default function Dashboard() {
   }, [apiOnline]);
 
   const briefText = status
-    ? `${agents.filter((a) => isOnline(a.status)).length} agents active. Pipeline: ${status.pipeline?.total ?? 0} leads. Revenue: £${status.finances?.revenue ?? 0}. Systems running smoothly.`
+    ? `${agents.filter((a) => isOnline(a.status)).length} agents active. Pipeline: ${status.pipeline?.total ?? 0} leads. Revenue: $${(status.finances?.revenue ?? 0).toLocaleString()}. Systems running smoothly.`
     : BOOT_MESSAGES[bootMsgIdx];
 
   const { displayed: briefDisplayed } = useTypewriter(briefText, 28);
@@ -1606,7 +1606,7 @@ export default function Dashboard() {
                 <div className="ground-stat-label">Pipeline</div>
               </div>
               <div className="ground-stat">
-                <div className="ground-stat-icon color-purple">&#163;</div>
+                <div className="ground-stat-icon color-purple">$</div>
                 <div className="ground-stat-value color-purple">
                   <AnimatedCounter
                     value={status?.finances?.revenue ?? null}
@@ -1679,25 +1679,25 @@ export default function Dashboard() {
               <div className="finance-item">
                 <div className="finance-label">Revenue</div>
                 <div className="finance-value color-green">
-                  {status ? `\u00A3${status.finances?.revenue ?? 0}` : "\u2014"}
+                  {status ? `$${(status.finances?.revenue ?? 0).toLocaleString()}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Expenses</div>
                 <div className="finance-value color-rose">
-                  {status ? `\u00A3${status.finances?.expenses ?? 0}` : "\u2014"}
+                  {status ? `$${(status.finances?.expenses ?? 0).toLocaleString()}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Profit</div>
                 <div className="finance-value">
-                  {status ? `\u00A3${status.finances?.profit ?? 0}` : "\u2014"}
+                  {status ? `$${(status.finances?.profit ?? 0).toLocaleString()}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Cash Position</div>
                 <div className="finance-value color-violet">
-                  {status ? `\u00A3${(status?.finances as Record<string, number>)?.cashPosition ?? 0}` : "\u2014"}
+                  {status ? `$${((status?.finances as Record<string, number>)?.cashPosition ?? 0).toLocaleString()}` : "\u2014"}
                 </div>
               </div>
             </div>
