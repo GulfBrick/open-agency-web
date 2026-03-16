@@ -693,12 +693,12 @@ export default function Dashboard() {
       }
 
       if (agentsRes.status === "fulfilled" && Array.isArray(agentsRes.value)) {
-        const mapped: Agent[] = agentsRes.value.map((a: Record<string, string>) => ({
-          id: a.id || a.name?.toLowerCase() || "",
-          name: a.name || "Unknown",
-          role: a.role || "",
-          status: a.status || "standing-by",
-          floor: a.floor || a.department || "Dev",
+        const mapped: Agent[] = agentsRes.value.map((a: Record<string, unknown>) => ({
+          id: typeof a.id === 'string' ? a.id : String(a.id || a.name || ""),
+          name: typeof a.name === 'string' ? a.name : "Unknown",
+          role: typeof a.role === 'string' ? a.role : "",
+          status: typeof a.status === 'string' ? a.status : "standing-by",
+          floor: typeof a.floor === 'string' ? a.floor : (typeof a.department === 'string' ? a.department : "Dev"),
         }));
         if (mapped.length > 0) setAgents(mapped);
       }
