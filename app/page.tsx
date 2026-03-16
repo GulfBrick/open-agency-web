@@ -14,12 +14,10 @@ interface Agent {
 }
 
 interface StatusData {
-  status: string;
-  agents: number;
-  pipeline: number;
-  revenue: string;
-  uptime: string;
-  bootTime?: string;
+  agents: { id: string; name: string; role: string; status: string }[];
+  pipeline: { total: number; hot: number; warm: number; cold: number };
+  finances: { revenue: number; expenses: number; profit: number };
+  systemHealth: { uptime: number; uptimeFormatted: string; bootCount: number; registeredAgents: number };
 }
 
 // ─── Agent Config ────────────────────────────────────────────────────────────
@@ -751,10 +749,10 @@ export default function Dashboard() {
   }
 
   const groundStats = [
-    { icon: "\u25CF", value: status?.agents ?? agents.length, label: "Agents Online", color: "#7C3AED" },
-    { icon: "\u25C6", value: status?.pipeline ?? 0, label: "Pipeline", color: "#10B981" },
-    { icon: "\u00A3", value: status?.revenue ?? "\u00A30", label: "Revenue", color: "#A78BFA" },
-    { icon: "\u26A1", value: status?.bootTime ?? status?.uptime ?? 0, label: "Boot Count", color: "#F59E0B" },
+    { icon: "\u25CF", value: status?.systemHealth?.registeredAgents ?? agents.length, label: "Agents Online", color: "#7C3AED" },
+    { icon: "\u25C6", value: status?.pipeline?.total ?? 0, label: "Pipeline", color: "#10B981" },
+    { icon: "\u00A3", value: status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u00A30", label: "Revenue", color: "#A78BFA" },
+    { icon: "\u26A1", value: status?.systemHealth?.bootCount ?? 0, label: "Boot Count", color: "#F59E0B" },
   ];
 
   let runningIndex = 0;
