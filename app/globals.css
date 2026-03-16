@@ -886,6 +886,14 @@ body {
   border-top: 5px solid rgba(15, 22, 35, 0.85);
 }
 
+/* Live bubble — shows real task result data */
+.bubble.live {
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--text);
+  background: rgba(124, 58, 237, 0.08);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.08);
+}
+
 @keyframes bubbleFade {
   0%, 100% { opacity: 0; transform: translateY(4px); }
   10%, 85% { opacity: 1; transform: translateY(0); }

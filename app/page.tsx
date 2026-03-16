@@ -286,7 +286,7 @@ function AgentPopup({ agent, onClose }: AgentPopupProps) {
 
 // ─── Agent Desk ─────────────────────────────────────────────────────────────
 
-function AgentDesk({ agent }: { agent: Agent }) {
+function AgentDesk({ agent, liveBubble }: { agent: Agent; liveBubble?: string }) {
   const isCeo = agent.floor === "ceo";
   const online = isOnline(agent.status);
   const avatarClass = AVATAR_CLASS[agent.floor] || "default";
@@ -294,9 +294,11 @@ function AgentDesk({ agent }: { agent: Agent }) {
   const firstName = agent.name.split(/[\s-]/)[0];
   const [phraseIdx, setPhraseIdx] = useState(0);
   const phrases = AGENT_IDLE_PHRASES[agent.id];
-  const bubbleText = phrases
+  const idleText = phrases
     ? phrases[phraseIdx % phrases.length]
     : isOnline(agent.status) ? "Working..." : "Standing by";
+  // Prefer live task result text over idle phrase
+  const bubbleText = liveBubble || idleText;
   const [popupOpen, setPopupOpen] = useState(false);
 
   // Cycle through phrases every 8 seconds (staggered by agent index)
@@ -320,7 +322,7 @@ function AgentDesk({ agent }: { agent: Agent }) {
 
   return (
     <div className={`agent-desk${isCeo ? " ceo-desk" : ""}${online ? " is-online" : ""}`} style={{ position: "relative" }}>
-      <div className="bubble">{bubbleText}</div>
+      <div className={`bubble${liveBubble ? " live" : ""}`}>{bubbleText}</div>
       <div className="desk-surface">
         <div className="desk-monitor">&#128187;</div>
         <div
@@ -345,9 +347,11 @@ function AgentDesk({ agent }: { agent: Agent }) {
 function BuildingFloor({
   floorDef,
   agents,
+  liveBubbles,
 }: {
   floorDef: (typeof FLOOR_ORDER)[number];
   agents: Agent[];
+  liveBubbles?: Record<string, string>;
 }) {
   const anyOnline = agents.some((a) => isOnline(a.status));
   return (
@@ -362,7 +366,7 @@ function BuildingFloor({
         <div className="floor-desks">
           <div className="window-glow" />
           {agents.map((agent) => (
-            <AgentDesk key={agent.id} agent={agent} />
+            <AgentDesk key={agent.id} agent={agent} liveBubble={liveBubbles?.[agent.id]} />
           ))}
         </div>
       </div>
@@ -624,6 +628,8 @@ export default function Dashboard() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [agentReports, setAgentReports] = useState<AgentReport[]>([]);
+  // Live bubbles: agentId → short snippet of latest task result
+  const [liveBubbles, setLiveBubbles] = useState<Record<string, string>>({});
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
 
@@ -707,6 +713,32 @@ export default function Dashboard() {
         const raw = reportsRes.value;
         const arr: AgentReport[] = Array.isArray(raw) ? raw.slice(0, 5) : [];
         setAgentReports(arr);
+
+        // Derive live bubbles from most recent completed task per agent
+        const bubbleMap: Record<string, string> = {};
+        if (Array.isArray(raw)) {
+          // Group by agentId, pick most recent completed
+          const byAgent: Record<string, AgentReport> = {};
+          for (const t of raw) {
+            const id = t.agentId || t.agent || "";
+            if (!id) continue;
+            if ((t.status || "").toLowerCase() !== "completed") continue;
+            const ts = t.completedAt ? new Date(t.completedAt).getTime() : 0;
+            const existing = byAgent[id];
+            if (!existing || (existing.completedAt ? new Date(existing.completedAt).getTime() : 0) < ts) {
+              byAgent[id] = t;
+            }
+          }
+          for (const [agentId, t] of Object.entries(byAgent)) {
+            const resultText = t.result
+              ? typeof t.result === "string" ? t.result : JSON.stringify(t.result)
+              : t.description || "";
+            // Trim to a punchy single sentence (max 60 chars)
+            const snippet = resultText.split(/\.\s/)[0].substring(0, 60).trim();
+            if (snippet) bubbleMap[agentId] = snippet + (snippet.length < resultText.length ? "…" : "");
+          }
+        }
+        setLiveBubbles((prev) => ({ ...prev, ...bubbleMap }));
       }
     } catch {
       setApiOnline(false);
@@ -911,7 +943,7 @@ export default function Dashboard() {
             {/* FLOORS */}
             {FLOOR_ORDER.map((floorDef) => {
               const floorAgents = agents.filter((a) => a.floor === floorDef.key);
-              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} />;
+              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} />;
             })}
 
             {/* GROUND FLOOR — STATS */}
