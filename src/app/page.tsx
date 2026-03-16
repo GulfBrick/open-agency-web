@@ -4,29 +4,35 @@ import { useState, useRef, useEffect } from 'react'
 
 const AGENTS = {
   ceo: [
-    { id: 'nikita', name: 'Nikita', role: 'CEO · Owner', initials: 'N', cls: 'ceo', status: 'online', bubble: 'Reviewing agency status...' },
+    { id: 'nikita', name: 'Nikita', role: 'CEO · Owner', initials: 'N', cls: 'ceo', status: 'online', bubble: 'Running the agency...' },
+  ],
+  creative: [
+    { id: 'nova', name: 'Nova', role: 'Creative Director', initials: 'No', cls: 'creative', status: 'online', bubble: 'Designing assets...' },
+    { id: 'iris', name: 'Iris', role: 'Designer', initials: 'Ir', cls: 'creative', status: 'online', bubble: 'Crafting visuals...' },
+    { id: 'finn', name: 'Finn', role: 'Video Editor', initials: 'F', cls: 'creative', status: 'online', bubble: 'Cutting footage...' },
+    { id: 'jade', name: 'Jade', role: 'Social Media', initials: 'Jd', cls: 'creative', status: 'online', bubble: 'Scheduling posts...' },
+    { id: 'ash', name: 'Ash', role: 'Copywriter', initials: 'Ash', cls: 'creative', status: 'online', bubble: 'Writing copy...' },
+  ],
+  sales: [
+    { id: 'jordan', name: 'Jordan', role: 'Sales Lead', initials: 'J', cls: 'sales', status: 'online', bubble: 'Closing deals...' },
+    { id: 'river', name: 'River', role: 'Closer', initials: 'Ri', cls: 'sales', status: 'online', bubble: 'Sending proposal...' },
+    { id: 'quinn', name: 'Quinn', role: 'Lead Qualifier', initials: 'Q', cls: 'sales', status: 'online', bubble: 'Qualifying leads...' },
+    { id: 'eden', name: 'Eden', role: 'Follow-Up', initials: 'Ed', cls: 'sales', status: 'online', bubble: 'Following up...' },
+    { id: 'blake', name: 'Blake', role: 'Proposals', initials: 'Bl', cls: 'sales', status: 'online', bubble: 'Building deck...' },
+  ],
+  dev: [
+    { id: 'kai', name: 'Kai', role: 'Dev Lead', initials: 'K', cls: 'dev', status: 'online', bubble: 'Merging PR #47...' },
+    { id: 'sage', name: 'Sage', role: 'Architect', initials: 'S', cls: 'dev', status: 'online', bubble: 'Designing system...' },
+    { id: 'luna', name: 'Luna', role: 'Frontend', initials: 'L', cls: 'dev', status: 'online', bubble: 'Shipping feature...' },
+    { id: 'rex', name: 'Rex', role: 'Backend', initials: 'R', cls: 'dev', status: 'online', bubble: 'Writing tests...' },
+    { id: 'avery', name: 'Avery', role: 'Fullstack', initials: 'A', cls: 'dev', status: 'offline', bubble: 'Idle...' },
+    { id: 'atlas', name: 'Atlas', role: 'QA', initials: 'At', cls: 'dev', status: 'online', bubble: 'Reviewing code...' },
+    { id: 'orion', name: 'Orion', role: 'Code Review', initials: 'Or', cls: 'dev', status: 'online', bubble: 'Reviewing PR...' },
   ],
   csuite: [
     { id: 'marcus', name: 'Marcus', role: 'CFO', initials: 'M', cls: 'csuite', status: 'online', bubble: 'Reconciling accounts...' },
     { id: 'zara', name: 'Zara', role: 'CTO', initials: 'Z', cls: 'csuite', status: 'online', bubble: 'Reviewing infra...' },
     { id: 'priya', name: 'Priya', role: 'CMO', initials: 'P', cls: 'csuite', status: 'online', bubble: 'Drafting campaigns...' },
-  ],
-  dev: [
-    { id: 'kai', name: 'Kai', role: 'Dev Lead', initials: 'K', cls: 'dev', status: 'online', bubble: 'Merging PR #47...' },
-    { id: 'sage', name: 'Sage', role: 'Engineer', initials: 'S', cls: 'dev', status: 'online', bubble: 'Fixing bug #312...' },
-    { id: 'luna', name: 'Luna', role: 'Engineer', initials: 'L', cls: 'dev', status: 'online', bubble: 'Shipping feature...' },
-    { id: 'rex', name: 'Rex', role: 'Engineer', initials: 'R', cls: 'dev', status: 'online', bubble: 'Writing tests...' },
-    { id: 'avery', name: 'Avery', role: 'Engineer', initials: 'A', cls: 'dev', status: 'offline', bubble: 'Idle...' },
-    { id: 'quinn', name: 'Quinn', role: 'Engineer', initials: 'Q', cls: 'dev', status: 'online', bubble: 'Optimising query...' },
-    { id: 'atlas', name: 'Atlas', role: 'Engineer', initials: 'At', cls: 'dev', status: 'online', bubble: 'Deploying...' },
-  ],
-  sales: [
-    { id: 'river', name: 'River', role: 'Sales', initials: 'Ri', cls: 'sales', status: 'online', bubble: 'Sending proposal...' },
-    { id: 'jordan', name: 'Jordan', role: 'Sales', initials: 'J', cls: 'sales', status: 'online', bubble: 'Following up...' },
-  ],
-  creative: [
-    { id: 'nova', name: 'Nova', role: 'Creative', initials: 'No', cls: 'creative', status: 'online', bubble: 'Designing assets...' },
-    { id: 'echo', name: 'Echo', role: 'Creative', initials: 'E', cls: 'creative', status: 'online', bubble: 'Editing copy...' },
   ],
 }
 
@@ -72,21 +78,27 @@ interface AgentReport {
 
 // Map agentId → display info
 const AGENT_INFO: Record<string, { name: string; initials: string; dept: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative' }> = {
-  nikita: { name: 'Nikita', initials: 'N', dept: 'ceo' },
-  marcus: { name: 'Marcus', initials: 'M', dept: 'csuite' },
-  zara:   { name: 'Zara',   initials: 'Z', dept: 'csuite' },
-  priya:  { name: 'Priya',  initials: 'P', dept: 'csuite' },
-  kai:    { name: 'Kai',    initials: 'K', dept: 'dev' },
-  sage:   { name: 'Sage',   initials: 'S', dept: 'dev' },
-  luna:   { name: 'Luna',   initials: 'L', dept: 'dev' },
-  rex:    { name: 'Rex',    initials: 'R', dept: 'dev' },
-  avery:  { name: 'Avery',  initials: 'A', dept: 'dev' },
-  quinn:  { name: 'Quinn',  initials: 'Q', dept: 'dev' },
-  atlas:  { name: 'Atlas',  initials: 'At', dept: 'dev' },
-  river:  { name: 'River',  initials: 'Ri', dept: 'sales' },
-  jordan: { name: 'Jordan', initials: 'J', dept: 'sales' },
-  nova:   { name: 'Nova',   initials: 'No', dept: 'creative' },
-  echo:   { name: 'Echo',   initials: 'E', dept: 'creative' },
+  nikita: { name: 'Nikita', initials: 'N',   dept: 'ceo' },
+  marcus: { name: 'Marcus', initials: 'M',   dept: 'csuite' },
+  zara:   { name: 'Zara',   initials: 'Z',   dept: 'csuite' },
+  priya:  { name: 'Priya',  initials: 'P',   dept: 'csuite' },
+  kai:    { name: 'Kai',    initials: 'K',   dept: 'dev' },
+  sage:   { name: 'Sage',   initials: 'S',   dept: 'dev' },
+  luna:   { name: 'Luna',   initials: 'L',   dept: 'dev' },
+  rex:    { name: 'Rex',    initials: 'R',   dept: 'dev' },
+  avery:  { name: 'Avery',  initials: 'A',   dept: 'dev' },
+  atlas:  { name: 'Atlas',  initials: 'At',  dept: 'dev' },
+  orion:  { name: 'Orion',  initials: 'Or',  dept: 'dev' },
+  river:  { name: 'River',  initials: 'Ri',  dept: 'sales' },
+  jordan: { name: 'Jordan', initials: 'J',   dept: 'sales' },
+  quinn:  { name: 'Quinn',  initials: 'Q',   dept: 'sales' },
+  eden:   { name: 'Eden',   initials: 'Ed',  dept: 'sales' },
+  blake:  { name: 'Blake',  initials: 'Bl',  dept: 'sales' },
+  nova:   { name: 'Nova',   initials: 'No',  dept: 'creative' },
+  iris:   { name: 'Iris',   initials: 'Ir',  dept: 'creative' },
+  finn:   { name: 'Finn',   initials: 'F',   dept: 'creative' },
+  jade:   { name: 'Jade',   initials: 'Jd',  dept: 'creative' },
+  ash:    { name: 'Ash',    initials: 'Ash', dept: 'creative' },
 }
 
 function chatTimeStr() {
@@ -321,7 +333,7 @@ export default function Home() {
         <p className="hero-subtitle">Intelligence at work.</p>
         <div className="hero-ticker">
           <div className="pulse-dot" />
-          <span className="ticker-text"><span className="ticker-count">{agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 13}</span> agents online</span>
+          <span className="ticker-text"><span className="ticker-count">{agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}</span> agents online</span>
         </div>
         <div className="hero-scroll">Scroll</div>
       </section>
@@ -375,7 +387,7 @@ export default function Home() {
             <div className="rooftop-tagline">Intelligence at work.</div>
             <div className="rooftop-status">
               <span className="dot" />
-              {agencyStatus?.agents ? `${agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length} agents online · all departments active` : '13 agents online · all departments active'}
+              {agencyStatus?.agents ? `${agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length} agents online · all departments active` : '20 agents online · all departments active'}
             </div>
           </div>
 
@@ -395,61 +407,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Floor 04 — C-Suite */}
-          <div className="floor floor-csuite">
-            <div className="floor-inner">
-              <div className="floor-label">
-                <div className="floor-number-badge">04</div>
-                <div className="floor-icon">👔</div>
-                <div className="floor-number">Floor 04</div>
-                <div className="floor-name">C-Suite</div>
-              </div>
-              <div className="floor-desks">
-                <div className="window-glow" />
-                {AGENTS.csuite.map(a => <AgentDesk key={a.id} agent={a} />)}
-              </div>
-            </div>
-          </div>
-
-          {/* Floor 03 — Dev */}
-          <div className="floor floor-dev">
-            <div className="floor-inner">
-              <div className="floor-label">
-                <div className="floor-number-badge">03</div>
-                <div className="floor-icon">💻</div>
-                <div className="floor-number">Floor 03</div>
-                <div className="floor-name">Dev Team</div>
-              </div>
-              <div className="floor-desks">
-                <div className="window-glow" />
-                {AGENTS.dev.map(a => <AgentDesk key={a.id} agent={a} />)}
-              </div>
-            </div>
-          </div>
-
-          {/* Floor 02 — Sales */}
-          <div className="floor floor-sales">
-            <div className="floor-inner">
-              <div className="floor-label">
-                <div className="floor-number-badge">02</div>
-                <div className="floor-icon">📈</div>
-                <div className="floor-number">Floor 02</div>
-                <div className="floor-name">Sales</div>
-              </div>
-              <div className="floor-desks">
-                <div className="window-glow" />
-                {AGENTS.sales.map(a => <AgentDesk key={a.id} agent={a} />)}
-              </div>
-            </div>
-          </div>
-
-          {/* Floor 01 — Creative */}
+          {/* Floor 04 — Creative */}
           <div className="floor floor-creative">
             <div className="floor-inner">
               <div className="floor-label">
-                <div className="floor-number-badge">01</div>
+                <div className="floor-number-badge">04</div>
                 <div className="floor-icon">🎨</div>
-                <div className="floor-number">Floor 01</div>
+                <div className="floor-number">Floor 04</div>
                 <div className="floor-name">Creative</div>
               </div>
               <div className="floor-desks">
@@ -459,12 +423,60 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Floor 03 — Sales */}
+          <div className="floor floor-sales">
+            <div className="floor-inner">
+              <div className="floor-label">
+                <div className="floor-number-badge">03</div>
+                <div className="floor-icon">📈</div>
+                <div className="floor-number">Floor 03</div>
+                <div className="floor-name">Sales</div>
+              </div>
+              <div className="floor-desks">
+                <div className="window-glow" />
+                {AGENTS.sales.map(a => <AgentDesk key={a.id} agent={a} />)}
+              </div>
+            </div>
+          </div>
+
+          {/* Floor 02 — Dev */}
+          <div className="floor floor-dev">
+            <div className="floor-inner">
+              <div className="floor-label">
+                <div className="floor-number-badge">02</div>
+                <div className="floor-icon">💻</div>
+                <div className="floor-number">Floor 02</div>
+                <div className="floor-name">Dev Team</div>
+              </div>
+              <div className="floor-desks">
+                <div className="window-glow" />
+                {AGENTS.dev.map(a => <AgentDesk key={a.id} agent={a} />)}
+              </div>
+            </div>
+          </div>
+
+          {/* Floor 01 — C-Suite */}
+          <div className="floor floor-csuite">
+            <div className="floor-inner">
+              <div className="floor-label">
+                <div className="floor-number-badge">01</div>
+                <div className="floor-icon">👔</div>
+                <div className="floor-number">Floor 01</div>
+                <div className="floor-name">C-Suite</div>
+              </div>
+              <div className="floor-desks">
+                <div className="window-glow" />
+                {AGENTS.csuite.map(a => <AgentDesk key={a.id} agent={a} />)}
+              </div>
+            </div>
+          </div>
+
           {/* Ground Floor Stats — live data */}
           <div className="ground-floor">
             <div className="ground-stat">
               <div className="ground-stat-icon">🤖</div>
               <div className="ground-stat-value color-violet">
-                {agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 13}
+                {agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}
               </div>
               <div className="ground-stat-label">Active Agents</div>
             </div>
