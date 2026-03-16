@@ -1504,7 +1504,16 @@ export default function Home() {
                 className={`chat-msg ${msg.role === 'user' ? 'user' : msg.role === 'typing' ? 'typing' : 'nikita'}`}
               >
                 {msg.role === 'typing' ? (
-                  <div className="chat-msg-text typing-text">{msg.text}</div>
+                  <div className="chat-nikita-row">
+                    <div className="chat-nk-avatar">NK</div>
+                    <div className="chat-nikita-body">
+                      <div className="nikita-typing-bubble">
+                        <div className="agents-working-dots">
+                          <span /><span /><span />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : msg.role === 'assistant' ? (
                   <div className="chat-nikita-row">
                     <div className="chat-nk-avatar">NK</div>
