@@ -190,16 +190,20 @@ function AgentDesk({ agent }: { agent: Agent }) {
   const online = isOnline(agent.status);
   const avatarClass = AVATAR_CLASS[agent.floor] || "default";
   const initials = getInitials(agent.name);
+  const firstName = agent.name.split(/[\s-]/)[0];
   const bubbleText = getBubbleText(agent.id, agent.status);
 
   return (
     <div className={`agent-desk${isCeo ? " ceo-desk" : ""}${online ? " is-online" : ""}`}>
       <div className="bubble">{bubbleText}</div>
-      <div className={`desk-avatar ${avatarClass}${isCeo ? " ceo" : ""} ${online ? "online" : "offline"}`}>
-        {initials}
-        <div className={`status-indicator ${online ? "online" : "offline"}`} />
+      <div className="desk-surface">
+        <div className="desk-monitor">&#128187;</div>
+        <div className={`desk-avatar ${avatarClass}${isCeo ? " ceo" : ""} ${online ? "online" : "offline"}`}>
+          {initials}
+          <div className={`status-indicator ${online ? "online" : "offline"}`} />
+        </div>
       </div>
-      <div className="desk-name">{agent.name}</div>
+      <div className="desk-name">{firstName}</div>
       <div className="desk-role">{agent.role}</div>
       <div className="desk-platform" />
     </div>
