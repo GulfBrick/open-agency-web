@@ -3,18 +3,26 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   const { message } = await req.json()
 
-  // Forward to the OpenClaw Agency backend if available
-  const agencyUrl = process.env.AGENCY_API_URL || 'http://localhost:3721'
+  // Forward to the OpenClaw Agency backend Nikita chat endpoint
+  const agencyUrl = process.env.AGENCY_API_URL || 'http://localhost:3001'
+  const apiKey = process.env.AGENCY_API_KEY || ''
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (apiKey) headers['X-API-Key'] = apiKey
 
   try {
-    const res = await fetch(`${agencyUrl}/api/tasks`, {
+    const res = await fetch(`${agencyUrl}/api/nikita/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agent: 'nikita', message }),
-      signal: AbortSignal.timeout(8000),
+      headers,
+      body: JSON.stringify({ message }),
+      signal: AbortSignal.timeout(12000),
     })
     const data = await res.json()
-    return NextResponse.json({ reply: data.reply || data.message || "Got it — I'm on it." })
+    return NextResponse.json({
+      reply: data.reply || "On it.",
+      dispatched: data.dispatched,
+      agents: data.agents,
+    })
   } catch {
     // Fallback smart reply when backend is offline
     const lower = message.toLowerCase()

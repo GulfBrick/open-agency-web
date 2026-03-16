@@ -98,18 +98,34 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ]
 
 function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
+  const isOnline = agent.status === 'online'
+  const isCeo = agent.id === 'nikita'
   return (
-    <div className={`agent-desk ${agent.id === 'nikita' ? 'ceo-desk' : ''}`}>
+    <div className={`agent-desk${isOnline ? ' is-online' : ''}${isCeo ? ' ceo-desk' : ''}`}>
       <div className="bubble">{agent.bubble}</div>
-      <div className={`desk-avatar ${agent.cls} ${agent.status}`}>
-        {agent.initials}
-        <span className={`status-indicator ${agent.status}`} />
+      <div className="desk-surface">
+        <div className="desk-monitor">💻</div>
+        <div className={`desk-avatar ${agent.cls} ${agent.status}`}>
+          {agent.initials}
+          <span className={`status-indicator ${agent.status}`} />
+        </div>
       </div>
       <div className="desk-name">{agent.name}</div>
       <div className="desk-role">{agent.role}</div>
       <div className="desk-platform" />
     </div>
   )
+}
+
+interface AgencyStatus {
+  agents?: Array<{ id: string; name: string; status: string; floor: string }>
+  clients?: Array<{ id: string; name: string; status: string }>
+  finances?: { revenue?: number; expenses?: number; profit?: number; cashPosition?: number }
+  pipeline?: { hot?: number; warm?: number; cold?: number; won?: number }
+  activeSprints?: Array<{ name: string; progress?: number; done?: number; inProgress?: number; todo?: number }>
+  recentLogs?: Array<{ timestamp: string; agent: string; type: string; data?: Record<string, unknown> }>
+  lastBriefing?: string
+  systemHealth?: { uptime?: number }
 }
 
 export default function Home() {
@@ -120,11 +136,28 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
   const [agentReports, setAgentReports] = useState<AgentReport[]>([])
   const [reportsExpanded, setReportsExpanded] = useState(true)
+  const [agencyStatus, setAgencyStatus] = useState<AgencyStatus | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1200)
     return () => clearTimeout(t)
+  }, [])
+
+  // Fetch live agency status every 30s
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch('/api/status')
+        if (res.ok) {
+          const data = await res.json()
+          if (!data.error) setAgencyStatus(data)
+        }
+      } catch { /* backend offline */ }
+    }
+    fetchStatus()
+    const interval = setInterval(fetchStatus, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -288,7 +321,7 @@ export default function Home() {
         <p className="hero-subtitle">Intelligence at work.</p>
         <div className="hero-ticker">
           <div className="pulse-dot" />
-          <span className="ticker-text"><span className="ticker-count">13</span> agents online</span>
+          <span className="ticker-text"><span className="ticker-count">{agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 13}</span> agents online</span>
         </div>
         <div className="hero-scroll">Scroll</div>
       </section>
@@ -342,7 +375,7 @@ export default function Home() {
             <div className="rooftop-tagline">Intelligence at work.</div>
             <div className="rooftop-status">
               <span className="dot" />
-              13 agents online · all departments active
+              {agencyStatus?.agents ? `${agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length} agents online · all departments active` : '13 agents online · all departments active'}
             </div>
           </div>
 
@@ -426,27 +459,35 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Ground Floor Stats */}
+          {/* Ground Floor Stats — live data */}
           <div className="ground-floor">
             <div className="ground-stat">
               <div className="ground-stat-icon">🤖</div>
-              <div className="ground-stat-value color-violet">13</div>
+              <div className="ground-stat-value color-violet">
+                {agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 13}
+              </div>
               <div className="ground-stat-label">Active Agents</div>
             </div>
             <div className="ground-stat">
-              <div className="ground-stat-icon">⚡</div>
-              <div className="ground-stat-value color-green">247</div>
-              <div className="ground-stat-label">Tasks Today</div>
+              <div className="ground-stat-icon">💼</div>
+              <div className="ground-stat-value color-amber">
+                {agencyStatus?.pipeline ? (agencyStatus.pipeline.hot || 0) + (agencyStatus.pipeline.warm || 0) + (agencyStatus.pipeline.cold || 0) + (agencyStatus.pipeline.won || 0) : '—'}
+              </div>
+              <div className="ground-stat-label">Pipeline</div>
+            </div>
+            <div className="ground-stat">
+              <div className="ground-stat-icon">£</div>
+              <div className="ground-stat-value color-green">
+                {agencyStatus?.finances ? `£${(agencyStatus.finances.revenue || 0).toLocaleString()}` : '£0'}
+              </div>
+              <div className="ground-stat-label">Revenue</div>
             </div>
             <div className="ground-stat">
               <div className="ground-stat-icon">🏢</div>
-              <div className="ground-stat-value color-purple">1</div>
+              <div className="ground-stat-value color-purple">
+                {agencyStatus?.clients ? agencyStatus.clients.filter((c) => c.status === 'active').length : 1}
+              </div>
               <div className="ground-stat-label">Active Clients</div>
-            </div>
-            <div className="ground-stat">
-              <div className="ground-stat-icon">📊</div>
-              <div className="ground-stat-value color-amber">99.9%</div>
-              <div className="ground-stat-label">Uptime</div>
             </div>
           </div>
 
