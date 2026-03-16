@@ -83,6 +83,21 @@ export async function runSchedule(key: string) {
   return res.json();
 }
 
+export async function onboardClient(data: {
+  name: string;
+  industry?: string;
+  contactName?: string;
+  contactEmail?: string;
+  notes?: string;
+}) {
+  const res = await fetch('/api/clients/onboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 export async function getElevenLabsKey(): Promise<string | null> {
   try {
     const res = await fetchAgency("/api/config/elevenlabs");

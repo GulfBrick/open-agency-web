@@ -2562,6 +2562,244 @@ body {
   letter-spacing: 1px;
 }
 
+/* ─── New Client Button (in Clients card header) ────── */
+.btn-new-client {
+  margin-left: auto;
+  padding: 5px 12px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 6px;
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--violet);
+  font-size: 10px;
+  font-family: var(--heading);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.btn-new-client:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(167, 139, 250, 0.15));
+  border-color: var(--violet);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.2);
+  color: #A78BFA;
+}
+
+/* ─── New Client Modal ───────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.15s ease-out;
+}
+
+.modal-panel {
+  background: var(--bg-card);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.06);
+  animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+  position: relative;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+}
+
+.modal-title {
+  font-family: var(--heading);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-icon { font-size: 16px; }
+
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.modal-close:hover {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.modal-form { display: flex; flex-direction: column; gap: 16px; }
+
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+
+.modal-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.modal-required { color: var(--rose); }
+
+.modal-input {
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  resize: none;
+}
+
+.modal-input:focus {
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+}
+
+.modal-input::placeholder { color: var(--text-muted); }
+
+.modal-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modal-textarea { min-height: 72px; }
+
+.modal-error {
+  font-size: 12px;
+  color: var(--rose);
+  background: var(--rose-dim);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.modal-btn-secondary {
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--heading);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.modal-btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.modal-btn-primary {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  color: #fff;
+  font-family: var(--heading);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+}
+
+.modal-btn-primary:hover {
+  background: linear-gradient(135deg, #6D28D9, #7C3AED);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+  transform: translateY(-1px);
+}
+
+.modal-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.modal-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.modal-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+  animation: fade-in 0.3s ease-out;
+}
+
+.modal-success-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), rgba(16, 185, 129, 0.7));
+  color: #fff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.4);
+  animation: statPop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-success-text {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 /* ─── Footer ────────────────────────────────────────── */
 .footer {
   text-align: center;

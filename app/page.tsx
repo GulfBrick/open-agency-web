@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule, getElevenLabsKey } from "@/lib/api";
+import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule, getElevenLabsKey, onboardClient } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -632,6 +632,134 @@ function AgentReportsPanel({ reports }: { reports: AgentReport[] }) {
   );
 }
 
+// ─── New Client Modal ────────────────────────────────────────────────────────
+
+interface NewClientModalProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function NewClientModal({ onClose, onSuccess }: NewClientModalProps) {
+  const [form, setForm] = useState({ name: "", industry: "", contactName: "", contactEmail: "", notes: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) { setError("Client name is required."); return; }
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await onboardClient(form);
+      if (res.error) { setError(res.error); setSubmitting(false); return; }
+      setDone(true);
+      setTimeout(() => { onSuccess(); onClose(); }, 1800);
+    } catch {
+      setError("Failed to connect to agency backend.");
+      setSubmitting(false);
+    }
+  };
+
+  // Close on backdrop click
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={handleBackdrop}>
+      <div className="modal-panel" role="dialog" aria-modal="true" aria-label="Onboard New Client">
+        <div className="modal-header">
+          <div className="modal-title">
+            <span className="modal-icon">&#128100;</span> New Client
+          </div>
+          <button className="modal-close" onClick={onClose} title="Close">&#10005;</button>
+        </div>
+        {done ? (
+          <div className="modal-success">
+            <div className="modal-success-icon">&#10003;</div>
+            <div className="modal-success-text">Client onboarded. Nikita is briefing the team.</div>
+          </div>
+        ) : (
+          <form className="modal-form" onSubmit={handleSubmit}>
+            <div className="modal-field">
+              <label className="modal-label">Client Name <span className="modal-required">*</span></label>
+              <input
+                className="modal-input"
+                type="text"
+                placeholder="e.g. Clearline Markets"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                disabled={submitting}
+                autoFocus
+              />
+            </div>
+            <div className="modal-field">
+              <label className="modal-label">Industry</label>
+              <input
+                className="modal-input"
+                type="text"
+                placeholder="e.g. Prop Trading, SaaS, E-commerce"
+                value={form.industry}
+                onChange={e => setForm(f => ({ ...f, industry: e.target.value }))}
+                disabled={submitting}
+              />
+            </div>
+            <div className="modal-row">
+              <div className="modal-field">
+                <label className="modal-label">Contact Name</label>
+                <input
+                  className="modal-input"
+                  type="text"
+                  placeholder="Jane Smith"
+                  value={form.contactName}
+                  onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))}
+                  disabled={submitting}
+                />
+              </div>
+              <div className="modal-field">
+                <label className="modal-label">Contact Email</label>
+                <input
+                  className="modal-input"
+                  type="email"
+                  placeholder="jane@company.com"
+                  value={form.contactEmail}
+                  onChange={e => setForm(f => ({ ...f, contactEmail: e.target.value }))}
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+            <div className="modal-field">
+              <label className="modal-label">Notes</label>
+              <textarea
+                className="modal-input modal-textarea"
+                placeholder="Brief context, goals, or special requirements..."
+                value={form.notes}
+                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                disabled={submitting}
+                rows={3}
+              />
+            </div>
+            {error && <div className="modal-error">{error}</div>}
+            <div className="modal-actions">
+              <button type="button" className="modal-btn-secondary" onClick={onClose} disabled={submitting}>
+                Cancel
+              </button>
+              <button type="submit" className="modal-btn-primary" disabled={submitting}>
+                {submitting ? (
+                  <><span className="modal-spinner" /> Onboarding...</>
+                ) : (
+                  "Onboard Client →"
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NikitaChat({
   onSend,
   isLoading,
@@ -784,6 +912,7 @@ export default function Dashboard() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [agentReports, setAgentReports] = useState<AgentReport[]>([]);
+  const [newClientOpen, setNewClientOpen] = useState(false);
   // Live bubbles: agentId → short snippet of latest task result
   const [liveBubbles, setLiveBubbles] = useState<Record<string, string>>({});
   const [agentTaskStats, setAgentTaskStats] = useState<Record<string, { done: number; successRate: number }>>({});
@@ -1453,6 +1582,13 @@ export default function Dashboard() {
             <div className="dash-card-title">
               <span className="card-icon">&#128100;</span> Clients
               <span className="card-badge">1 active</span>
+              <button
+                className="btn-new-client"
+                onClick={() => setNewClientOpen(true)}
+                title="Onboard a new client"
+              >
+                + New Client
+              </button>
             </div>
             <div className="client-list">
               <div className="client-item">
@@ -1586,6 +1722,14 @@ export default function Dashboard() {
         onOpen={() => setUnreadCount(0)}
         agentReports={agentReports}
       />
+
+      {/* New Client Modal */}
+      {newClientOpen && (
+        <NewClientModal
+          onClose={() => setNewClientOpen(false)}
+          onSuccess={() => fetchData()}
+        />
+      )}
     </>
   );
 }
