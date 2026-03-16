@@ -50,3 +50,9 @@ export async function getTaskResults() {
   if (!res.ok) throw new Error(`Task results API error: ${res.status}`);
   return res.json();
 }
+
+export async function getTaskQueue() {
+  const res = await fetchAgency("/api/tasks");
+  if (!res.ok) throw new Error(`Task queue API error: ${res.status}`);
+  return res.json();
+}

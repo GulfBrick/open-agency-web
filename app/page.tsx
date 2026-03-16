@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getStatus, getAgents, sendNikitaMessage, getTaskResults } from "@/lib/api";
+import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,6 +18,17 @@ interface StatusData {
   pipeline: { total: number; hot: number; warm: number; cold: number; won?: number };
   finances: { revenue: number; expenses: number; profit: number; cashPosition?: number };
   systemHealth: { uptime: number; uptimeFormatted: string; bootCount: number; registeredAgents: number };
+}
+
+interface Task {
+  id: string;
+  agentId?: string;
+  agentName?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+  completedAt?: string;
+  result?: unknown;
 }
 
 // ─── Agent Config ────────────────────────────────────────────────────────────
@@ -479,6 +490,7 @@ export default function Dashboard() {
   const [loaded, setLoaded] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [taskQueue, setTaskQueue] = useState<Task[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
 
@@ -509,7 +521,7 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, agentsRes] = await Promise.allSettled([getStatus(), getAgents()]);
+      const [statusRes, agentsRes, taskRes] = await Promise.allSettled([getStatus(), getAgents(), getTaskQueue()]);
 
       if (statusRes.status === "fulfilled" && statusRes.value) {
         setStatus(statusRes.value);
@@ -531,6 +543,12 @@ export default function Dashboard() {
           };
         });
         if (mapped.length > 0) setAgents(mapped);
+      }
+
+      if (taskRes.status === "fulfilled") {
+        const raw = taskRes.value;
+        const arr: Task[] = Array.isArray(raw) ? raw : Array.isArray(raw?.tasks) ? raw.tasks : [];
+        setTaskQueue(arr.slice(-50).reverse()); // most recent first, cap at 50
       }
     } catch {
       setApiOnline(false);
@@ -874,28 +892,44 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Active Sprint */}
+          {/* Live Task Queue */}
           <div className="dash-card card-sprint">
             <div className="dash-card-title">
-              <span className="card-icon">&#128640;</span> Active Sprint
-              <span className="card-badge sprint-badge">LIVE</span>
+              <span className="card-icon">&#9889;</span> Live Task Queue
+              <span className="card-badge sprint-badge">{taskQueue.length || "0"}</span>
             </div>
-            <div className="sprint-list">
-              {[
-                { label: "Web dashboard v2", status: "done", color: "green" },
-                { label: "Animated building + floors", status: "done", color: "green" },
-                { label: "Agent chat bubbles", status: "done", color: "green" },
-                { label: "Live activity log", status: "building", color: "amber" },
-                { label: "Client onboarding flow", status: "queued", color: "muted" },
-              ].map((item, i) => (
-                <div key={i} className="sprint-item">
-                  <span className={`sprint-dot color-${item.color}`}>
-                    {item.status === "done" ? "✓" : item.status === "building" ? "⟳" : "○"}
-                  </span>
-                  <span className={`sprint-label${item.status === "done" ? " done" : ""}`}>{item.label}</span>
-                  <span className={`sprint-status color-${item.color}`}>{item.status}</span>
-                </div>
-              ))}
+            <div className="task-queue-stats">
+              {(["pending","in_progress","completed","failed"] as const).map((st) => {
+                const count = taskQueue.filter(t => (t.status || "").toLowerCase() === st).length;
+                const colorMap: Record<string,string> = { pending: "amber", in_progress: "blue", completed: "green", failed: "rose" };
+                const labelMap: Record<string,string> = { pending: "Pending", in_progress: "Active", completed: "Done", failed: "Failed" };
+                return (
+                  <div key={st} className={`tq-stat color-${colorMap[st]}`}>
+                    <div className="tq-stat-value">{count}</div>
+                    <div className="tq-stat-label">{labelMap[st]}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="task-feed-list">
+              {taskQueue.length === 0 ? (
+                <div className="task-feed-empty">{apiOnline ? "No tasks yet" : "Loading..."}</div>
+              ) : (
+                taskQueue.slice(0, 6).map((task, i) => {
+                  const st = (task.status || "pending").toLowerCase();
+                  const dotColor = st === "completed" ? "green" : st === "in_progress" ? "blue" : st === "failed" ? "rose" : "amber";
+                  const cfg = FLOOR_CONFIG[task.agentId || ""];
+                  const name = cfg?.name || task.agentName || task.agentId || "Agent";
+                  const desc = task.description || "Task";
+                  return (
+                    <div key={task.id || i} className="task-feed-item">
+                      <span className={`task-feed-dot color-${dotColor}`}>●</span>
+                      <span className="task-feed-agent">{name}</span>
+                      <span className="task-feed-desc">{desc.length > 38 ? desc.slice(0, 38) + "…" : desc}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

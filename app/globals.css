@@ -1826,12 +1826,90 @@ body {
   box-shadow: none;
 }
 
-/* ─── Sprint Card ─────────────────────────────────────── */
+/* ─── Live Task Queue Card ───────────────────────────── */
 .sprint-badge {
-  background: rgba(244, 63, 94, 0.15);
-  color: var(--rose);
-  border-color: rgba(244, 63, 94, 0.25);
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--blue);
+  border-color: rgba(59, 130, 246, 0.25);
   animation: badgePulse 2s ease-in-out infinite;
+}
+
+.task-queue-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.tq-stat {
+  text-align: center;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tq-stat-value {
+  font-family: var(--heading);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tq-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.task-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.task-feed-item {
+  display: grid;
+  grid-template-columns: 12px 52px 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.task-feed-item:last-child {
+  border-bottom: none;
+}
+
+.task-feed-dot {
+  font-size: 7px;
+  text-align: center;
+}
+
+.task-feed-agent {
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-feed-desc {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-feed-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 0;
 }
 
 @keyframes badgePulse {
