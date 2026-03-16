@@ -15,106 +15,96 @@ interface Agent {
 
 interface StatusData {
   agents: { id: string; name: string; role: string; status: string }[];
-  pipeline: { total: number; hot: number; warm: number; cold: number };
-  finances: { revenue: number; expenses: number; profit: number };
+  pipeline: { total: number; hot: number; warm: number; cold: number; won?: number };
+  finances: { revenue: number; expenses: number; profit: number; cashPosition?: number };
   systemHealth: { uptime: number; uptimeFormatted: string; bootCount: number; registeredAgents: number };
 }
 
 // ─── Agent Config ────────────────────────────────────────────────────────────
 
-const FLOOR_ORDER = ["CEO", "Creative", "Sales", "Dev", "C-Suite"] as const;
-
-const FLOOR_META: Record<string, {
-  number: string;
-  icon: string;
-  labelColor: string;
-  borderGradient: string;
-  glowColor: string;
-  badgeColor: string;
-  windowGlow: string;
-}> = {
-  CEO: {
-    number: "05",
-    icon: "\uD83D\uDC51",
-    labelColor: "transparent",
-    borderGradient: "linear-gradient(180deg, #F59E0B, #7C3AED, rgba(124, 58, 237, 0.2))",
-    glowColor: "rgba(245, 158, 11, 0.06)",
-    badgeColor: "rgba(245, 158, 11, 0.20)",
-    windowGlow: "linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(124, 58, 237, 0.06))",
-  },
-  Creative: {
-    number: "04",
-    icon: "\uD83C\uDFA8",
-    labelColor: "#F43F5E",
-    borderGradient: "linear-gradient(180deg, #F43F5E, rgba(244, 63, 94, 0.2))",
-    glowColor: "rgba(244, 63, 94, 0.25)",
-    badgeColor: "rgba(244, 63, 94, 0.15)",
-    windowGlow: "#F43F5E",
-  },
-  Sales: {
-    number: "03",
-    icon: "\uD83D\uDCBC",
-    labelColor: "#F59E0B",
-    borderGradient: "linear-gradient(180deg, #F59E0B, rgba(245, 158, 11, 0.2))",
-    glowColor: "rgba(245, 158, 11, 0.25)",
-    badgeColor: "rgba(245, 158, 11, 0.15)",
-    windowGlow: "#F59E0B",
-  },
-  Dev: {
-    number: "02",
-    icon: "\uD83D\uDE80",
-    labelColor: "#3B82F6",
-    borderGradient: "linear-gradient(180deg, #3B82F6, rgba(59, 130, 246, 0.2))",
-    glowColor: "rgba(59, 130, 246, 0.25)",
-    badgeColor: "rgba(59, 130, 246, 0.15)",
-    windowGlow: "#3B82F6",
-  },
-  "C-Suite": {
-    number: "01",
-    icon: "\uD83D\uDC51",
-    labelColor: "#7C3AED",
-    borderGradient: "linear-gradient(180deg, #7C3AED, rgba(124, 58, 237, 0.2))",
-    glowColor: "rgba(124, 58, 237, 0.25)",
-    badgeColor: "rgba(124, 58, 237, 0.15)",
-    windowGlow: "#7C3AED",
-  },
+const FLOOR_CONFIG: Record<string, { floor: string; name: string; role: string }> = {
+  nikita:             { floor: "ceo", name: "Nikita", role: "CEO" },
+  "creative-director":{ floor: "creative", name: "Nova", role: "Creative Director" },
+  designer:           { floor: "creative", name: "Iris", role: "Designer" },
+  "video-editor":     { floor: "creative", name: "Finn", role: "Video" },
+  "social-media":     { floor: "creative", name: "Jade", role: "Social" },
+  copywriter:         { floor: "creative", name: "Ash", role: "Copy" },
+  "sales-lead":       { floor: "sales", name: "Jordan", role: "Sales Lead" },
+  closer:             { floor: "sales", name: "Closer", role: "Closer" },
+  "lead-qualifier":   { floor: "sales", name: "Qualifier", role: "Lead Qual" },
+  "follow-up":        { floor: "sales", name: "Follow-Up", role: "Follow-Up" },
+  proposal:           { floor: "sales", name: "Proposal", role: "Proposals" },
+  "dev-lead":         { floor: "dev", name: "Kai", role: "Dev Lead" },
+  architect:          { floor: "dev", name: "Architect", role: "Architect" },
+  frontend:           { floor: "dev", name: "Frontend", role: "Frontend" },
+  backend:            { floor: "dev", name: "Backend", role: "Backend" },
+  fullstack:          { floor: "dev", name: "Fullstack", role: "Fullstack" },
+  qa:                 { floor: "dev", name: "QA", role: "QA" },
+  "code-review":      { floor: "dev", name: "Reviewer", role: "Code Review" },
+  cfo:                { floor: "csuite", name: "Marcus", role: "CFO" },
+  cto:                { floor: "csuite", name: "Zara", role: "CTO" },
+  cmo:                { floor: "csuite", name: "Priya", role: "CMO" },
 };
 
-const AVATAR_GRADIENT: Record<string, { bg: string; shadow: string }> = {
-  CEO:        { bg: "linear-gradient(135deg, #7C3AED, #A78BFA, #F59E0B)", shadow: "0 0 24px rgba(124, 58, 237, 0.4), 0 0 48px rgba(245, 158, 11, 0.15)" },
-  "C-Suite":  { bg: "linear-gradient(135deg, #7C3AED, #A78BFA)", shadow: "0 0 12px rgba(124, 58, 237, 0.3)" },
-  Dev:        { bg: "linear-gradient(135deg, #3B82F6, #60A5FA)", shadow: "0 0 12px rgba(59, 130, 246, 0.3)" },
-  Sales:      { bg: "linear-gradient(135deg, #F59E0B, #FBBF24)", shadow: "0 0 12px rgba(245, 158, 11, 0.3)" },
-  Creative:   { bg: "linear-gradient(135deg, #F43F5E, #FB7185)", shadow: "0 0 12px rgba(244, 63, 94, 0.3)" },
+const AVATAR_CLASS: Record<string, string> = {
+  ceo: "ceo",
+  creative: "creative",
+  sales: "sales",
+  dev: "dev",
+  csuite: "csuite",
 };
 
 const DEFAULT_AGENTS: Agent[] = [
-  { id: "nikita", name: "Nikita", role: "CEO", status: "standing-by", floor: "CEO" },
-  { id: "marcus", name: "Marcus", role: "CFO", status: "standing-by", floor: "C-Suite" },
-  { id: "zara", name: "Zara", role: "CTO", status: "standing-by", floor: "C-Suite" },
-  { id: "priya", name: "Priya", role: "CMO", status: "standing-by", floor: "C-Suite" },
-  { id: "kai", name: "Kai", role: "Dev Lead", status: "standing-by", floor: "Dev" },
-  { id: "architect", name: "Architect", role: "Architect", status: "standing-by", floor: "Dev" },
-  { id: "frontend", name: "Frontend", role: "Frontend Dev", status: "standing-by", floor: "Dev" },
-  { id: "backend", name: "Backend", role: "Backend Dev", status: "standing-by", floor: "Dev" },
-  { id: "fullstack", name: "Fullstack", role: "Fullstack Dev", status: "standing-by", floor: "Dev" },
-  { id: "qa", name: "QA", role: "QA Engineer", status: "standing-by", floor: "Dev" },
-  { id: "code-reviewer", name: "Code Reviewer", role: "Code Reviewer", status: "standing-by", floor: "Dev" },
-  { id: "jordan", name: "Jordan", role: "Sales Lead", status: "standing-by", floor: "Sales" },
-  { id: "closer", name: "Closer", role: "Closer", status: "standing-by", floor: "Sales" },
-  { id: "lead-qualifier", name: "Lead Qualifier", role: "Lead Qualifier", status: "standing-by", floor: "Sales" },
-  { id: "follow-up", name: "Follow-Up", role: "Follow-Up", status: "standing-by", floor: "Sales" },
-  { id: "proposal", name: "Proposal", role: "Proposal Writer", status: "standing-by", floor: "Sales" },
-  { id: "nova", name: "Nova", role: "Creative Director", status: "standing-by", floor: "Creative" },
-  { id: "iris", name: "Iris", role: "Designer", status: "standing-by", floor: "Creative" },
-  { id: "finn", name: "Finn", role: "Video Producer", status: "standing-by", floor: "Creative" },
-  { id: "jade", name: "Jade", role: "Social Media", status: "standing-by", floor: "Creative" },
-  { id: "ash", name: "Ash", role: "Copywriter", status: "standing-by", floor: "Creative" },
+  { id: "nikita", name: "Nikita", role: "CEO", status: "standing-by", floor: "ceo" },
+  { id: "creative-director", name: "Nova", role: "Creative Director", status: "standing-by", floor: "creative" },
+  { id: "designer", name: "Iris", role: "Designer", status: "standing-by", floor: "creative" },
+  { id: "video-editor", name: "Finn", role: "Video", status: "standing-by", floor: "creative" },
+  { id: "social-media", name: "Jade", role: "Social", status: "standing-by", floor: "creative" },
+  { id: "copywriter", name: "Ash", role: "Copy", status: "standing-by", floor: "creative" },
+  { id: "sales-lead", name: "Jordan", role: "Sales Lead", status: "standing-by", floor: "sales" },
+  { id: "closer", name: "Closer", role: "Closer", status: "standing-by", floor: "sales" },
+  { id: "lead-qualifier", name: "Qualifier", role: "Lead Qual", status: "standing-by", floor: "sales" },
+  { id: "follow-up", name: "Follow-Up", role: "Follow-Up", status: "standing-by", floor: "sales" },
+  { id: "proposal", name: "Proposal", role: "Proposals", status: "standing-by", floor: "sales" },
+  { id: "dev-lead", name: "Kai", role: "Dev Lead", status: "standing-by", floor: "dev" },
+  { id: "architect", name: "Architect", role: "Architect", status: "standing-by", floor: "dev" },
+  { id: "frontend", name: "Frontend", role: "Frontend", status: "standing-by", floor: "dev" },
+  { id: "backend", name: "Backend", role: "Backend", status: "standing-by", floor: "dev" },
+  { id: "fullstack", name: "Fullstack", role: "Fullstack", status: "standing-by", floor: "dev" },
+  { id: "qa", name: "QA", role: "QA", status: "standing-by", floor: "dev" },
+  { id: "code-review", name: "Reviewer", role: "Code Review", status: "standing-by", floor: "dev" },
+  { id: "cfo", name: "Marcus", role: "CFO", status: "standing-by", floor: "csuite" },
+  { id: "cto", name: "Zara", role: "CTO", status: "standing-by", floor: "csuite" },
+  { id: "cmo", name: "Priya", role: "CMO", status: "standing-by", floor: "csuite" },
 ];
 
-const BUBBLE_TEXT: Record<string, string> = {
-  nikita: "Running the agency...",
-};
+const FLOOR_ORDER = [
+  { key: "ceo", cssClass: "floor-ceo", number: "05", icon: "\uD83D\uDC51", label: "Floor 5", name: "CEO \u00B7 Nikita \uD83D\uDC51" },
+  { key: "creative", cssClass: "floor-creative", number: "04", icon: "\uD83C\uDFA8", label: "Floor 4", name: "Creative" },
+  { key: "sales", cssClass: "floor-sales", number: "03", icon: "\uD83D\uDCBC", label: "Floor 3", name: "Sales" },
+  { key: "dev", cssClass: "floor-dev", number: "02", icon: "\uD83D\uDE80", label: "Floor 2", name: "Dev Team" },
+  { key: "csuite", cssClass: "floor-csuite", number: "01", icon: "\uD83D\uDC51", label: "Floor 1", name: "C-Suite" },
+];
+
+function isOnline(status: string) {
+  return status === "active" || status === "working" || status === "online";
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/[\s()]+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getBubbleText(agentId: string, status: string) {
+  if (agentId === "nikita") return "Running the agency...";
+  if (isOnline(status)) return "Working...";
+  return "Standing by";
+}
 
 // ─── Rooftop Star Particles ──────────────────────────────────────────────────
 
@@ -125,334 +115,86 @@ function RooftopParticles() {
     const container = containerRef.current;
     if (!container) return;
 
-    // Floating particles
     for (let i = 0; i < 30; i++) {
       const p = document.createElement("div");
       p.className = "particle";
       p.style.left = Math.random() * 100 + "%";
       p.style.bottom = Math.random() * 40 + "%";
-      p.style.animationDuration = (4 + Math.random() * 6) + "s";
-      p.style.animationDelay = (Math.random() * 8) + "s";
-      const size = (1.5 + Math.random() * 2.5) + "px";
+      p.style.animationDuration = 4 + Math.random() * 6 + "s";
+      p.style.animationDelay = Math.random() * 8 + "s";
+      const size = 1.5 + Math.random() * 2.5 + "px";
       p.style.width = size;
       p.style.height = size;
       p.style.opacity = String(0.4 + Math.random() * 0.6);
       container.appendChild(p);
     }
 
-    // Twinkling stars
     for (let i = 0; i < 20; i++) {
       const s = document.createElement("div");
       s.className = "particle twinkle star";
       s.style.left = Math.random() * 100 + "%";
       s.style.top = Math.random() * 70 + "%";
-      const size = (2 + Math.random() * 3) + "px";
+      const size = 2 + Math.random() * 3 + "px";
       s.style.width = size;
       s.style.height = size;
-      s.style.animationDuration = (2 + Math.random() * 4) + "s";
-      s.style.animationDelay = (Math.random() * 5) + "s";
+      s.style.animationDuration = 2 + Math.random() * 4 + "s";
+      s.style.animationDelay = Math.random() * 5 + "s";
       container.appendChild(s);
     }
 
-    return () => { container.innerHTML = ""; };
+    return () => {
+      container.innerHTML = "";
+    };
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        position: "absolute",
-        top: 0, left: 0, right: 0, bottom: 0,
-        pointerEvents: "none",
-        overflow: "hidden",
-        zIndex: 0,
-      }}
-    />
-  );
+  return <div ref={containerRef} className="rooftop-particles" />;
 }
 
-// ─── Agent Desk (building-style) ─────────────────────────────────────────────
+// ─── Agent Desk ─────────────────────────────────────────────────────────────
 
-function AgentDesk({ agent, index }: { agent: Agent; index: number }) {
-  const isCeo = agent.floor === "CEO";
-  const isOnline = agent.status === "active" || agent.status === "working" || agent.status === "online";
-  const grad = AVATAR_GRADIENT[agent.floor] || AVATAR_GRADIENT.Dev;
-  const bubbleText = BUBBLE_TEXT[agent.id] || (isOnline ? "Working..." : "Standing by");
-  const initials = agent.name.split(/[\s()]+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+function AgentDesk({ agent }: { agent: Agent }) {
+  const isCeo = agent.floor === "ceo";
+  const online = isOnline(agent.status);
+  const avatarClass = AVATAR_CLASS[agent.floor] || "default";
+  const initials = getInitials(agent.name);
+  const bubbleText = getBubbleText(agent.id, agent.status);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "relative",
-        minWidth: isCeo ? 100 : 80,
-        zIndex: 1,
-        animation: `agentBreathe 4s ease-in-out infinite`,
-        animationDelay: `${(index % 7) * 0.4}s`,
-      }}
-    >
-      {/* Speech bubble */}
-      <div
-        style={{
-          position: "relative",
-          background: "rgba(15, 22, 35, 0.85)",
-          backdropFilter: "blur(12px)",
-          border: isCeo ? "1px solid rgba(245, 158, 11, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)",
-          borderRadius: 10,
-          padding: "6px 12px",
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          color: "var(--text-dim)",
-          maxWidth: isCeo ? 200 : 150,
-          textAlign: "center",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          marginBottom: 8,
-          animation: `bubbleFade 5s ease-in-out infinite`,
-          animationDelay: `${index * 0.8}s`,
-        }}
-      >
-        {bubbleText}
-        <div
-          style={{
-            position: "absolute",
-            bottom: -5,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 0, height: 0,
-            borderLeft: "5px solid transparent",
-            borderRight: "5px solid transparent",
-            borderTop: "5px solid rgba(15, 22, 35, 0.85)",
-          }}
-        />
-      </div>
-
-      {/* Avatar */}
-      <div
-        style={{
-          width: isCeo ? 60 : 44,
-          height: isCeo ? 60 : 44,
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "var(--font-sans)",
-          fontWeight: 700,
-          fontSize: isCeo ? 18 : 14,
-          color: "#fff",
-          background: grad.bg,
-          backgroundSize: isCeo ? "200% 200%" : undefined,
-          animation: isCeo ? "ceoAvatarShift 4s ease-in-out infinite" : undefined,
-          boxShadow: isOnline
-            ? `0 0 0 3px rgba(16, 185, 129, 0.25), 0 0 16px rgba(16, 185, 129, 0.15), ${grad.shadow}`
-            : grad.shadow,
-          position: "relative",
-          transition: "transform 0.3s, box-shadow 0.3s",
-          cursor: "pointer",
-          opacity: isOnline ? 1 : 0.45,
-          filter: isOnline ? undefined : "grayscale(0.4)",
-        }}
-      >
+    <div className={`agent-desk${isCeo ? " ceo-desk" : ""}${online ? " is-online" : ""}`}>
+      <div className="bubble">{bubbleText}</div>
+      <div className={`desk-avatar ${avatarClass}${isCeo ? " ceo" : ""} ${online ? "online" : "offline"}`}>
         {initials}
-        {/* Status indicator dot */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0, right: 0,
-            width: isCeo ? 12 : 10,
-            height: isCeo ? 12 : 10,
-            borderRadius: "50%",
-            border: "2px solid var(--bg)",
-            background: isOnline ? "var(--green)" : "var(--text-muted)",
-            boxShadow: isOnline ? "0 0 6px rgba(16, 185, 129, 0.6)" : "none",
-            animation: isOnline ? "pulse-glow 2s ease-in-out infinite" : "none",
-          }}
-        />
+        <div className={`status-indicator ${online ? "online" : "offline"}`} />
       </div>
-
-      {/* Name */}
-      <div
-        style={{
-          marginTop: 6,
-          fontFamily: "var(--font-sans)",
-          fontSize: isCeo ? 13 : 11,
-          fontWeight: isCeo ? 700 : 600,
-          color: "var(--text-primary)",
-          textAlign: "center",
-          whiteSpace: "nowrap",
-          maxWidth: isCeo ? 100 : 72,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          ...(isCeo ? {
-            background: "linear-gradient(135deg, #F59E0B, #A78BFA)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          } : {}),
-        }}
-      >
-        {agent.name}
-      </div>
-
-      {/* Role */}
-      <div style={{ fontSize: 9, color: "var(--text-muted)", textAlign: "center", marginTop: 1 }}>
-        {agent.role}
-      </div>
-
-      {/* Desk platform */}
-      <div
-        style={{
-          width: isCeo ? 76 : 64,
-          height: 6,
-          marginTop: 4,
-          borderRadius: 3,
-          background: isCeo
-            ? "linear-gradient(90deg, rgba(245, 158, 11, 0.06), rgba(124, 58, 237, 0.06))"
-            : "rgba(255, 255, 255, 0.035)",
-          border: isCeo
-            ? "1px solid rgba(245, 158, 11, 0.08)"
-            : "1px solid rgba(255, 255, 255, 0.025)",
-        }}
-      />
+      <div className="desk-name">{agent.name}</div>
+      <div className="desk-role">{agent.role}</div>
+      <div className="desk-platform" />
     </div>
   );
 }
 
-// ─── Building Floor ──────────────────────────────────────────────────────────
+// ─── Building Floor ─────────────────────────────────────────────────────────
 
-function BuildingFloor({ floorName, agents, startIndex }: { floorName: string; agents: Agent[]; startIndex: number }) {
-  const meta = FLOOR_META[floorName] || FLOOR_META.Dev;
-  const isCeo = floorName === "CEO";
-
+function BuildingFloor({
+  floorDef,
+  agents,
+}: {
+  floorDef: (typeof FLOOR_ORDER)[number];
+  agents: Agent[];
+}) {
   return (
-    <div
-      style={{
-        borderBottom: "1px solid rgba(255, 255, 255, 0.03)",
-        position: "relative",
-        transition: "background 0.3s",
-        background: isCeo ? "linear-gradient(135deg, rgba(245, 158, 11, 0.03), rgba(124, 58, 237, 0.03))" : undefined,
-      }}
-    >
-      {/* Floor separator gradient line */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0, left: 0, right: 0,
-          height: 3,
-          background: "linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.06) 10%, rgba(255, 255, 255, 0.07) 30%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.07) 70%, rgba(124, 58, 237, 0.06) 90%, transparent 100%)",
-        }}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "140px 1fr",
-          minHeight: isCeo ? 170 : 150,
-        }}
-      >
-        {/* Floor label (left column) */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            padding: "20px 16px 20px 20px",
-            borderRight: "1px solid rgba(255, 255, 255, 0.03)",
-            position: "relative",
-          }}
-        >
-          {/* Coloured left border strip */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0, left: 0,
-              width: 4, height: "100%",
-              background: meta.borderGradient,
-            }}
-          />
-
-          <div
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 32,
-              fontWeight: 800,
-              lineHeight: 1,
-              letterSpacing: -1,
-              marginBottom: 4,
-              color: meta.badgeColor,
-            }}
-          >
-            {meta.number}
-          </div>
-          <div style={{ fontSize: 22, marginBottom: 4, filter: "saturate(1.2)" }}>
-            {meta.icon}
-          </div>
-          <div
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 10,
-              fontWeight: 700,
-              color: "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: 2,
-              marginBottom: 4,
-            }}
-          >
-            Floor {meta.number}
-          </div>
-          <div
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 16,
-              fontWeight: 800,
-              letterSpacing: -0.3,
-              ...(isCeo ? {
-                background: "linear-gradient(135deg, #F59E0B, #A78BFA)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              } : {
-                color: meta.labelColor,
-              }),
-            }}
-          >
-            {isCeo ? `CEO \u00B7 Nikita \uD83D\uDC51` : floorName}
-          </div>
+    <div className={`floor ${floorDef.cssClass}`}>
+      <div className="floor-inner">
+        <div className="floor-label">
+          <div className="floor-number-badge">{floorDef.number}</div>
+          <div className="floor-icon">{floorDef.icon}</div>
+          <div className="floor-number">{floorDef.label}</div>
+          <div className="floor-name">{floorDef.name}</div>
         </div>
-
-        {/* Agent desks (right column) */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 24,
-            padding: "20px 24px",
-            position: "relative",
-          }}
-        >
-          {/* Window glow */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%", left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "80%", height: "70%",
-              borderRadius: 8,
-              pointerEvents: "none",
-              opacity: 0.04,
-              zIndex: 0,
-              background: meta.windowGlow,
-              animation: "pulse-glow 6s ease-in-out infinite",
-            }}
-          />
-
-          {agents.map((agent, i) => (
-            <AgentDesk key={agent.id} agent={agent} index={startIndex + i} />
+        <div className="floor-desks">
+          <div className="window-glow" />
+          {agents.map((agent) => (
+            <AgentDesk key={agent.id} agent={agent} />
           ))}
         </div>
       </div>
@@ -460,212 +202,93 @@ function BuildingFloor({ floorName, agents, startIndex }: { floorName: string; a
   );
 }
 
-// ─── Ground Floor Stats ──────────────────────────────────────────────────────
+// ─── Nikita Chat Sidebar ────────────────────────────────────────────────────
 
-function GroundStats({ stats }: { stats: { icon: string; value: string | number; label: string; color: string }[] }) {
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: 1,
-        background: "rgba(255, 255, 255, 0.02)",
-        borderTop: "2px solid rgba(124, 58, 237, 0.08)",
-      }}
-    >
-      {stats.map((stat, i) => (
-        <div
-          key={stat.label}
-          style={{
-            padding: "24px 20px",
-            background: "rgba(15, 22, 35, 0.7)",
-            textAlign: "center",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* Decorative circle glow */}
-          <div
-            style={{
-              position: "absolute",
-              top: -30, right: -30,
-              width: 80, height: 80,
-              borderRadius: "50%",
-              opacity: 0.05,
-              pointerEvents: "none",
-              background: stat.color,
-            }}
-          />
-          <div style={{ fontSize: 18, marginBottom: 8, color: stat.color }}>{stat.icon}</div>
-          <div
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 28,
-              fontWeight: 800,
-              letterSpacing: -1,
-              lineHeight: 1,
-              color: stat.color,
-            }}
-          >
-            {stat.value}
-          </div>
-          <div
-            style={{
-              fontSize: 11,
-              color: "var(--text-muted)",
-              fontWeight: 500,
-              marginTop: 4,
-              letterSpacing: 0.3,
-            }}
-          >
-            {stat.label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+interface ChatMessage {
+  role: "user" | "nikita";
+  text: string;
+  time: string;
 }
 
-// ─── Chat Bar ────────────────────────────────────────────────────────────────
-
-function ChatBar({
+function NikitaChat({
   onSend,
   isLoading,
-  lastReply,
+  messages,
 }: {
   onSend: (msg: string) => void;
   isLoading: boolean;
-  lastReply: string | null;
+  messages: ChatMessage[];
 }) {
-  const [message, setMessage] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const threadRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (threadRef.current) {
+      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading) return;
-    onSend(message.trim());
-    setMessage("");
+    if (!input.trim() || isLoading) return;
+    onSend(input.trim());
+    setInput("");
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0, left: 0, right: 0,
-        zIndex: 50,
-        background: "linear-gradient(to top, var(--bg) 60%, transparent)",
-        paddingTop: "2rem",
-      }}
-    >
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 16px" }}>
-        {lastReply && (
-          <div
-            className="animate-slide-up"
-            style={{
-              marginBottom: 12,
-              padding: 16,
-              borderRadius: 16,
-              fontSize: 13,
-              lineHeight: 1.6,
-              background: "var(--bg-card)",
-              border: "1px solid var(--card-border)",
-              color: "rgba(255,255,255,0.8)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div
-                style={{
-                  width: 24, height: 24,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 10,
-                  fontWeight: 800,
-                  color: "#fff",
-                  background: "linear-gradient(135deg, #7C3AED, #A78BFA)",
-                }}
-              >
-                N
+    <>
+      <button
+        className="nikita-chat-toggle"
+        style={{ display: open ? "none" : undefined }}
+        onClick={() => setOpen(true)}
+        title="Chat with Nikita"
+      >
+        &#128172;
+      </button>
+
+      <div className={`nikita-chat${open ? " open" : ""}`}>
+        <button className="nikita-chat-close" onClick={() => setOpen(false)} title="Close chat">
+          &#10005;
+        </button>
+        <div className="nikita-chat-thread" ref={threadRef}>
+          <div className="nikita-chat-thread-inner">
+            {messages.map((msg, i) => (
+              <div key={i} className={`chat-msg ${msg.role}`}>
+                <div className="chat-msg-text">{msg.text}</div>
+                <div className="chat-msg-time">{msg.time}</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#7C3AED" }}>Nikita</span>
-            </div>
-            {lastReply}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} style={{ position: "relative" }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Message Nikita..."
-            disabled={isLoading}
-            style={{
-              width: "100%",
-              height: 56,
-              paddingLeft: 20,
-              paddingRight: 56,
-              borderRadius: 16,
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#fff",
-              outline: "none",
-              background: "rgba(15, 22, 35, 0.8)",
-              border: "1px solid rgba(124, 58, 237, 0.12)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-              fontFamily: "var(--font-sans)",
-              transition: "border-color 0.2s, box-shadow 0.2s",
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = "rgba(124, 58, 237, 0.35)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.3), 0 0 16px rgba(124, 58, 237, 0.06)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "rgba(124, 58, 237, 0.12)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.3)";
-            }}
-          />
-          <button
-            type="submit"
-            disabled={!message.trim() || isLoading}
-            style={{
-              position: "absolute",
-              right: 8, top: "50%",
-              transform: "translateY(-50%)",
-              width: 40, height: 40,
-              borderRadius: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "none",
-              cursor: message.trim() ? "pointer" : "default",
-              background: message.trim() ? "linear-gradient(135deg, #7C3AED, #6D28D9)" : "rgba(255,255,255,0.05)",
-              transition: "all 0.2s",
-              opacity: !message.trim() || isLoading ? 0.4 : 1,
-            }}
-          >
-            {isLoading ? (
-              <div
-                style={{
-                  width: 16, height: 16,
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff",
-                  borderRadius: "50%",
-                  animation: "spin 0.8s linear infinite",
-                }}
-              />
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
+            ))}
+            {isLoading && (
+              <div className="chat-msg nikita">
+                <div className="chat-msg-text">Thinking...</div>
+              </div>
             )}
-          </button>
-        </form>
+          </div>
+        </div>
+        <div className="nikita-chat-bar">
+          <form onSubmit={handleSubmit} className="nikita-chat-bar-inner">
+            <input
+              type="text"
+              className="nikita-chat-input"
+              placeholder="Message Nikita..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={isLoading}
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              className="nikita-chat-send"
+              disabled={!input.trim() || isLoading}
+              title="Send"
+            >
+              &#9654;
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -674,16 +297,14 @@ function ChatBar({
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>(DEFAULT_AGENTS);
   const [status, setStatus] = useState<StatusData | null>(null);
-  const [chatReply, setChatReply] = useState<string | null>(null);
-  const [chatLoading, setChatLoading] = useState(false);
   const [apiOnline, setApiOnline] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, agentsRes] = await Promise.allSettled([
-        getStatus(),
-        getAgents(),
-      ]);
+      const [statusRes, agentsRes] = await Promise.allSettled([getStatus(), getAgents()]);
 
       if (statusRes.status === "fulfilled" && statusRes.value) {
         setStatus(statusRes.value);
@@ -693,13 +314,17 @@ export default function Dashboard() {
       }
 
       if (agentsRes.status === "fulfilled" && Array.isArray(agentsRes.value)) {
-        const mapped: Agent[] = agentsRes.value.map((a: Record<string, unknown>) => ({
-          id: typeof a.id === 'string' ? a.id : String(a.id || a.name || ""),
-          name: typeof a.name === 'string' ? a.name : "Unknown",
-          role: typeof a.role === 'string' ? a.role : "",
-          status: typeof a.status === 'string' ? a.status : "standing-by",
-          floor: typeof a.floor === 'string' ? a.floor : (typeof a.department === 'string' ? a.department : "Dev"),
-        }));
+        const mapped: Agent[] = agentsRes.value.map((a: Record<string, unknown>) => {
+          const id = typeof a.id === "string" ? a.id : String(a.id || a.name || "");
+          const cfg = FLOOR_CONFIG[id];
+          return {
+            id,
+            name: cfg?.name || (typeof a.name === "string" ? a.name : "Unknown"),
+            role: cfg?.role || (typeof a.role === "string" ? a.role : ""),
+            status: typeof a.status === "string" ? a.status : "standing-by",
+            floor: cfg?.floor || (typeof a.floor === "string" ? a.floor : typeof a.department === "string" ? a.department : "dev"),
+          };
+        });
         if (mapped.length > 0) setAgents(mapped);
       }
     } catch {
@@ -708,18 +333,20 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    fetchData().then(() => setLoaded(true));
     const interval = setInterval(fetchData, 10_000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
   const handleSendMessage = async (message: string) => {
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setChatMessages((prev) => [...prev, { role: "user", text: message, time: now }]);
     setChatLoading(true);
-    setChatReply(null);
     try {
       const res = await sendNikitaMessage(message);
       const reply = res.reply || res.message || res.response || JSON.stringify(res);
-      setChatReply(reply);
+      const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setChatMessages((prev) => [...prev, { role: "nikita", text: reply, time: replyTime }]);
 
       if ("speechSynthesis" in window) {
         const utterance = new SpeechSynthesisUtterance(reply);
@@ -728,347 +355,299 @@ export default function Dashboard() {
         window.speechSynthesis.speak(utterance);
       }
     } catch {
-      setChatReply("Connection to Nikita unavailable. The agency will be online shortly.");
+      const errorTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "nikita", text: "Connection to Nikita unavailable. The agency will be online shortly.", time: errorTime },
+      ]);
     } finally {
       setChatLoading(false);
     }
   };
 
-  // Group agents by floor in order
-  const floorGroups: { floor: string; agents: Agent[] }[] = [];
-  for (const floor of FLOOR_ORDER) {
-    const floorAgents = agents.filter((a) => a.floor === floor);
-    if (floorAgents.length > 0) {
-      floorGroups.push({ floor, agents: floorAgents });
-    }
-  }
-  const knownFloors = new Set<string>(FLOOR_ORDER);
-  const extraAgents = agents.filter((a) => !knownFloors.has(a.floor));
-  if (extraAgents.length > 0) {
-    floorGroups.push({ floor: "Other", agents: extraAgents });
-  }
+  // Count online agents
+  const onlineCount = agents.filter((a) => isOnline(a.status)).length;
 
-  const groundStats = [
-    { icon: "\u25CF", value: status?.systemHealth?.registeredAgents ?? agents.length, label: "Agents Online", color: "#7C3AED" },
-    { icon: "\u25C6", value: status?.pipeline?.total ?? 0, label: "Pipeline", color: "#10B981" },
-    { icon: "\u00A3", value: status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u00A30", label: "Revenue", color: "#A78BFA" },
-    { icon: "\u26A1", value: status?.systemHealth?.bootCount ?? 0, label: "Boot Count", color: "#F59E0B" },
-  ];
-
-  let runningIndex = 0;
+  // Pipeline helpers
+  const pipeTotal = status?.pipeline?.total || 1;
+  const pipeHot = status?.pipeline?.hot ?? 0;
+  const pipeWarm = status?.pipeline?.warm ?? 0;
+  const pipeCold = status?.pipeline?.cold ?? 0;
+  const pipeWon = (status?.pipeline as Record<string, number>)?.won ?? 0;
 
   return (
     <>
-      {/* Top gradient rainbow bar */}
+      {/* Loading Overlay */}
+      <div className={`loading-overlay${loaded ? " hidden" : ""}`}>
+        <div className="load-logo">Open Agency</div>
+        <div className="load-spinner" />
+        <div className="load-text">Initialising systems...</div>
+      </div>
+
+      {/* Top Gradient Bar */}
       <div className="top-gradient-bar" />
 
-      {/* Scanline overlay */}
+      {/* Subtle Overlays */}
       <div className="scanline-overlay" />
+      <div className="noise-overlay" />
 
-      {/* Animated dot grid background */}
+      {/* Background Grid */}
       <div className="bg-grid" />
 
-      {/* Main content wrapper */}
-      <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
-        {/* ── Sticky Header ── */}
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 40px",
-            borderBottom: "1px solid rgba(124, 58, 237, 0.08)",
-            background: "rgba(10, 11, 20, 0.8)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 38, height: 38,
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 14,
-                fontWeight: 800,
-                color: "#fff",
-                background: "linear-gradient(135deg, #3B82F6, #8B5CF6)",
-                boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
-              }}
-            >
-              OA
-            </div>
-            <div>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 17, fontWeight: 700, letterSpacing: -0.5, color: "var(--text-primary)" }}>
-                Open Agency
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 500, color: "var(--violet-dim)", letterSpacing: 1.5, textTransform: "uppercase" }}>
-                Intelligence at work
-              </div>
-            </div>
+      {/* Hero Section */}
+      <section className="hero">
+        <h1 className="hero-wordmark">
+          <span>Open Agency</span>
+        </h1>
+        <p className="hero-subtitle">Intelligence at work.</p>
+        <div className="hero-ticker">
+          <div className="pulse-dot" />
+          <span className="ticker-text">
+            <span className="ticker-count">{onlineCount || "--"}</span> agents online
+          </span>
+        </div>
+        <div className="hero-scroll">Scroll</div>
+      </section>
+
+      {/* Header */}
+      <header className="header">
+        <div className="header-left">
+          <div className="logo">OA</div>
+          <div className="header-brand">
+            <div className="header-title">Open Agency</div>
+            <div className="header-tagline">Intelligence at work</div>
           </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "7px 16px",
-                borderRadius: 24,
-                fontSize: 12,
-                fontWeight: 600,
-                background: apiOnline ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)",
-                color: apiOnline ? "var(--green)" : "#EF4444",
-                border: `1px solid ${apiOnline ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)"}`,
-              }}
-            >
-              <div
-                style={{
-                  width: 8, height: 8,
-                  borderRadius: "50%",
-                  background: apiOnline ? "var(--green)" : "#EF4444",
-                  boxShadow: apiOnline ? "0 0 8px rgba(16, 185, 129, 0.6)" : "none",
-                  animation: apiOnline ? "pulse-glow 2s ease-in-out infinite" : "none",
-                }}
-              />
-              <span>{apiOnline ? "Systems Online" : "Connecting..."}</span>
-            </div>
+        </div>
+        <div className="header-right">
+          <span className="uptime">{status?.systemHealth?.uptimeFormatted || "--"}</span>
+          <div className={`status-badge${apiOnline ? "" : " offline"}`}>
+            <div className="status-dot" />
+            <span>{apiOnline ? "Systems Online" : "Connecting..."}</span>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* ── Building ── */}
-        <main style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 40px", position: "relative", zIndex: 1 }}>
-          <div
-            style={{
-              position: "relative",
-              borderRadius: "4px 4px 0 0",
-              overflow: "hidden",
-              background: "rgba(15, 22, 35, 0.4)",
-              border: "1px solid rgba(124, 58, 237, 0.12)",
-              animation: "buildingBreathe 8s ease-in-out infinite",
-            }}
-          >
-            {/* Building panel texture overlay */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: 0,
-                pointerEvents: "none",
-                backgroundImage: "linear-gradient(0deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124, 58, 237, 0.02) 1px, transparent 1px)",
-                backgroundSize: "100% 28px, 60px 100%",
-                opacity: 0.6,
-              }}
-            />
+      {/* Main Content */}
+      <main className="main">
+        <div className="building-column">
+          <div className="building">
+            {/* Corner Accents */}
+            <div className="building-corner building-corner--tl" />
+            <div className="building-corner building-corner--tr" />
+            <div className="building-corner building-corner--bl" />
+            <div className="building-corner building-corner--br" />
 
-            {/* Building outer frame accent */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: 0,
-                pointerEvents: "none",
-                border: "2px solid rgba(124, 58, 237, 0.08)",
-                borderRadius: "4px 4px 0 0",
-              }}
-            />
-
-            {/* Corner accents */}
-            {[
-              { top: -1, left: -1, borderTop: "3px solid rgba(124, 58, 237, 0.35)", borderLeft: "3px solid rgba(124, 58, 237, 0.35)", borderRadius: "4px 0 0 0" },
-              { top: -1, right: -1, borderTop: "3px solid rgba(124, 58, 237, 0.35)", borderRight: "3px solid rgba(124, 58, 237, 0.35)", borderRadius: "0 4px 0 0" },
-              { bottom: -1, left: -1, borderBottom: "3px solid rgba(124, 58, 237, 0.35)", borderLeft: "3px solid rgba(124, 58, 237, 0.35)" },
-              { bottom: -1, right: -1, borderBottom: "3px solid rgba(124, 58, 237, 0.35)", borderRight: "3px solid rgba(124, 58, 237, 0.35)" },
-            ].map((style, i) => (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  width: 20, height: 20,
-                  zIndex: 2,
-                  pointerEvents: "none",
-                  ...style,
-                } as React.CSSProperties}
-              />
-            ))}
-
-            {/* ── Rooftop ── */}
-            <div
-              style={{
-                background: "linear-gradient(180deg, rgba(124, 58, 237, 0.18) 0%, rgba(15, 22, 35, 0.8) 100%)",
-                padding: "56px 36px 40px",
-                textAlign: "center",
-                borderBottom: "2px solid rgba(124, 58, 237, 0.15)",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
+            {/* ROOFTOP */}
+            <div className="rooftop">
               <RooftopParticles />
-
-              {/* Antenna accent */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0, left: "50%",
-                  transform: "translateX(-50%)",
-                  width: 2, height: 16,
-                  background: "linear-gradient(180deg, var(--violet), transparent)",
-                }}
-              />
-
-              {/* Glow orb */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-40%", left: "30%",
-                  width: 300, height: 300,
-                  background: "radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 56,
-                  fontWeight: 800,
-                  letterSpacing: -3,
-                  lineHeight: 1,
-                  position: "relative",
-                  zIndex: 1,
-                  marginBottom: 4,
-                }}
-              >
-                <span className="gradient-text" style={{ filter: "drop-shadow(0 0 20px rgba(124, 58, 237, 0.3))" }}>
-                  OA
-                </span>
+              <div className="rooftop-monogram">
+                <span>OA</span>
               </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 26,
-                  fontWeight: 700,
-                  letterSpacing: -1,
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <span className="gradient-text">Open Agency</span>
+              <div className="rooftop-logo">
+                <span>Open Agency</span>
               </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "var(--violet)",
-                  marginTop: 8,
-                  letterSpacing: 1,
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                Intelligence at work.
-              </div>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginTop: 20,
-                  padding: "6px 18px",
-                  borderRadius: 100,
-                  background: apiOnline ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)",
-                  border: `1px solid ${apiOnline ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)"}`,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: apiOnline ? "var(--green)" : "#EF4444",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    width: 7, height: 7,
-                    borderRadius: "50%",
-                    background: apiOnline ? "var(--green)" : "#EF4444",
-                    boxShadow: apiOnline ? "0 0 8px rgba(16, 185, 129, 0.5)" : "none",
-                    animation: apiOnline ? "pulse-glow 2s ease-in-out infinite" : "none",
-                  }}
-                />
+              <div className="rooftop-tagline">Intelligence at work.</div>
+              <div className={`rooftop-status${apiOnline ? "" : " offline"}`}>
+                <div className="dot" />
                 <span>{apiOnline ? "All Systems Operational" : "Connecting..."}</span>
               </div>
             </div>
 
-            {/* ── Building Floors ── */}
-            {floorGroups.map((group) => {
-              const section = (
-                <BuildingFloor
-                  key={group.floor}
-                  floorName={group.floor}
-                  agents={group.agents}
-                  startIndex={runningIndex}
-                />
-              );
-              runningIndex += group.agents.length;
-              return section;
+            {/* FLOORS */}
+            {FLOOR_ORDER.map((floorDef) => {
+              const floorAgents = agents.filter((a) => a.floor === floorDef.key);
+              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} />;
             })}
 
-            {/* ── Ground Floor Stats ── */}
-            <GroundStats stats={groundStats} />
-          </div>
-
-          {/* ── Building Foundation ── */}
-          <div
-            style={{
-              background: "linear-gradient(180deg, rgba(15, 22, 35, 0.6) 0%, rgba(10, 11, 20, 0.95) 100%)",
-              borderTop: "3px solid rgba(124, 58, 237, 0.12)",
-              padding: "6px 0 0",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0, left: "10%", right: "10%",
-                height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.15), transparent)",
-              }}
-            />
-            <div
-              style={{
-                height: 8,
-                background: "repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 20px, rgba(255, 255, 255, 0.01) 20px, rgba(255, 255, 255, 0.01) 40px)",
-              }}
-            />
-            <div
-              style={{
-                textAlign: "center",
-                padding: "16px 20px",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color: "var(--text-muted)",
-                background: "rgba(10, 11, 20, 0.8)",
-              }}
-            >
-              <span style={{ color: "var(--violet-dim)" }}>Open Agency</span> &copy; 2026 &middot; Intelligence at work.
+            {/* GROUND FLOOR — STATS */}
+            <div className="ground-floor">
+              <div className="ground-stat">
+                <div className="ground-stat-icon color-violet">&#9679;</div>
+                <div className="ground-stat-value color-violet">
+                  {status?.systemHealth?.registeredAgents ?? agents.length}
+                </div>
+                <div className="ground-stat-label">Agents Online</div>
+              </div>
+              <div className="ground-stat">
+                <div className="ground-stat-icon color-green">&#9670;</div>
+                <div className="ground-stat-value color-green">{status?.pipeline?.total ?? 0}</div>
+                <div className="ground-stat-label">Pipeline</div>
+              </div>
+              <div className="ground-stat">
+                <div className="ground-stat-icon color-purple">&#163;</div>
+                <div className="ground-stat-value color-purple">
+                  {status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u00A30"}
+                </div>
+                <div className="ground-stat-label">Revenue</div>
+              </div>
+              <div className="ground-stat">
+                <div className="ground-stat-icon color-amber">&#9889;</div>
+                <div className="ground-stat-value color-amber">
+                  {status?.systemHealth?.bootCount ?? 0}
+                </div>
+                <div className="ground-stat-label">Boot Count</div>
+              </div>
             </div>
           </div>
 
-          {/* spacer for chat bar */}
-          <div style={{ height: 120 }} />
-        </main>
+          {/* Building Foundation & Footer */}
+          <div className="building-foundation">
+            <div className="building-foundation-texture" />
+            <div className="building-footer">
+              <span>Open Agency</span> &copy; 2026 &middot; Intelligence at work.
+            </div>
+          </div>
+        </div>
 
-        {/* ── Chat Bar ── */}
-        <ChatBar onSend={handleSendMessage} isLoading={chatLoading} lastReply={chatReply} />
+        {/* CEO Brief */}
+        <div className="ceo-brief">
+          <div className="ceo-brief-header">
+            <div className="ceo-brief-avatar">N</div>
+            <div className="ceo-brief-label">CEO Briefing</div>
+          </div>
+          <div className={`ceo-brief-text${!status ? " empty" : ""}`}>
+            {status
+              ? `${agents.filter((a) => isOnline(a.status)).length} agents active. Pipeline: ${status.pipeline?.total ?? 0} leads. Revenue: \u00A3${status.finances?.revenue ?? 0}. Systems running smoothly.`
+              : "Awaiting first briefing..."}
+          </div>
+          <div className="ceo-brief-time" />
+        </div>
+
+        {/* Dashboard Grid */}
+        <section className="dashboard-grid">
+          {/* Financials */}
+          <div className="dash-card card-financials">
+            <div className="dash-card-title">
+              <span className="card-icon">&#163;</span> Financials
+            </div>
+            <div className="finance-grid">
+              <div className="finance-item">
+                <div className="finance-label">Revenue</div>
+                <div className="finance-value color-green">
+                  &pound;{status?.finances?.revenue ?? 0}
+                </div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Expenses</div>
+                <div className="finance-value color-rose">
+                  &pound;{status?.finances?.expenses ?? 0}
+                </div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Profit</div>
+                <div className="finance-value">
+                  &pound;{status?.finances?.profit ?? 0}
+                </div>
+              </div>
+              <div className="finance-item">
+                <div className="finance-label">Cash Position</div>
+                <div className="finance-value color-violet">
+                  &pound;{(status?.finances as Record<string, number>)?.cashPosition ?? 0}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sales Pipeline */}
+          <div className="dash-card card-pipeline">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128188;</span> Sales Pipeline
+            </div>
+            <div className="pipeline-list">
+              <div className="pipeline-row">
+                <div className="pipeline-label">Hot</div>
+                <div className="pipeline-bar-track">
+                  <div
+                    className="pipeline-bar-fill rose"
+                    style={{ width: `${pipeTotal ? (pipeHot / pipeTotal) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="pipeline-count color-rose">{pipeHot}</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Warm</div>
+                <div className="pipeline-bar-track">
+                  <div
+                    className="pipeline-bar-fill amber"
+                    style={{ width: `${pipeTotal ? (pipeWarm / pipeTotal) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="pipeline-count color-amber">{pipeWarm}</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Cold</div>
+                <div className="pipeline-bar-track">
+                  <div
+                    className="pipeline-bar-fill violet"
+                    style={{ width: `${pipeTotal ? (pipeCold / pipeTotal) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="pipeline-count color-violet">{pipeCold}</div>
+              </div>
+              <div className="pipeline-row">
+                <div className="pipeline-label">Won</div>
+                <div className="pipeline-bar-track">
+                  <div
+                    className="pipeline-bar-fill green"
+                    style={{ width: `${pipeTotal ? (pipeWon / pipeTotal) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="pipeline-count color-green">{pipeWon}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Sprint */}
+          <div className="dash-card card-sprint">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128640;</span> Active Sprint
+              <span className="card-badge">--</span>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>No active sprint</div>
+          </div>
+
+          {/* Clients */}
+          <div className="dash-card card-clients">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128100;</span> Clients
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+              {apiOnline ? "No active clients" : "Loading..."}
+            </div>
+          </div>
+
+          {/* Scheduled Tasks */}
+          <div className="dash-card card-schedules">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128337;</span> Scheduled Tasks
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+              {apiOnline ? "No scheduled tasks" : "Loading..."}
+            </div>
+          </div>
+
+          {/* Activity Log */}
+          <div className="dash-card card-activity">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128196;</span> Activity Log
+              <span className="card-badge">--</span>
+            </div>
+            <div className="activity-ticker">
+              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                {apiOnline ? "No recent activity" : "Loading..."}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <div className="footer">
+        <span>Open Agency</span> &copy; 2026 &middot; Intelligence at work.
       </div>
+
+      {/* Nikita Chat Sidebar */}
+      <NikitaChat onSend={handleSendMessage} isLoading={chatLoading} messages={chatMessages} />
     </>
   );
 }
