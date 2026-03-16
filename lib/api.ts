@@ -44,3 +44,9 @@ export async function getHealth() {
   const res = await fetchAgency("/api/health");
   return res.json();
 }
+
+export async function getTaskResults() {
+  const res = await fetchAgency("/api/tasks/results");
+  if (!res.ok) throw new Error(`Task results API error: ${res.status}`);
+  return res.json();
+}

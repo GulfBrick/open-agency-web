@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getStatus, getAgents, sendNikitaMessage } from "@/lib/api";
+import { getStatus, getAgents, sendNikitaMessage, getTaskResults } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -205,19 +205,73 @@ function BuildingFloor({
 // ─── Nikita Chat Sidebar ────────────────────────────────────────────────────
 
 interface ChatMessage {
-  role: "user" | "nikita";
+  type: "user" | "nikita" | "agent";
   text: string;
+  timestamp: number;
   time: string;
+  agentId?: string;
+  agentName?: string;
+  agentRole?: string;
+  department?: string;
+}
+
+const DEPT_COLORS: Record<string, string> = {
+  cfo: "#7C3AED",
+  csuite: "#7C3AED",
+  cto: "#3B82F6",
+  cmo: "#F59E0B",
+  dev: "#10B981",
+  sales: "#F43F5E",
+  creative: "#EC4899",
+};
+
+function deptFromAgent(agentId: string): string {
+  const cfg = FLOOR_CONFIG[agentId];
+  if (cfg) return cfg.floor;
+  const lower = agentId.toLowerCase();
+  if (lower.includes("cfo") || lower.includes("marcus")) return "cfo";
+  if (lower.includes("cto") || lower.includes("zara")) return "cto";
+  if (lower.includes("cmo") || lower.includes("priya")) return "cmo";
+  if (lower.includes("dev") || lower.includes("kai") || lower.includes("frontend") || lower.includes("backend") || lower.includes("qa")) return "dev";
+  if (lower.includes("sales") || lower.includes("jordan") || lower.includes("closer") || lower.includes("proposal")) return "sales";
+  if (lower.includes("creative") || lower.includes("nova") || lower.includes("iris") || lower.includes("finn") || lower.includes("jade") || lower.includes("ash")) return "creative";
+  return "dev";
+}
+
+function AgentBubble({ msg }: { msg: ChatMessage }) {
+  const dept = msg.department || "dev";
+  const color = DEPT_COLORS[dept] || DEPT_COLORS.dev;
+  const initials = getInitials(msg.agentName || "AG");
+
+  return (
+    <div className="chat-msg agent-msg" style={{ borderColor: `${color}33` }}>
+      <div className="agent-bubble-row">
+        <div className="agent-bubble-avatar" style={{ background: `linear-gradient(135deg, ${color}, ${color}99)` }}>
+          {initials}
+        </div>
+        <div className="agent-bubble-content">
+          <div className="agent-bubble-header">
+            <span className="agent-bubble-name" style={{ color }}>{msg.agentName}</span>
+            <span className="agent-bubble-role">{msg.agentRole}</span>
+          </div>
+          <div className="agent-bubble-text">{msg.text}</div>
+          <div className="chat-msg-time">{msg.time}</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function NikitaChat({
   onSend,
   isLoading,
   messages,
+  isPolling,
 }: {
   onSend: (msg: string) => void;
   isLoading: boolean;
   messages: ChatMessage[];
+  isPolling: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -253,15 +307,27 @@ function NikitaChat({
         </button>
         <div className="nikita-chat-thread" ref={threadRef}>
           <div className="nikita-chat-thread-inner">
-            {messages.map((msg, i) => (
-              <div key={i} className={`chat-msg ${msg.role}`}>
-                <div className="chat-msg-text">{msg.text}</div>
-                <div className="chat-msg-time">{msg.time}</div>
-              </div>
-            ))}
+            {messages.map((msg, i) =>
+              msg.type === "agent" ? (
+                <AgentBubble key={i} msg={msg} />
+              ) : (
+                <div key={i} className={`chat-msg ${msg.type}`}>
+                  <div className="chat-msg-text">{msg.text}</div>
+                  <div className="chat-msg-time">{msg.time}</div>
+                </div>
+              )
+            )}
             {isLoading && (
               <div className="chat-msg nikita">
                 <div className="chat-msg-text">Thinking...</div>
+              </div>
+            )}
+            {isPolling && (
+              <div className="agents-working-indicator">
+                <div className="agents-working-dots">
+                  <span /><span /><span />
+                </div>
+                <span className="agents-working-text">Agents working...</span>
               </div>
             )}
           </div>
@@ -300,7 +366,10 @@ export default function Dashboard() {
   const [apiOnline, setApiOnline] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [chatPolling, setChatPolling] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const seenResultsRef = useRef<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     try {
@@ -338,15 +407,76 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    setChatPolling(false);
+  }, []);
+
+  const startPolling = useCallback((sentAt: number) => {
+    stopPolling();
+    let agentCount = 0;
+    const deadline = Date.now() + 30_000;
+    setChatPolling(true);
+
+    pollingRef.current = setInterval(async () => {
+      if (Date.now() > deadline || agentCount >= 3) {
+        stopPolling();
+        return;
+      }
+      try {
+        const results = await getTaskResults();
+        const arr = Array.isArray(results) ? results : [];
+        for (const task of arr) {
+          const completedAt = task.completedAt ? new Date(task.completedAt).getTime() : 0;
+          if (completedAt <= sentAt) continue;
+          const taskKey = `${task.agentId || task.agentName}-${completedAt}`;
+          if (seenResultsRef.current.has(taskKey)) continue;
+          seenResultsRef.current.add(taskKey);
+          agentCount++;
+
+          const agentId = task.agentId || "";
+          const dept = deptFromAgent(agentId);
+          const cfg = FLOOR_CONFIG[agentId];
+          const agentName = cfg?.name || task.agentName || agentId || "Agent";
+          const agentRole = cfg?.role || task.description || "";
+          const text = typeof task.result === "string" ? task.result : JSON.stringify(task.result);
+          const time = new Date(completedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+          setChatMessages((prev) => [
+            ...prev,
+            { type: "agent", text, timestamp: completedAt, time, agentId, agentName, agentRole, department: dept },
+          ]);
+
+          if (agentCount >= 3) {
+            stopPolling();
+            return;
+          }
+        }
+      } catch {
+        // polling error — silently continue
+      }
+    }, 3000);
+  }, [stopPolling]);
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, []);
+
   const handleSendMessage = async (message: string) => {
-    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setChatMessages((prev) => [...prev, { role: "user", text: message, time: now }]);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setChatMessages((prev) => [...prev, { type: "user", text: message, timestamp: now.getTime(), time: timeStr }]);
     setChatLoading(true);
+    const sentAt = now.getTime();
     try {
       const res = await sendNikitaMessage(message);
       const reply = res.reply || res.message || res.response || JSON.stringify(res);
       const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setChatMessages((prev) => [...prev, { role: "nikita", text: reply, time: replyTime }]);
+      setChatMessages((prev) => [...prev, { type: "nikita", text: reply, timestamp: Date.now(), time: replyTime }]);
 
       if ("speechSynthesis" in window) {
         const utterance = new SpeechSynthesisUtterance(reply);
@@ -354,11 +484,14 @@ export default function Dashboard() {
         utterance.pitch = 1;
         window.speechSynthesis.speak(utterance);
       }
+
+      // Start polling for agent results
+      startPolling(sentAt);
     } catch {
       const errorTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setChatMessages((prev) => [
         ...prev,
-        { role: "nikita", text: "Connection to Nikita unavailable. The agency will be online shortly.", time: errorTime },
+        { type: "nikita", text: "Connection to Nikita unavailable. The agency will be online shortly.", timestamp: Date.now(), time: errorTime },
       ]);
     } finally {
       setChatLoading(false);
@@ -647,7 +780,7 @@ export default function Dashboard() {
       </div>
 
       {/* Nikita Chat Sidebar */}
-      <NikitaChat onSend={handleSendMessage} isLoading={chatLoading} messages={chatMessages} />
+      <NikitaChat onSend={handleSendMessage} isLoading={chatLoading} messages={chatMessages} isPolling={chatPolling} />
     </>
   );
 }
