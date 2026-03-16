@@ -1109,6 +1109,62 @@ body {
   background: var(--text-muted);
 }
 
+/* ─── Active Task State — desk glows when agent is running a live task ─── */
+.agent-desk.is-active {
+  animation: agentBreathe 2s ease-in-out infinite;
+}
+
+.agent-desk.is-active .desk-avatar {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.25);
+}
+.agent-desk.is-active .desk-avatar.csuite {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.5), 0 0 24px rgba(124, 58, 237, 0.3);
+}
+.agent-desk.is-active .desk-avatar.dev {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.3);
+}
+.agent-desk.is-active .desk-avatar.sales {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5), 0 0 24px rgba(245, 158, 11, 0.3);
+}
+.agent-desk.is-active .desk-avatar.creative {
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.5), 0 0 24px rgba(244, 63, 94, 0.3);
+}
+.agent-desk.is-active .desk-avatar.ceo {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5), 0 0 24px rgba(16, 185, 129, 0.3);
+}
+
+/* Spinning busy ring around avatar when actively running task */
+.busy-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.6);
+  border-right-color: rgba(255, 255, 255, 0.2);
+  animation: busySpin 1.2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes busySpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Active bubble — stays visible, cyan tint */
+.bubble.bubble-active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: none;
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93C5FD;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Floor-specific active bubble tints */
+.floor-csuite .bubble.bubble-active { border-color: rgba(124, 58, 237, 0.35); color: #C4B5FD; background: rgba(124, 58, 237, 0.08); }
+.floor-sales .bubble.bubble-active  { border-color: rgba(245, 158, 11, 0.35); color: #FCD34D; background: rgba(245, 158, 11, 0.08); }
+.floor-creative .bubble.bubble-active { border-color: rgba(244, 63, 94, 0.35); color: #FDA4AF; background: rgba(244, 63, 94, 0.08); }
+.floor-ceo .bubble.bubble-active    { border-color: rgba(16, 185, 129, 0.35); color: #6EE7B7; background: rgba(16, 185, 129, 0.08); }
+
 /* Room divider between agents */
 .agent-desk + .agent-desk::before {
   content: '';

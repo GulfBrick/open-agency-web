@@ -228,13 +228,18 @@ const AGENT_STATS: Record<string, { done: number; active: number; rank: string }
   ash:     { done: 79,  active: 2,  rank: 'Copywriter · Copy' },
 }
 
-function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
+function AgentDesk({ agent, activeTask }: { agent: typeof AGENTS.csuite[0]; activeTask?: string }) {
   const [hovered, setHovered] = useState(false)
   const [bubbleIdx, setBubbleIdx] = useState(0)
   const isOnline = agent.status === 'online'
   const isCeo = agent.id === 'nikita'
+  const isActive = !!activeTask
   const stats = AGENT_STATS[agent.id] || { done: 0, active: 0, rank: agent.role }
   const bubbles = AGENT_BUBBLES[agent.id] || [agent.bubble]
+  // When actively running a task, show truncated task text in bubble
+  const displayBubble = isActive
+    ? activeTask!.replace(/\[.*?\]\s*/g, '').split('.')[0].substring(0, 50)
+    : bubbles[bubbleIdx]
 
   // Cycle bubble text every 4–8s (stagger by agent index in array)
   useEffect(() => {
@@ -250,7 +255,7 @@ function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
 
   return (
     <div
-      className={`agent-desk${isOnline ? ' is-online' : ''}${isCeo ? ' ceo-desk' : ''}`}
+      className={`agent-desk${isOnline ? ' is-online' : ''}${isCeo ? ' ceo-desk' : ''}${isActive ? ' is-active' : ''}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -282,12 +287,13 @@ function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
         </div>
       </div>
 
-      <div className="bubble" key={bubbleIdx}>{bubbles[bubbleIdx]}</div>
+      <div className={`bubble${isActive ? ' bubble-active' : ''}`} key={isActive ? 'active' : bubbleIdx}>{displayBubble}</div>
       <div className="desk-surface">
         <div className="desk-monitor">💻</div>
-        <div className={`desk-avatar ${agent.cls} ${agent.status}`}>
+        <div className={`desk-avatar ${agent.cls} ${agent.status}${isActive ? ' desk-avatar-busy' : ''}`}>
           {agent.initials}
           <span className={`status-indicator ${agent.status}`} />
+          {isActive && <span className="busy-ring" />}
         </div>
       </div>
       <div className="desk-name">{agent.name}</div>
@@ -809,6 +815,17 @@ function WorkWithUsForm() {
   )
 }
 
+// Build a map of agentId → active task description from live reports
+function buildActiveTaskMap(reports: AgentReport[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const r of reports) {
+    if ((r.status === 'in_progress' || r.status === 'pending') && r.agentId && r.description) {
+      map[r.agentId.toLowerCase()] = r.description
+    }
+  }
+  return map
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -834,6 +851,8 @@ export default function Home() {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [approvingWorkflow, setApprovingWorkflow] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
+  // Derived: map of agentId → active task description (drives desk glow)
+  const activeTaskMap = buildActiveTaskMap(agentReports)
   // Agent activity toasts
   const [agentToasts, setAgentToasts] = useState<AgentToastItem[]>([])
   const demoToastIdx = useRef(0)
@@ -1408,7 +1427,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.ceo.map(a => <AgentDesk key={a.id} agent={a} />)}
+                {AGENTS.ceo.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>
@@ -1424,7 +1443,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.creative.map(a => <AgentDesk key={a.id} agent={a} />)}
+                {AGENTS.creative.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>
@@ -1440,7 +1459,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.sales.map(a => <AgentDesk key={a.id} agent={a} />)}
+                {AGENTS.sales.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>
@@ -1456,7 +1475,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.dev.map(a => <AgentDesk key={a.id} agent={a} />)}
+                {AGENTS.dev.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>
@@ -1472,7 +1491,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.csuite.map(a => <AgentDesk key={a.id} agent={a} />)}
+                {AGENTS.csuite.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>
