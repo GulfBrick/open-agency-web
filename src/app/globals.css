@@ -2856,47 +2856,139 @@ body {
 }
 
 @media (max-width: 768px) {
-  .main { padding: 20px 16px; }
-  .header { padding: 14px 16px; }
+  .main { padding: 20px 12px; }
+  .header { padding: 12px 14px; gap: 8px; }
+  .header-left { min-width: 0; }
+  .header-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .hero { min-height: 80vh; padding: 40px 20px; }
   .hero-wordmark { letter-spacing: -2px; }
+
+  /* Building — floors collapse to vertical layout with horizontal scroll on desks */
+  .building { border-radius: 8px; }
   .floor-inner { grid-template-columns: 1fr; }
   .floor-label {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 10px;
+    padding: 10px 14px;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    min-height: unset;
   }
   .floor-label::before {
     width: 100%; height: 3px;
     top: 0; left: 0;
-    background: inherit;
+    bottom: auto;
   }
-  .floor-number { margin-bottom: 0; }
-  .floor-desks { padding: 16px; }
-  .ground-floor { grid-template-columns: 1fr 1fr; }
-  .dashboard-grid { grid-template-columns: 1fr; }
+  .floor-number-badge { font-size: 22px; margin-bottom: 0; }
+  .floor-icon { font-size: 16px; margin-bottom: 0; }
+  .floor-number { display: none; }
+  .floor-name { font-size: 13px; }
+
+  /* Desks scroll horizontally — keep proper size on all phones */
+  .floor-desks {
+    padding: 14px 16px 18px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 16px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Right fade: hints at scrollable content */
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black 80%, transparent 100%);
+  }
+  .floor-desks::-webkit-scrollbar { display: none; }
+  /* Remove mask after scroll so last agents stay visible when scrolled fully right */
+  .floor-desks.scrolled-end {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .agent-desk {
+    min-width: 76px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  /* Swipe hint label — shown below each floor on mobile */
+  .floor-desks::after {
+    content: 'swipe →';
+    display: block;
+    position: absolute;
+    bottom: 4px;
+    right: 10px;
+    font-size: 8px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    opacity: 0.45;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+
+  /* Ground floor stats */
+  .ground-floor {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 14px 14px;
+  }
+  .ground-stat-value { font-size: 20px; }
+  .ground-stat-label { font-size: 9px; }
+
+  /* Dashboard */
+  .dashboard-grid { grid-template-columns: 1fr; gap: 14px; }
   .dash-card-wide { grid-column: span 1; }
-  .nikita-chat { width: 100%; }
-  .nikita-chat-toggle { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 20px; }
-  .chat-msg { max-width: 88%; }
-  .footer { padding: 10px 16px; }
+
+  /* Chat sidebar */
+  .nikita-chat { width: 100%; border-radius: 0; }
+  .nikita-chat-toggle { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 20px; }
+  .chat-msg { max-width: 90%; }
+
+  /* CEO brief & ticker */
+  .ceo-brief { padding: 18px 16px; }
+  .ceo-brief-dept-row { flex-wrap: wrap; gap: 6px; }
+  .activity-ticker-strip { margin: 16px 0 0; }
+
+  /* Footer */
+  .footer { padding: 10px 14px; }
+  .footer-left { font-size: 11px; }
 }
 
 @media (max-width: 480px) {
   .header-tagline { display: none; }
   .uptime { display: none; }
+  .last-refreshed { display: none; }
   .hero-scroll { display: none; }
-  .ground-floor { grid-template-columns: 1fr; }
-  .ground-stat-value { font-size: 22px; }
-  .rooftop { padding: 36px 20px 28px; }
-  .rooftop-monogram { font-size: 40px; }
-  .hero-wordmark { font-size: clamp(40px, 10vw, 64px); }
-  .ceo-brief { padding: 18px 20px; }
-  .dash-card { padding: 16px 18px; }
-  .finance-grid { grid-template-columns: 1fr; }
+  /* Shrink status badge text on tiny screens */
+  .status-badge { font-size: 10px; padding: 5px 10px; gap: 6px; }
+  .status-badge .status-dot { width: 6px; height: 6px; }
+  .header-cta { padding: 6px 12px; font-size: 12px; }
+  .header-title { font-size: 15px; }
+  /* Ground floor — 2 per row on very small screens */
+  .ground-floor { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 10px; }
+  .ground-stat { padding: 10px 6px; }
+  .ground-stat-value { font-size: 18px; }
+  .ground-stat-icon { font-size: 14px; margin-bottom: 2px; }
+  .rooftop { padding: 28px 16px 20px; }
+  .rooftop-monogram { font-size: 32px; }
+  .rooftop-logo { font-size: 16px; }
+  .rooftop-tagline { font-size: 10px; }
+  .hero-wordmark { font-size: clamp(36px, 9vw, 56px); }
+  .hero-subtitle { font-size: 14px; }
+  .hero-ctas { gap: 10px; flex-direction: column; align-items: center; }
+  .hero-cta-primary, .hero-cta-secondary { width: 220px; text-align: center; justify-content: center; }
+  .ceo-brief { padding: 14px 14px; }
+  .dash-card { padding: 14px 14px; }
+  .finance-grid { grid-template-columns: 1fr 1fr; }
+  .agent-desk { min-width: 70px; }
+  .desk-avatar { width: 38px; height: 38px; font-size: 12px; }
+  .desk-avatar.ceo { width: 52px; height: 52px; font-size: 16px; }
+  .bubble { font-size: 9px; padding: 4px 8px; max-width: 88px; }
+  .desk-name { font-size: 9px; }
+  .desk-role { font-size: 8px; }
+  /* Quick prompts on mobile — wrap nicely */
+  .chat-quick-chip { font-size: 11px; padding: 5px 10px; }
+  /* Onboarding panel — full width on mobile */
+  .onboarding-panel { left: 12px; right: 12px; bottom: 76px; max-width: none; }
 }
 
 /* ─── Desk platform extra detail (matching local dashboard) ─── */
