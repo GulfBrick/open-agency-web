@@ -308,15 +308,19 @@ function RooftopParticles() {
 interface AgentPopupProps {
   agent: Agent;
   onClose: () => void;
+  tasksDone?: number;
+  successRate?: number;
 }
 
-function AgentPopup({ agent, onClose }: AgentPopupProps) {
+function AgentPopup({ agent, onClose, tasksDone, successRate }: AgentPopupProps) {
   const cfg = FLOOR_CONFIG[agent.id];
   const rank = cfg?.rank || "Agent";
   const avatarClass = AVATAR_CLASS[agent.floor] || "default";
   const initials = getInitials(agent.name);
   const online = isOnline(agent.status);
   const statusText = agent.id === "nikita" ? "Running the agency..." : online ? "Working..." : "Standing by";
+
+  const hasStats = typeof tasksDone === "number" && tasksDone > 0;
 
   return (
     <div className="agent-popup visible" onClick={(e) => e.stopPropagation()}>
@@ -327,12 +331,25 @@ function AgentPopup({ agent, onClose }: AgentPopupProps) {
           <div className="popup-role">{agent.role}</div>
         </div>
       </div>
-      <div className="popup-stats">
-        <div className="popup-stat">
-          <div className="popup-stat-value" style={{ color: "var(--text-dim)", fontSize: "13px" }}>{statusText}</div>
-          <div className="popup-stat-label">Status</div>
+      {hasStats ? (
+        <div className="popup-stats">
+          <div className="popup-stat">
+            <div className="popup-stat-value color-green">{tasksDone}</div>
+            <div className="popup-stat-label">Tasks Done</div>
+          </div>
+          <div className="popup-stat">
+            <div className="popup-stat-value color-violet">{successRate ?? 100}%</div>
+            <div className="popup-stat-label">Success</div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="popup-stats">
+          <div className="popup-stat">
+            <div className="popup-stat-value" style={{ color: "var(--text-dim)", fontSize: "13px" }}>{statusText}</div>
+            <div className="popup-stat-label">Status</div>
+          </div>
+        </div>
+      )}
       <div className="popup-rank">Rank: <span>{rank}</span></div>
       <button className="popup-dismiss" onClick={onClose} title="Close">✕</button>
     </div>
@@ -341,7 +358,7 @@ function AgentPopup({ agent, onClose }: AgentPopupProps) {
 
 // ─── Agent Desk ─────────────────────────────────────────────────────────────
 
-function AgentDesk({ agent, liveBubble }: { agent: Agent; liveBubble?: string }) {
+function AgentDesk({ agent, liveBubble, tasksDone, successRate }: { agent: Agent; liveBubble?: string; tasksDone?: number; successRate?: number }) {
   const isCeo = agent.floor === "ceo";
   const online = isOnline(agent.status);
   const avatarClass = AVATAR_CLASS[agent.floor] || "default";
@@ -392,7 +409,7 @@ function AgentDesk({ agent, liveBubble }: { agent: Agent; liveBubble?: string })
       <div className="desk-name">{firstName}</div>
       <div className="desk-role">{agent.role}</div>
       <div className="desk-platform" />
-      {popupOpen && <AgentPopup agent={agent} onClose={() => setPopupOpen(false)} />}
+      {popupOpen && <AgentPopup agent={agent} onClose={() => setPopupOpen(false)} tasksDone={tasksDone} successRate={successRate} />}
     </div>
   );
 }
@@ -403,10 +420,12 @@ function BuildingFloor({
   floorDef,
   agents,
   liveBubbles,
+  agentTaskStats,
 }: {
   floorDef: (typeof FLOOR_ORDER)[number];
   agents: Agent[];
   liveBubbles?: Record<string, string>;
+  agentTaskStats?: Record<string, { done: number; successRate: number }>;
 }) {
   const anyOnline = agents.some((a) => isOnline(a.status));
   return (
@@ -421,7 +440,13 @@ function BuildingFloor({
         <div className="floor-desks">
           <div className="window-glow" />
           {agents.map((agent) => (
-            <AgentDesk key={agent.id} agent={agent} liveBubble={liveBubbles?.[agent.id]} />
+            <AgentDesk
+              key={agent.id}
+              agent={agent}
+              liveBubble={liveBubbles?.[agent.id]}
+              tasksDone={agentTaskStats?.[agent.id]?.done}
+              successRate={agentTaskStats?.[agent.id]?.successRate}
+            />
           ))}
         </div>
       </div>
@@ -691,6 +716,7 @@ export default function Dashboard() {
   const [agentReports, setAgentReports] = useState<AgentReport[]>([]);
   // Live bubbles: agentId → short snippet of latest task result
   const [liveBubbles, setLiveBubbles] = useState<Record<string, string>>({});
+  const [agentTaskStats, setAgentTaskStats] = useState<Record<string, { done: number; successRate: number }>>({});
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
 
@@ -812,6 +838,29 @@ export default function Dashboard() {
           }
         }
         setLiveBubbles((prev) => ({ ...prev, ...bubbleMap }));
+
+        // Compute per-agent task stats (done count + success rate)
+        if (Array.isArray(raw)) {
+          const statsMap: Record<string, { done: number; failed: number }> = {};
+          for (const t of raw) {
+            const id = t.agentId || t.agent || "";
+            if (!id) continue;
+            const st = (t.status || "").toLowerCase();
+            if (st !== "completed" && st !== "failed") continue;
+            if (!statsMap[id]) statsMap[id] = { done: 0, failed: 0 };
+            if (st === "completed") statsMap[id].done++;
+            else statsMap[id].failed++;
+          }
+          const computedStats: Record<string, { done: number; successRate: number }> = {};
+          for (const [id, s] of Object.entries(statsMap)) {
+            const total = s.done + s.failed;
+            computedStats[id] = {
+              done: s.done,
+              successRate: total > 0 ? Math.round((s.done / total) * 100) : 100,
+            };
+          }
+          setAgentTaskStats(computedStats);
+        }
       }
     } catch {
       setApiOnline(false);
@@ -1016,7 +1065,7 @@ export default function Dashboard() {
             {/* FLOORS */}
             {FLOOR_ORDER.map((floorDef) => {
               const floorAgents = agents.filter((a) => a.floor === floorDef.key);
-              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} />;
+              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} agentTaskStats={agentTaskStats} />;
             })}
 
             {/* GROUND FLOOR — STATS (6 live cards with animated counters) */}
