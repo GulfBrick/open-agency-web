@@ -553,6 +553,30 @@ function BuildingFloor({
   );
 }
 
+// ─── Toast System ────────────────────────────────────────────────────────────
+
+interface ToastItem { id: number; msg: string; type: "success" | "error" | "" }
+
+// Module-level callback — set by Dashboard, called by action components
+let _globalShowToast: ((msg: string, type?: "success" | "error" | "") => void) | null = null;
+function globalShowToast(msg: string, type: "success" | "error" | "" = "") {
+  if (_globalShowToast) _globalShowToast(msg, type);
+}
+
+function ToastContainer({ toasts }: { toasts: ToastItem[] }) {
+  return (
+    <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 9990, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", pointerEvents: "none" }}>
+      {toasts.map((t) => (
+        <div key={t.id} className={`oa-toast oa-toast-${t.type || "info"} oa-toast-show`}>
+          {t.type === "success" && <span className="toast-icon">✓</span>}
+          {t.type === "error" && <span className="toast-icon">✕</span>}
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Schedule Run Item ──────────────────────────────────────────────────────
 
 function ScheduleRunItem({ name, timeStr, scheduleKey }: { name: string; timeStr: string; scheduleKey: string }) {
@@ -566,9 +590,10 @@ function ScheduleRunItem({ name, timeStr, scheduleKey }: { name: string; timeStr
     try {
       await runSchedule(scheduleKey);
       setRan(true);
+      globalShowToast(`${name} triggered`, "success");
       setTimeout(() => setRan(false), 3000);
     } catch {
-      // silent fail
+      globalShowToast(`Failed to run ${name}`, "error");
     } finally {
       setRunning(false);
     }
@@ -608,9 +633,10 @@ function WorkflowApproveButton({ workflowId, onApproved }: { workflowId: string;
     try {
       await approveWorkflow(workflowId);
       setApproved(true);
+      globalShowToast("Workflow approved", "success");
       onApproved?.();
     } catch {
-      // silent fail
+      globalShowToast("Approval failed", "error");
     } finally {
       setApproving(false);
     }
@@ -1149,8 +1175,20 @@ export default function Dashboard() {
   // Live bubbles: agentId → short snippet of latest task result
   const [liveBubbles, setLiveBubbles] = useState<Record<string, string>>({});
   const [agentTaskStats, setAgentTaskStats] = useState<Record<string, { done: number; successRate: number }>>({});
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastIdRef = useRef(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
+
+  // Register global toast dispatcher
+  useEffect(() => {
+    _globalShowToast = (msg: string, type: "success" | "error" | "" = "") => {
+      const id = ++toastIdRef.current;
+      setToasts((prev) => [...prev, { id, msg, type }]);
+      setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3200);
+    };
+    return () => { _globalShowToast = null; };
+  }, []);
 
   const loadChatHistory = useCallback(async () => {
     if (historyLoaded) return;
@@ -2008,9 +2046,12 @@ export default function Dashboard() {
       {newClientOpen && (
         <NewClientModal
           onClose={() => setNewClientOpen(false)}
-          onSuccess={() => fetchData()}
+          onSuccess={() => { fetchData(); globalShowToast("Client onboarded — Nikita is briefing the team", "success"); }}
         />
       )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} />
     </>
   );
 }
