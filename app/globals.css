@@ -3538,6 +3538,41 @@ body {
   .uptime { display: none; }
   .hero-scroll { display: none; }
   .ground-floor { grid-template-columns: repeat(2, 1fr); }
+  .header-refresh-time { display: none; }
+}
+
+/* ═══ Header Refresh Timestamp ═══════════════════════════════════════════════ */
+.header-refresh-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  transition: opacity 0.3s;
+}
+
+.header-refresh-time:hover { opacity: 1; }
+
+/* ═══ Demo Mode Badge ════════════════════════════════════════════════════════ */
+.demo-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--amber);
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  animation: demoPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes demoPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* --- Chat Markdown Rendering ------------------------------------------------ */

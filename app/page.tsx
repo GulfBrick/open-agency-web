@@ -1063,10 +1063,45 @@ function OnboardingPanel() {
 
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
+// ═══ Demo Data ═══════════════════════════════════════════════════════════════
+const DEMO_STATUS: StatusData = {
+  agents: DEFAULT_AGENTS.map(a => ({ id: a.id, name: a.name, role: a.role, status: "standing-by" })),
+  pipeline: { total: 24, hot: 7, warm: 11, cold: 4, won: 2 },
+  finances: { revenue: 48200, expenses: 12400, profit: 35800, cashPosition: 91500 },
+  systemHealth: { uptime: 99.97, uptimeFormatted: "14d 6h 22m", bootCount: 3, registeredAgents: 21 },
+};
+
+const DEMO_TASKS: Task[] = [
+  { id: "t1", agentId: "cfo", agentName: "Marcus", description: "Q2 financial forecast", status: "completed", createdAt: new Date(Date.now() - 1800000).toISOString(), completedAt: new Date(Date.now() - 900000).toISOString() },
+  { id: "t2", agentId: "frontend", agentName: "Frontend", description: "Dashboard UI polish sprint", status: "in_progress", createdAt: new Date(Date.now() - 3600000).toISOString() },
+  { id: "t3", agentId: "sales-lead", agentName: "Jordan", description: "Qualify 3 new inbound leads", status: "completed", createdAt: new Date(Date.now() - 7200000).toISOString(), completedAt: new Date(Date.now() - 5400000).toISOString() },
+  { id: "t4", agentId: "copywriter", agentName: "Ash", description: "Write homepage hero copy v3", status: "pending", createdAt: new Date(Date.now() - 1200000).toISOString() },
+  { id: "t5", agentId: "backend", agentName: "Backend", description: "API rate limiting implementation", status: "in_progress", createdAt: new Date(Date.now() - 2400000).toISOString() },
+  { id: "t6", agentId: "cmo", agentName: "Priya", description: "Monthly brand report", status: "completed", createdAt: new Date(Date.now() - 10800000).toISOString(), completedAt: new Date(Date.now() - 9000000).toISOString() },
+  { id: "t7", agentId: "qa", agentName: "QA", description: "Regression test suite pass", status: "pending", createdAt: new Date(Date.now() - 600000).toISOString() },
+  { id: "t8", agentId: "designer", agentName: "Iris", description: "Client pitch deck v2 — Clearline", status: "completed", createdAt: new Date(Date.now() - 14400000).toISOString(), completedAt: new Date(Date.now() - 12600000).toISOString() },
+];
+
+const DEMO_WORKFLOWS: Workflow[] = [
+  { workflowId: "wf-001", name: "Client Onboard — Clearline", status: "DONE", steps: [{ status: "DONE" }, { status: "DONE" }, { status: "DONE" }] },
+  { workflowId: "wf-002", name: "Q2 Marketing Campaign", status: "RUNNING", steps: [{ status: "DONE" }, { status: "DONE" }, { status: "RUNNING" }, { status: "PENDING" }] },
+  { workflowId: "wf-003", name: "Dev Sprint — Dashboard", status: "RUNNING", steps: [{ status: "DONE" }, { status: "RUNNING" }, { status: "PENDING" }, { status: "PENDING" }] },
+];
+
+const DEMO_SCHEDULES: Schedule[] = [
+  { key: "nikita-heartbeat", name: "Nikita Heartbeat", agentId: "nikita", schedule: { hour: 9, minute: 0, type: "daily" } },
+  { key: "cfo-report", name: "Marcus — Daily P&L", agentId: "cfo", schedule: { hour: 18, minute: 0, type: "daily" } },
+  { key: "sales-pipeline", name: "Pipeline Sync", agentId: "sales-lead", schedule: { hour: 8, minute: 30, type: "daily" } },
+  { key: "ui-builder", name: "UI Builder Heartbeat", agentId: "designer", schedule: { hour: 0, minute: 10, type: "daily" } },
+];
+
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>(DEFAULT_AGENTS);
   const [status, setStatus] = useState<StatusData | null>(null);
   const [apiOnline, setApiOnline] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [secondsSinceRefresh, setSecondsSinceRefresh] = useState(0);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatPolling, setChatPolling] = useState(false);
@@ -1229,6 +1264,38 @@ export default function Dashboard() {
     } catch {
       setApiOnline(false);
     }
+    setLastRefreshed(new Date());
+    setSecondsSinceRefresh(0);
+  }, []);
+
+  // Seed demo data when API is offline (after first load attempt)
+  const demoSeeded = useRef(false);
+  useEffect(() => {
+    if (!apiOnline && loaded && !demoSeeded.current) {
+      demoSeeded.current = true;
+      setDemoMode(true);
+      setStatus(DEMO_STATUS);
+      setTaskQueue(DEMO_TASKS);
+      setWorkflows(DEMO_WORKFLOWS);
+      setSchedules(DEMO_SCHEDULES);
+      setAgentReports([
+        { agent: "Marcus", agentId: "cfo", description: "Q2 financial forecast completed", status: "completed", completedAt: new Date(Date.now() - 900000).toISOString(), result: "Revenue on track at £48.2k. Expenses 25.7% of revenue. Cash position healthy." },
+        { agent: "Jordan", agentId: "sales-lead", description: "Qualified 3 inbound leads", status: "completed", completedAt: new Date(Date.now() - 5400000).toISOString(), result: "2 hot leads, 1 warm. Total pipeline value ~£18k." },
+        { agent: "Iris", agentId: "designer", description: "Clearline pitch deck v2", status: "completed", completedAt: new Date(Date.now() - 12600000).toISOString(), result: "Deck delivered. 12 slides, brand aligned. Client review booked." },
+      ]);
+    }
+    if (apiOnline && demoMode) {
+      setDemoMode(false);
+      demoSeeded.current = false;
+    }
+  }, [apiOnline, loaded, demoMode]);
+
+  // Live countdown since last refresh
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSecondsSinceRefresh(s => s + 1);
+    }, 1000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -1401,7 +1468,15 @@ export default function Dashboard() {
           {liveClock && (
             <span className="header-clock">{liveClock}</span>
           )}
+          {lastRefreshed && (
+            <span className="header-refresh-time" title={`Last refreshed: ${lastRefreshed.toLocaleTimeString()}`}>
+              {secondsSinceRefresh < 5 ? "just now" : secondsSinceRefresh < 60 ? `${secondsSinceRefresh}s ago` : `${Math.floor(secondsSinceRefresh / 60)}m ago`}
+            </span>
+          )}
           <span className="uptime">{status?.systemHealth?.uptimeFormatted || "--"}</span>
+          {demoMode && (
+            <span className="demo-badge" title="API offline — showing demo data">Demo</span>
+          )}
           <div className={`status-badge${apiOnline ? "" : " offline"}`}>
             <div className="status-dot" />
             <span>{apiOnline ? "Systems Online" : "Connecting..."}</span>
