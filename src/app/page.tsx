@@ -257,6 +257,8 @@ export default function Home() {
               return acc
             }, { pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
             setTaskCounts(counts)
+            // Also store all results so task feed card can display them
+            setAgentReports(results)
           }
         }
       } catch { /* backend offline */ }
@@ -789,11 +791,37 @@ export default function Home() {
                 <div className="task-status-lbl">Failed</div>
               </div>
             </div>
-            {taskCounts.total === 0 ? (
+            {/* Task detail feed */}
+            {agentReports.length === 0 ? (
               <div className="task-feed-empty">No tasks yet — agents standing by.</div>
             ) : (
-              <div className="task-feed-empty" style={{ color: 'var(--text-dim)' }}>
-                {taskCounts.in_progress > 0 ? `${taskCounts.in_progress} task${taskCounts.in_progress > 1 ? 's' : ''} running now` : `${taskCounts.completed} tasks completed`}
+              <div className="task-feed">
+                {(() => {
+                  const inProg = agentReports.filter(r => r.status === 'in_progress')
+                  const pending = agentReports.filter(r => r.status === 'pending')
+                  const completed = agentReports.filter(r => r.status === 'completed').slice(-8).reverse()
+                  const failed = agentReports.filter(r => r.status === 'failed').slice(-4).reverse()
+                  const all = [...inProg, ...pending, ...completed, ...failed]
+                  return all.map((t, i) => {
+                    const info = AGENT_INFO[t.agentId?.toLowerCase()] || { name: t.agentId || 'Agent', initials: 'A', dept: 'csuite' as const }
+                    const shortDesc = (t.description || '').split('.')[0].substring(0, 90)
+                    const statusColor = t.status === 'in_progress' ? 'var(--blue)' : t.status === 'pending' ? 'var(--amber)' : t.status === 'completed' ? 'var(--green)' : 'var(--rose)'
+                    const statusLabel = t.status === 'in_progress' ? 'RUNNING' : t.status.toUpperCase()
+                    const timeStr = t.createdAt ? new Date(t.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''
+                    return (
+                      <div key={t.id || i} className="task-feed-row">
+                        <div className="task-feed-status" style={{ color: statusColor }}>{statusLabel}</div>
+                        <div className="task-feed-body">
+                          <div className="task-feed-desc">{shortDesc}</div>
+                          <div className="task-feed-meta">
+                            <span className={`task-feed-agent dept-${info.dept}`}>{info.name}</span>
+                            {timeStr && <span className="task-feed-time">{timeStr}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             )}
           </div>
