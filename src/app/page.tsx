@@ -510,6 +510,60 @@ function ActivityTicker({ recentLogs }: { recentLogs?: AgencyStatus['recentLogs'
   )
 }
 
+// ─── Agent Activity Toast System ───
+interface AgentToastItem {
+  id: number
+  agentId: string
+  agentName: string
+  agentInitials: string
+  dept: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative'
+  text: string
+  exiting?: boolean
+}
+
+// Static demo toast events to cycle through when API is offline
+const DEMO_TOAST_EVENTS: Array<{ agentId: string; text: string }> = [
+  { agentId: 'kai',    text: 'Shipped PR #47 — animations improved' },
+  { agentId: 'priya',  text: 'LinkedIn post scheduled — 3 queued' },
+  { agentId: 'jordan', text: 'Hot lead followed up — Nexus Capital' },
+  { agentId: 'luna',   text: 'Mobile layout fixed — all breakpoints' },
+  { agentId: 'marcus', text: 'P&L reconciled — profit up 18%' },
+  { agentId: 'atlas',  text: 'PR #51 reviewed — approved ✓' },
+  { agentId: 'jade',   text: 'Instagram stories scheduled for week' },
+  { agentId: 'rex',    text: 'API endpoint deployed — 48ms response' },
+  { agentId: 'ash',    text: '4 blog posts delivered — SEO 90+' },
+  { agentId: 'zara',   text: 'Infra scaled — uptime 99.9%' },
+  { agentId: 'quinn',  text: '2 leads qualified — both warm now' },
+  { agentId: 'nova',   text: 'Brand refresh assets approved ✓' },
+]
+
+function AgentToastStack({ toasts, onDismiss }: { toasts: AgentToastItem[]; onDismiss: (id: number) => void }) {
+  return (
+    <div className="agent-toast-stack">
+      {toasts.map(toast => (
+        <div
+          key={toast.id}
+          className={`agent-toast${toast.exiting ? ' exiting' : ''}`}
+          style={{ position: 'relative', overflow: 'hidden' }}
+          onClick={() => onDismiss(toast.id)}
+          title="Click to dismiss"
+        >
+          <div className={`agent-toast-avatar dept-${toast.dept}`}>{toast.agentInitials}</div>
+          <div className="agent-toast-body">
+            <div className="agent-toast-header">
+              <span className="agent-toast-name">{toast.agentName}</span>
+              <span className={`agent-toast-tag dept-${toast.dept}`}>{toast.dept}</span>
+            </div>
+            <div className="agent-toast-text">{toast.text}</div>
+          </div>
+          <div className="agent-toast-checkmark">✓</div>
+          <div className={`agent-toast-progress dept-${toast.dept}`} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── First-Visit Onboarding Panel ───
 function OnboardingPanel() {
   const [visible, setVisible] = useState(false)
@@ -780,16 +834,62 @@ export default function Home() {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [approvingWorkflow, setApprovingWorkflow] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
+  // Agent activity toasts
+  const [agentToasts, setAgentToasts] = useState<AgentToastItem[]>([])
+  const demoToastIdx = useRef(0)
+  const toastIdCounter = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
   const chatOpenRef = useRef(chatOpen)
   useEffect(() => { chatOpenRef.current = chatOpen }, [chatOpen])
 
+  // Helper: push an agent toast and auto-dismiss after 5s
+  const pushAgentToast = useRef((agentId: string, text: string) => {
+    const info = AGENT_INFO[agentId?.toLowerCase()] || {
+      name: agentId || 'Agent',
+      initials: (agentId || 'A').charAt(0).toUpperCase(),
+      dept: 'csuite' as const,
+    }
+    const id = ++toastIdCounter.current
+    setAgentToasts(prev => [...prev.slice(-2), { // cap at 3 visible
+      id,
+      agentId,
+      agentName: info.name,
+      agentInitials: info.initials,
+      dept: info.dept,
+      text,
+    }])
+    // Start exit animation after 4.6s, remove after 5s
+    setTimeout(() => {
+      setAgentToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t))
+    }, 4600)
+    setTimeout(() => {
+      setAgentToasts(prev => prev.filter(t => t.id !== id))
+    }, 5000)
+  }).current
+
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1200)
     return () => clearTimeout(t)
   }, [])
+
+  // Demo toast cycle — fires every 22s when API is offline to simulate live activity
+  useEffect(() => {
+    if (apiOnline === true) return // live API toasts come from report polling
+    // Start with a short delay so the page loads first
+    const initial = setTimeout(() => {
+      const ev = DEMO_TOAST_EVENTS[demoToastIdx.current % DEMO_TOAST_EVENTS.length]
+      demoToastIdx.current++
+      pushAgentToast(ev.agentId, ev.text)
+    }, 6000)
+    const interval = setInterval(() => {
+      const ev = DEMO_TOAST_EVENTS[demoToastIdx.current % DEMO_TOAST_EVENTS.length]
+      demoToastIdx.current++
+      pushAgentToast(ev.agentId, ev.text)
+    }, 22000)
+    return () => { clearTimeout(initial); clearInterval(interval) }
+  }, [apiOnline, pushAgentToast])
 
   // Fetch live agency status every 10s — fall back to demo data when API is unreachable
   useEffect(() => {
@@ -985,6 +1085,11 @@ export default function Home() {
             if (!chatOpenRef.current) {
               setUnreadCount(prev => prev + newReports.length)
             }
+            // Push live activity toasts for new completions
+            newReports.slice(0, 2).forEach((r: AgentReport) => {
+              const shortDesc = (r.description || '').split('.')[0].substring(0, 60)
+              if (shortDesc) pushAgentToast(r.agentId, shortDesc)
+            })
           }
         }
       } catch { /* offline */ }
@@ -2278,6 +2383,12 @@ export default function Home() {
           {newClientToast.msg}
         </div>
       )}
+
+      {/* Agent Activity Toast Stack */}
+      <AgentToastStack
+        toasts={agentToasts}
+        onDismiss={(id) => setAgentToasts(prev => prev.filter(t => t.id !== id))}
+      />
     </>
   )
 }
