@@ -1,5 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.oagencyconsulting.com";
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+const API_URL = "https://api.oagencyconsulting.com";
+const API_KEY = "oa_live_b051d6501b9db536e386e19539659a93b9bbf98a5401523b50ca49fd859d86cb";
 
 export async function fetchAgency(
   endpoint: string,
