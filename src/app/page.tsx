@@ -762,6 +762,12 @@ export default function Home() {
 
   return (
     <>
+      {/* Ambient overlays — pixel-perfect match to local dashboard */}
+      <div className="top-gradient-bar" />
+      <div className="scanline-overlay" />
+      <div className="noise-overlay" />
+      <div className="bg-grid" />
+
       {/* Loading Overlay */}
       <div className={`loading-overlay${loaded ? ' hidden' : ''}`}>
         <div className="load-logo">Open Agency</div>
