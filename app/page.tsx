@@ -267,15 +267,24 @@ function NikitaChat({
   isLoading,
   messages,
   isPolling,
+  unreadCount,
+  onOpen,
 }: {
   onSend: (msg: string) => void;
   isLoading: boolean;
   messages: ChatMessage[];
   isPolling: boolean;
+  unreadCount: number;
+  onOpen: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
+
+  const handleOpen = () => {
+    setOpen(true);
+    onOpen();
+  };
 
   useEffect(() => {
     if (threadRef.current) {
@@ -295,16 +304,29 @@ function NikitaChat({
       <button
         className="nikita-chat-toggle"
         style={{ display: open ? "none" : undefined }}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         title="Chat with Nikita"
       >
         &#128172;
+        {unreadCount > 0 && (
+          <span className="nikita-chat-unread">{unreadCount}</span>
+        )}
       </button>
 
       <div className={`nikita-chat${open ? " open" : ""}`}>
-        <button className="nikita-chat-close" onClick={() => setOpen(false)} title="Close chat">
-          &#10005;
-        </button>
+        <div className="nikita-chat-header">
+          <div className="nikita-chat-header-avatar">N</div>
+          <div className="nikita-chat-header-info">
+            <div className="nikita-chat-header-name">Nikita</div>
+            <div className="nikita-chat-header-status">
+              <span className="nikita-chat-header-dot" />
+              CEO · Open Agency
+            </div>
+          </div>
+          <button className="nikita-chat-close" onClick={() => setOpen(false)} title="Close chat">
+            &#10005;
+          </button>
+        </div>
         <div className="nikita-chat-thread" ref={threadRef}>
           <div className="nikita-chat-thread-inner">
             {messages.map((msg, i) =>
@@ -368,8 +390,35 @@ export default function Dashboard() {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatPolling, setChatPolling] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
+
+  const loadChatHistory = useCallback(async () => {
+    if (historyLoaded) return;
+    try {
+      const { getNikitaHistory } = await import("@/lib/api");
+      const data = await getNikitaHistory();
+      const arr = Array.isArray(data) ? data : data?.value ?? data?.messages ?? [];
+      if (!arr.length) { setHistoryLoaded(true); return; }
+      const mapped: ChatMessage[] = arr.slice(-20).map((m: Record<string, string>) => {
+        const ts = m.timestamp ? new Date(m.timestamp).getTime() : Date.now();
+        const time = new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return {
+          type: m.role === "user" ? "user" : "nikita",
+          text: m.content || m.message || m.text || "",
+          timestamp: ts,
+          time,
+        };
+      });
+      setChatMessages(mapped);
+      setHistoryLoaded(true);
+      setUnreadCount(mapped.filter(m => m.type === "nikita").length > 0 ? 1 : 0);
+    } catch {
+      setHistoryLoaded(true);
+    }
+  }, [historyLoaded]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -403,9 +452,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData().then(() => setLoaded(true));
+    loadChatHistory();
     const interval = setInterval(fetchData, 10_000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, loadChatHistory]);
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -780,7 +830,14 @@ export default function Dashboard() {
       </div>
 
       {/* Nikita Chat Sidebar */}
-      <NikitaChat onSend={handleSendMessage} isLoading={chatLoading} messages={chatMessages} isPolling={chatPolling} />
+      <NikitaChat
+        onSend={handleSendMessage}
+        isLoading={chatLoading}
+        messages={chatMessages}
+        isPolling={chatPolling}
+        unreadCount={unreadCount}
+        onOpen={() => setUnreadCount(0)}
+      />
     </>
   );
 }
