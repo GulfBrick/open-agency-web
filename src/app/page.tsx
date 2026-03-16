@@ -104,6 +104,7 @@ interface ChatMessage {
   agentDept?: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative'
   taskStatus?: 'completed' | 'failed' | 'pending' | 'in_progress'
   dispatchedAgents?: string[]
+  streaming?: boolean  // true while typewriter is still running
 }
 
 interface AgentReport {
@@ -428,6 +429,60 @@ interface NewClientForm {
   notes: string
 }
 
+// ─── Typewriter streaming hook ───
+function useTypewriter(text: string, speed = 18) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  const prevText = useRef('')
+
+  useEffect(() => {
+    if (text === prevText.current) return
+    prevText.current = text
+    setDisplayed('')
+    setDone(false)
+
+    let i = 0
+    const chars = Array.from(text) // handles emoji + unicode correctly
+    const interval = setInterval(() => {
+      i++
+      setDisplayed(chars.slice(0, i).join(''))
+      if (i >= chars.length) {
+        clearInterval(interval)
+        setDone(true)
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, speed])
+
+  return { displayed, done }
+}
+
+// Streaming chat message — types out text char by char
+function StreamingMessage({ text, time, onDone }: { text: string; time?: string; onDone?: () => void }) {
+  const { displayed, done } = useTypewriter(text, 16)
+  const calledDone = useRef(false)
+
+  useEffect(() => {
+    if (done && onDone && !calledDone.current) {
+      calledDone.current = true
+      onDone()
+    }
+  }, [done, onDone])
+
+  return (
+    <div className="chat-nikita-row">
+      <div className="chat-nk-avatar">NK</div>
+      <div className="chat-nikita-body">
+        <div className="chat-msg-text">
+          {displayed}
+          {!done && <span className="chat-cursor">▌</span>}
+        </div>
+        {done && time && <div className="chat-msg-time">{time}</div>}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -651,7 +706,7 @@ export default function Home() {
         const filtered = prev.filter(m => m.role !== 'typing')
         const next: ChatMessage[] = [
           ...filtered,
-          { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() },
+          { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr(), streaming: true },
         ]
         // If Nikita dispatched agents, inject a dispatch card immediately below the reply
         if (data.dispatched && Array.isArray(data.agents) && data.agents.length > 0) {
@@ -1571,13 +1626,23 @@ export default function Home() {
                     </div>
                   </div>
                 ) : msg.role === 'assistant' ? (
-                  <div className="chat-nikita-row">
-                    <div className="chat-nk-avatar">NK</div>
-                    <div className="chat-nikita-body">
-                      <div className="chat-msg-text">{msg.text}</div>
-                      {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                  msg.streaming ? (
+                    <StreamingMessage
+                      text={msg.text}
+                      time={msg.time}
+                      onDone={() => {
+                        setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, streaming: false } : m))
+                      }}
+                    />
+                  ) : (
+                    <div className="chat-nikita-row">
+                      <div className="chat-nk-avatar">NK</div>
+                      <div className="chat-nikita-body">
+                        <div className="chat-msg-text">{msg.text}</div>
+                        {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : (
                   <>
                     <div className="chat-msg-text">{msg.text}</div>
@@ -1621,7 +1686,7 @@ export default function Home() {
                             const filtered = prev.filter(m => m.role !== 'typing')
                             const next: ChatMessage[] = [
                               ...filtered,
-                              { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() },
+                              { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr(), streaming: true },
                             ]
                             if (data.dispatched && Array.isArray(data.agents) && data.agents.length > 0) {
                               next.push({ id: Date.now() + 3, role: 'dispatch', text: '', time: chatTimeStr(), dispatchedAgents: data.agents as string[] })
