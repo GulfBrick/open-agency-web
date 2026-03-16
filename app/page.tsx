@@ -144,8 +144,38 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+const AGENT_IDLE_PHRASES: Record<string, string[]> = {
+  nikita: ["Running the agency...", "Watching the numbers...", "Briefing the team..."],
+  cfo: ["Reviewing P&L...", "Cash flow looks good.", "Q2 forecast running..."],
+  cto: ["Architecture review...", "Infra scaling up...", "Monitoring systems..."],
+  cmo: ["Campaign live...", "Brand strategy session", "Content calendar updated"],
+  "dev-lead": ["Sprint planning...", "PR review queue...", "Velocity tracking..."],
+  frontend: ["UI polish in progress", "Component library++", "Pixel perfect."],
+  backend: ["API endpoints live", "DB query optimised", "Rate limits tuned..."],
+  fullstack: ["Feature shipped.", "Full stack rolling...", "Deployment pipeline..."],
+  qa: ["Tests passing ✓", "Coverage at 94%", "Bug hunt in progress"],
+  "code-review": ["PR reviewed.", "Code quality: high", "Feedback dispatched..."],
+  architect: ["System design session", "Scaling blueprint...", "Infra as code..."],
+  "sales-lead": ["Pipeline updated.", "3 hot leads today.", "Follow-up queued..."],
+  closer: ["Deal in negotiation", "Closing call booked.", "Proposal submitted..."],
+  "lead-qualifier": ["Qualifying inbound...", "ICP match: 82%", "Lead scored..."],
+  "follow-up": ["Sequence running...", "Outreach step 3/5", "Re-engaged lead..."],
+  proposal: ["Deck being drafted", "Pricing customised", "Proposal sent ✓"],
+  "creative-director": ["Brand voice locked.", "Campaign concept...", "Creative brief out"],
+  designer: ["Mockup in Figma...", "Design system++", "Visual polish..."],
+  "video-editor": ["Render in progress", "B-roll selected.", "Cut approved ✓"],
+  "social-media": ["Post scheduled.", "Engagement up 12%", "Trending topic hit"],
+  copywriter: ["Copy in review...", "Hook finalised.", "CTA optimised..."],
+};
+
+const bubblePhraseIdx: Record<string, number> = {};
+
 function getBubbleText(agentId: string, status: string) {
-  if (agentId === "nikita") return "Running the agency...";
+  const phrases = AGENT_IDLE_PHRASES[agentId];
+  if (phrases) {
+    const idx = (bubblePhraseIdx[agentId] || 0) % phrases.length;
+    return phrases[idx];
+  }
   if (isOnline(status)) return "Working...";
   return "Standing by";
 }
@@ -238,8 +268,23 @@ function AgentDesk({ agent }: { agent: Agent }) {
   const avatarClass = AVATAR_CLASS[agent.floor] || "default";
   const initials = getInitials(agent.name);
   const firstName = agent.name.split(/[\s-]/)[0];
-  const bubbleText = getBubbleText(agent.id, agent.status);
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const phrases = AGENT_IDLE_PHRASES[agent.id];
+  const bubbleText = phrases
+    ? phrases[phraseIdx % phrases.length]
+    : isOnline(agent.status) ? "Working..." : "Standing by";
   const [popupOpen, setPopupOpen] = useState(false);
+
+  // Cycle through phrases every 8 seconds (staggered by agent index)
+  useEffect(() => {
+    if (!phrases || phrases.length < 2) return;
+    const delay = Math.random() * 6000;
+    const t = setTimeout(() => {
+      const interval = setInterval(() => setPhraseIdx((i) => i + 1), 8000);
+      return () => clearInterval(interval);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [phrases]);
 
   // Close popup when clicking elsewhere
   useEffect(() => {
