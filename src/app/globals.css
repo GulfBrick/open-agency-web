@@ -966,6 +966,46 @@ body {
   50% { opacity: 0.06; }
 }
 
+/* ─── Per-Floor Desk Ambient Glow ─── */
+/* A coloured radial light source behind the agent desks — makes each floor feel alive */
+.floor-desks::after {
+  content: '';
+  position: absolute;
+  bottom: -10px; right: -20px;
+  width: 60%; height: 120%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  animation: deskAmbientPulse 8s ease-in-out infinite;
+}
+
+.floor.floor-creative .floor-desks::after {
+  background: radial-gradient(ellipse, rgba(244, 63, 94, 0.07) 0%, transparent 70%);
+  animation-delay: 0s;
+}
+.floor.floor-sales .floor-desks::after {
+  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.07) 0%, transparent 70%);
+  animation-delay: 1.5s;
+}
+.floor.floor-dev .floor-desks::after {
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.07) 0%, transparent 70%);
+  animation-delay: 3s;
+}
+.floor.floor-csuite .floor-desks::after {
+  background: radial-gradient(ellipse, rgba(124, 58, 237, 0.07) 0%, transparent 70%);
+  animation-delay: 4.5s;
+}
+.floor.floor-ceo .floor-desks::after {
+  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.06) 0%, rgba(124, 58, 237, 0.04) 50%, transparent 70%);
+  animation-delay: 2s;
+}
+
+@keyframes deskAmbientPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 /* ─── Agent Desk ─── */
 .agent-desk {
   display: flex;
@@ -983,6 +1023,7 @@ body {
 .agent-desk:nth-child(5) { animation-delay: 0.3s; }
 .agent-desk:nth-child(6) { animation-delay: 0.8s; }
 .agent-desk:nth-child(7) { animation-delay: 1.3s; }
+.agent-desk:nth-child(8) { animation-delay: 1.8s; }
 
 @keyframes agentBreathe {
   0%, 100% { transform: translateY(0); }
@@ -1070,6 +1111,7 @@ body {
 .agent-desk:nth-child(5) .bubble { animation-delay: 1.5s; }
 .agent-desk:nth-child(6) .bubble { animation-delay: 2.5s; }
 .agent-desk:nth-child(7) .bubble { animation-delay: 3s; }
+.agent-desk:nth-child(8) .bubble { animation-delay: 3.5s; }
 
 .desk-avatar {
   width: 44px;
@@ -1160,10 +1202,17 @@ body {
 }
 
 /* Floor-specific active bubble tints */
-.floor-csuite .bubble.bubble-active { border-color: rgba(124, 58, 237, 0.35); color: #C4B5FD; background: rgba(124, 58, 237, 0.08); }
-.floor-sales .bubble.bubble-active  { border-color: rgba(245, 158, 11, 0.35); color: #FCD34D; background: rgba(245, 158, 11, 0.08); }
+.floor-csuite .bubble.bubble-active   { border-color: rgba(124, 58, 237, 0.35); color: #C4B5FD; background: rgba(124, 58, 237, 0.08); }
+.floor-sales .bubble.bubble-active    { border-color: rgba(245, 158, 11, 0.35); color: #FCD34D; background: rgba(245, 158, 11, 0.08); }
 .floor-creative .bubble.bubble-active { border-color: rgba(244, 63, 94, 0.35); color: #FDA4AF; background: rgba(244, 63, 94, 0.08); }
-.floor-ceo .bubble.bubble-active    { border-color: rgba(16, 185, 129, 0.35); color: #6EE7B7; background: rgba(16, 185, 129, 0.08); }
+.floor-ceo .bubble.bubble-active      { border-color: rgba(16, 185, 129, 0.35); color: #6EE7B7; background: rgba(16, 185, 129, 0.08); }
+.floor-dev .bubble.bubble-active      { border-color: rgba(59, 130, 246, 0.35); color: #93C5FD; background: rgba(59, 130, 246, 0.08); }
+
+/* Avatar busy state — applied alongside is-active: slight brightness boost + glow */
+.desk-avatar.desk-avatar-busy {
+  filter: brightness(1.15) saturate(1.2);
+  transition: filter 0.4s ease;
+}
 
 /* Room divider between agents */
 .agent-desk + .agent-desk::before {
