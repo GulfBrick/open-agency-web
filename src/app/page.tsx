@@ -1285,13 +1285,54 @@ export default function Home() {
             )}
           </div>
 
-          {/* Workflows */}
-          <div className="dash-card card-workflows">
+          {/* Agency Health */}
+          <div className="dash-card card-health">
             <div className="dash-card-title">
-              <span className="card-icon">🔧</span> Workflows
-              <span className="card-badge">0</span>
+              <span className="card-icon">🩺</span> Agency Health
+              {agencyStatus?.systemHealth?.schedulerActive && (
+                <span className="card-live-badge">● LIVE</span>
+              )}
             </div>
-            <div className="dash-card-empty">No active workflows</div>
+            <div className="health-grid">
+              <div className="health-item">
+                <div className="health-label">Scheduler</div>
+                <div className={`health-value ${agencyStatus?.systemHealth?.schedulerActive ? 'color-green' : 'color-amber'}`}>
+                  {agencyStatus?.systemHealth?.schedulerActive ? 'Active' : apiOnline === null ? '—' : 'Paused'}
+                </div>
+              </div>
+              <div className="health-item">
+                <div className="health-label">Agents Registered</div>
+                <div className="health-value color-violet">
+                  {agencyStatus?.systemHealth?.registeredAgents ?? '—'}
+                </div>
+              </div>
+              <div className="health-item">
+                <div className="health-label">Boot Count</div>
+                <div className="health-value color-amber">
+                  {agencyStatus?.systemHealth?.bootCount ?? '—'}
+                </div>
+              </div>
+              <div className="health-item">
+                <div className="health-label">API Status</div>
+                <div className={`health-value ${apiOnline === true ? 'color-green' : apiOnline === false ? 'color-rose' : 'color-amber'}`}>
+                  {apiOnline === true ? 'Online' : apiOnline === false ? 'Offline' : 'Checking...'}
+                </div>
+              </div>
+              <div className="health-item">
+                <div className="health-label">Tasks In Queue</div>
+                <div className="health-value color-blue">
+                  {taskCounts.pending + taskCounts.in_progress}
+                </div>
+              </div>
+              <div className="health-item">
+                <div className="health-label">Success Rate</div>
+                <div className={`health-value ${taskCounts.total > 0 && (taskCounts.completed / taskCounts.total) > 0.8 ? 'color-green' : 'color-amber'}`}>
+                  {taskCounts.total > 0
+                    ? `${Math.round((taskCounts.completed / taskCounts.total) * 100)}%`
+                    : '—'}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Clients */}

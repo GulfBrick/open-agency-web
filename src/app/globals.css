@@ -2541,7 +2541,65 @@ body {
 
 /* ─── Card accent lines (missing ones) ─── */
 .dash-card.card-tasks::before { background: linear-gradient(180deg, var(--blue), rgba(59, 130, 246, 0.2)); }
-.dash-card.card-workflows::before { background: linear-gradient(180deg, #A78BFA, rgba(167, 139, 250, 0.2)); }
+.dash-card.card-health::before { background: linear-gradient(180deg, #10B981, rgba(16, 185, 129, 0.2)); }
+
+/* ─── Agency Health Card ─── */
+.health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin-top: 4px;
+}
+
+.health-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.health-item:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.health-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.health-value {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-live-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--green);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 5px;
+  padding: 2px 7px;
+  letter-spacing: 0.3px;
+  animation: liveFlash 2s ease-in-out infinite;
+}
+
+@keyframes liveFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 
 /* ─── Live Clock ─── */
 .live-clock {
