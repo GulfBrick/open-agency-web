@@ -2618,6 +2618,85 @@ body {
   background: var(--amber-dim);
 }
 
+/* ─── Floor Online Pulse (when any agent is online) ── */
+@keyframes floorOnlinePulse {
+  0%, 100% { background: rgba(255, 255, 255, 0.008); }
+  50% { background: rgba(255, 255, 255, 0.015); }
+}
+
+.floor-ceo.has-online { animation: floorOnlinePulse 4s ease-in-out infinite; }
+.floor-dev.has-online { animation: floorOnlinePulse 4.5s ease-in-out infinite; }
+.floor-sales.has-online { animation: floorOnlinePulse 5s ease-in-out infinite; }
+.floor-creative.has-online { animation: floorOnlinePulse 5.5s ease-in-out infinite; }
+.floor-csuite.has-online { animation: floorOnlinePulse 6s ease-in-out infinite; }
+
+/* ─── Dashboard Card Entrance Animations ──────────── */
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dash-card {
+  animation: cardSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.dash-card:nth-child(1) { animation-delay: 0.05s; }
+.dash-card:nth-child(2) { animation-delay: 0.10s; }
+.dash-card:nth-child(3) { animation-delay: 0.15s; }
+.dash-card:nth-child(4) { animation-delay: 0.20s; }
+.dash-card:nth-child(5) { animation-delay: 0.25s; }
+.dash-card:nth-child(6) { animation-delay: 0.30s; }
+.dash-card:nth-child(7) { animation-delay: 0.35s; }
+.dash-card:nth-child(8) { animation-delay: 0.40s; }
+
+/* ─── Nikita Typing Bubble ─────────────────────────── */
+.nikita-typing-bubble {
+  padding: 12px 16px !important;
+  min-width: 64px;
+}
+
+.nikita-typing-bubble .agents-working-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+}
+
+.nikita-typing-bubble .agents-working-dots span {
+  width: 7px;
+  height: 7px;
+  background: var(--violet);
+  border-radius: 50%;
+  animation: agentDotPulse 1.4s infinite ease-in-out;
+  opacity: 0.6;
+}
+
+.nikita-typing-bubble .agents-working-dots span:nth-child(2) { animation-delay: 0.2s; }
+.nikita-typing-bubble .agents-working-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── Popup Dismiss Button ─────────────────────────── */
+.popup-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.popup-dismiss:hover {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--text);
+}
+
 @media (max-width: 1280px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);

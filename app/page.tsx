@@ -349,8 +349,9 @@ function BuildingFloor({
   floorDef: (typeof FLOOR_ORDER)[number];
   agents: Agent[];
 }) {
+  const anyOnline = agents.some((a) => isOnline(a.status));
   return (
-    <div className={`floor ${floorDef.cssClass}`}>
+    <div className={`floor ${floorDef.cssClass}${anyOnline ? " has-online" : ""}`}>
       <div className="floor-inner">
         <div className="floor-label">
           <div className="floor-number-badge">{floorDef.number}</div>
@@ -562,8 +563,10 @@ function NikitaChat({
               )
             )}
             {isLoading && (
-              <div className="chat-msg nikita">
-                <div className="chat-msg-text">Thinking...</div>
+              <div className="chat-msg nikita nikita-typing-bubble">
+                <div className="agents-working-dots">
+                  <span /><span /><span />
+                </div>
               </div>
             )}
             {isPolling && (
