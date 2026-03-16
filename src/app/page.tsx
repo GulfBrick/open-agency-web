@@ -140,6 +140,14 @@ interface AgencyStatus {
   systemHealth?: { uptime?: number }
 }
 
+interface TaskCounts {
+  pending: number
+  in_progress: number
+  completed: number
+  failed: number
+  total: number
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -149,6 +157,7 @@ export default function Home() {
   const [agentReports, setAgentReports] = useState<AgentReport[]>([])
   const [reportsExpanded, setReportsExpanded] = useState(true)
   const [agencyStatus, setAgencyStatus] = useState<AgencyStatus | null>(null)
+  const [taskCounts, setTaskCounts] = useState<TaskCounts>({ pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -169,6 +178,34 @@ export default function Home() {
     }
     fetchStatus()
     const interval = setInterval(fetchStatus, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch task queue counts every 20s
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch('/api/tasks/results?limit=100')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.results && Array.isArray(data.results)) {
+            const results = data.results as AgentReport[]
+            const counts = results.reduce((acc, r) => {
+              const s = r.status
+              if (s === 'pending') acc.pending++
+              else if (s === 'in_progress') acc.in_progress++
+              else if (s === 'completed') acc.completed++
+              else if (s === 'failed') acc.failed++
+              acc.total++
+              return acc
+            }, { pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
+            setTaskCounts(counts)
+          }
+        }
+      } catch { /* backend offline */ }
+    }
+    fetchTasks()
+    const interval = setInterval(fetchTasks, 20000)
     return () => clearInterval(interval)
   }, [])
 
@@ -518,10 +555,13 @@ export default function Home() {
             <div className="ceo-brief-avatar">N</div>
             <div className="ceo-brief-label">CEO Briefing</div>
           </div>
-          <div className="ceo-brief-text">
-            Agency is live. Building is up. Dev team is shipping the website every 10 minutes. Clearline Markets is our first active client — Aquas Trading integration in progress. No blockers. All systems green.
+          <div className={`ceo-brief-text${agencyStatus?.lastBriefing ? '' : ' empty'}`}>
+            {agencyStatus?.lastBriefing || 'Agency is live. Building is up. Dev team shipping every 10 minutes. Clearline Markets is our first active client. No blockers. All systems green.'}
           </div>
-          <div className="ceo-brief-time">Monday, 16 March 2026 — 09:37 AM</div>
+          <div className="ceo-brief-time">
+            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {' '}— {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+          </div>
         </div>
 
         {/* Dashboard Grid */}
@@ -535,19 +575,27 @@ export default function Home() {
             <div className="finance-grid">
               <div className="finance-item">
                 <div className="finance-label">Revenue</div>
-                <div className="finance-value color-green">£0</div>
+                <div className="finance-value color-green">
+                  £{((agencyStatus?.finances?.revenue) || 0).toLocaleString()}
+                </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Expenses</div>
-                <div className="finance-value color-rose">£0</div>
+                <div className="finance-value color-rose">
+                  £{((agencyStatus?.finances?.expenses) || 0).toLocaleString()}
+                </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Profit</div>
-                <div className="finance-value">£0</div>
+                <div className={`finance-value ${(agencyStatus?.finances?.profit || 0) >= 0 ? 'color-green' : 'color-rose'}`}>
+                  £{((agencyStatus?.finances?.profit) || 0).toLocaleString()}
+                </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Cash Position</div>
-                <div className="finance-value color-violet">£0</div>
+                <div className="finance-value color-violet">
+                  £{((agencyStatus?.finances?.cashPosition) || 0).toLocaleString()}
+                </div>
               </div>
             </div>
           </div>
@@ -557,89 +605,140 @@ export default function Home() {
             <div className="dash-card-title">
               <span className="card-icon">💼</span> Sales Pipeline
             </div>
-            <div className="pipeline-list">
-              <div className="pipeline-row">
-                <div className="pipeline-label">Hot</div>
-                <div className="pipeline-bar-track">
-                  <div className="pipeline-bar-fill rose" style={{ width: '0%' }} />
+            {(() => {
+              const p = agencyStatus?.pipeline
+              const hot = p?.hot || 0
+              const warm = p?.warm || 0
+              const cold = p?.cold || 0
+              const won = p?.won || 0
+              const max = Math.max(hot, warm, cold, won, 1)
+              return (
+                <div className="pipeline-list">
+                  <div className="pipeline-row">
+                    <div className="pipeline-label">Hot</div>
+                    <div className="pipeline-bar-track">
+                      <div className="pipeline-bar-fill rose" style={{ width: `${(hot / max) * 100}%` }} />
+                    </div>
+                    <div className="pipeline-count color-rose">{hot}</div>
+                  </div>
+                  <div className="pipeline-row">
+                    <div className="pipeline-label">Warm</div>
+                    <div className="pipeline-bar-track">
+                      <div className="pipeline-bar-fill amber" style={{ width: `${(warm / max) * 100}%` }} />
+                    </div>
+                    <div className="pipeline-count color-amber">{warm}</div>
+                  </div>
+                  <div className="pipeline-row">
+                    <div className="pipeline-label">Cold</div>
+                    <div className="pipeline-bar-track">
+                      <div className="pipeline-bar-fill violet" style={{ width: `${(cold / max) * 100}%` }} />
+                    </div>
+                    <div className="pipeline-count color-violet">{cold}</div>
+                  </div>
+                  <div className="pipeline-row">
+                    <div className="pipeline-label">Won</div>
+                    <div className="pipeline-bar-track">
+                      <div className="pipeline-bar-fill green" style={{ width: `${(won / max) * 100}%` }} />
+                    </div>
+                    <div className="pipeline-count color-green">{won}</div>
+                  </div>
                 </div>
-                <div className="pipeline-count color-rose">0</div>
-              </div>
-              <div className="pipeline-row">
-                <div className="pipeline-label">Warm</div>
-                <div className="pipeline-bar-track">
-                  <div className="pipeline-bar-fill amber" style={{ width: '15%' }} />
-                </div>
-                <div className="pipeline-count color-amber">1</div>
-              </div>
-              <div className="pipeline-row">
-                <div className="pipeline-label">Cold</div>
-                <div className="pipeline-bar-track">
-                  <div className="pipeline-bar-fill violet" style={{ width: '0%' }} />
-                </div>
-                <div className="pipeline-count color-violet">0</div>
-              </div>
-              <div className="pipeline-row">
-                <div className="pipeline-label">Won</div>
-                <div className="pipeline-bar-track">
-                  <div className="pipeline-bar-fill green" style={{ width: '100%' }} />
-                </div>
-                <div className="pipeline-count color-green">1</div>
-              </div>
-            </div>
+              )
+            })()}
           </div>
 
           {/* Active Sprint */}
           <div className="dash-card card-sprint">
             <div className="dash-card-title">
               <span className="card-icon">🚀</span> Active Sprint
-              <span className="card-badge">Sprint 1</span>
+              <span className="card-badge">
+                {agencyStatus?.activeSprints?.[0] ? agencyStatus.activeSprints[0].name : 'Sprint 1'}
+              </span>
             </div>
-            <div className="sprint-pct">Website build · 40% complete</div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: '40%' }} />
-            </div>
-            <div className="sprint-stats">
-              <div className="sprint-stat">
-                <div className="sprint-stat-value color-green">4</div>
-                <div className="sprint-stat-label">Done</div>
-              </div>
-              <div className="sprint-stat">
-                <div className="sprint-stat-value color-blue">2</div>
-                <div className="sprint-stat-label">Active</div>
-              </div>
-              <div className="sprint-stat">
-                <div className="sprint-stat-value color-amber">6</div>
-                <div className="sprint-stat-label">Todo</div>
-              </div>
-            </div>
+            {agencyStatus?.activeSprints?.[0] ? (() => {
+              const s = agencyStatus.activeSprints![0]
+              const done = s.done || 0
+              const inProg = s.inProgress || 0
+              const todo = s.todo || 0
+              const total = done + inProg + todo
+              const pct = total > 0 ? Math.round((done / total) * 100) : (s.progress || 0)
+              return (
+                <>
+                  <div className="sprint-pct">{s.name} · {pct}% complete</div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="sprint-stats">
+                    <div className="sprint-stat">
+                      <div className="sprint-stat-value color-green">{done}</div>
+                      <div className="sprint-stat-label">Done</div>
+                    </div>
+                    <div className="sprint-stat">
+                      <div className="sprint-stat-value color-blue">{inProg}</div>
+                      <div className="sprint-stat-label">Active</div>
+                    </div>
+                    <div className="sprint-stat">
+                      <div className="sprint-stat-value color-amber">{todo}</div>
+                      <div className="sprint-stat-label">Todo</div>
+                    </div>
+                  </div>
+                </>
+              )
+            })() : (
+              <>
+                <div className="sprint-pct">Website build · 40% complete</div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: '40%' }} />
+                </div>
+                <div className="sprint-stats">
+                  <div className="sprint-stat">
+                    <div className="sprint-stat-value color-green">4</div>
+                    <div className="sprint-stat-label">Done</div>
+                  </div>
+                  <div className="sprint-stat">
+                    <div className="sprint-stat-value color-blue">2</div>
+                    <div className="sprint-stat-label">Active</div>
+                  </div>
+                  <div className="sprint-stat">
+                    <div className="sprint-stat-value color-amber">6</div>
+                    <div className="sprint-stat-label">Todo</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Live Task Queue — spans 2 columns */}
           <div className="dash-card card-tasks dash-card-wide">
             <div className="dash-card-title">
               <span className="card-icon">⚡</span> Live Task Queue
-              <span className="card-badge">0</span>
+              <span className="card-badge">{taskCounts.total}</span>
             </div>
             <div className="task-status-row">
               <div className="task-status-cell" style={{ background: 'rgba(245,158,11,0.10)' }}>
-                <div className="task-status-val color-amber">0</div>
+                <div className="task-status-val color-amber">{taskCounts.pending}</div>
                 <div className="task-status-lbl">Pending</div>
               </div>
               <div className="task-status-cell" style={{ background: 'rgba(59,130,246,0.10)' }}>
-                <div className="task-status-val color-blue">0</div>
+                <div className="task-status-val color-blue">{taskCounts.in_progress}</div>
                 <div className="task-status-lbl">In Progress</div>
               </div>
               <div className="task-status-cell" style={{ background: 'rgba(16,185,129,0.10)' }}>
-                <div className="task-status-val color-green">0</div>
+                <div className="task-status-val color-green">{taskCounts.completed}</div>
                 <div className="task-status-lbl">Completed</div>
               </div>
               <div className="task-status-cell" style={{ background: 'rgba(244,63,94,0.10)' }}>
-                <div className="task-status-val color-rose">0</div>
+                <div className="task-status-val color-rose">{taskCounts.failed}</div>
                 <div className="task-status-lbl">Failed</div>
               </div>
             </div>
-            <div className="task-feed-empty">No tasks yet — agents standing by.</div>
+            {taskCounts.total === 0 ? (
+              <div className="task-feed-empty">No tasks yet — agents standing by.</div>
+            ) : (
+              <div className="task-feed-empty" style={{ color: 'var(--text-dim)' }}>
+                {taskCounts.in_progress > 0 ? `${taskCounts.in_progress} task${taskCounts.in_progress > 1 ? 's' : ''} running now` : `${taskCounts.completed} tasks completed`}
+              </div>
+            )}
           </div>
 
           {/* Workflows */}
@@ -657,14 +756,25 @@ export default function Home() {
               <span className="card-icon">👤</span> Clients
             </div>
             <div className="client-list">
-              <div className="client-card">
-                <div className="client-avatar">C</div>
-                <div>
-                  <div className="client-name">Clearline Markets</div>
-                  <div className="client-meta">Prop trading · Active</div>
+              {agencyStatus?.clients && agencyStatus.clients.length > 0 ? agencyStatus.clients.map((c, i) => (
+                <div key={i} className="client-card">
+                  <div className="client-avatar">{c.name.charAt(0)}</div>
+                  <div>
+                    <div className="client-name">{c.name}</div>
+                    <div className="client-meta">{c.id} · {c.status}</div>
+                  </div>
+                  <span className={`badge badge-${c.status === 'active' ? 'green' : 'amber'}`} style={{ marginLeft: 'auto' }}>{c.status}</span>
                 </div>
-                <span className="badge badge-green" style={{ marginLeft: 'auto' }}>Active</span>
-              </div>
+              )) : (
+                <div className="client-card">
+                  <div className="client-avatar">C</div>
+                  <div>
+                    <div className="client-name">Clearline Markets</div>
+                    <div className="client-meta">Prop trading · Active</div>
+                  </div>
+                  <span className="badge badge-green" style={{ marginLeft: 'auto' }}>Active</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -695,21 +805,48 @@ export default function Home() {
           <div className="dash-card card-activity">
             <div className="dash-card-title">
               <span className="card-icon">📄</span> Activity Log
-              <span className="card-badge">3</span>
+              <span className="card-badge">{agencyStatus?.recentLogs ? agencyStatus.recentLogs.length : 3}</span>
             </div>
             <div className="activity-ticker">
-              <div className="log-entry">
-                <div className="log-time">09:57</div>
-                <div className="log-text"><span className="log-agent log-agent--dev">Kai</span> <span className="log-action">shipped website update</span></div>
-              </div>
-              <div className="log-entry">
-                <div className="log-time">09:47</div>
-                <div className="log-text"><span className="log-agent log-agent--csuite">Priya</span> <span className="log-action">posted to Twitter</span></div>
-              </div>
-              <div className="log-entry">
-                <div className="log-time">09:37</div>
-                <div className="log-text"><span className="log-agent log-agent--default">Nikita</span> <span className="log-action">issued morning brief</span></div>
-              </div>
+              {agencyStatus?.recentLogs && agencyStatus.recentLogs.length > 0 ? (
+                agencyStatus.recentLogs.slice(0, 8).map((log, i) => {
+                  const agentId = log.agent?.toLowerCase() || ''
+                  const deptCls = AGENT_INFO[agentId]?.dept
+                    ? `log-agent--${AGENT_INFO[agentId].dept}`
+                    : 'log-agent--default'
+                  const timeStr = log.timestamp
+                    ? new Date(log.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                    : '--:--'
+                  const action = log.type === 'TASK_COMPLETED' ? 'completed task'
+                    : log.type === 'TASK_FAILED' ? 'task failed'
+                    : log.type === 'TASK_STARTED' ? 'started task'
+                    : log.type?.toLowerCase().replace(/_/g, ' ') || 'logged activity'
+                  return (
+                    <div key={i} className="log-entry">
+                      <div className="log-time">{timeStr}</div>
+                      <div className="log-text">
+                        <span className={`log-agent ${deptCls}`}>{AGENT_INFO[agentId]?.name || log.agent}</span>{' '}
+                        <span className="log-action">{action}</span>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <>
+                  <div className="log-entry">
+                    <div className="log-time">10:57</div>
+                    <div className="log-text"><span className="log-agent log-agent--dev">Kai</span> <span className="log-action">shipped website update</span></div>
+                  </div>
+                  <div className="log-entry">
+                    <div className="log-time">10:47</div>
+                    <div className="log-text"><span className="log-agent log-agent--csuite">Priya</span> <span className="log-action">posted to Twitter</span></div>
+                  </div>
+                  <div className="log-entry">
+                    <div className="log-time">10:37</div>
+                    <div className="log-text"><span className="log-agent log-agent--default">Nikita</span> <span className="log-action">issued morning brief</span></div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
