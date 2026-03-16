@@ -358,6 +358,14 @@ function ValuePropTicker() {
   )
 }
 
+interface NewClientForm {
+  name: string
+  industry: string
+  contactName: string
+  contactEmail: string
+  notes: string
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -374,6 +382,11 @@ export default function Home() {
   const [apiOnline, setApiOnline] = useState<boolean | null>(null)
   const [runningSchedule, setRunningSchedule] = useState<string | null>(null)
   const [runToast, setRunToast] = useState<string | null>(null)
+  // New Client modal
+  const [newClientOpen, setNewClientOpen] = useState(false)
+  const [newClientForm, setNewClientForm] = useState<NewClientForm>({ name: '', industry: '', contactName: '', contactEmail: '', notes: '' })
+  const [newClientSubmitting, setNewClientSubmitting] = useState(false)
+  const [newClientToast, setNewClientToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -404,7 +417,7 @@ export default function Home() {
       } catch { setApiOnline(false) }
     }
     fetchStatus()
-    const interval = setInterval(fetchStatus, 30000)
+    const interval = setInterval(fetchStatus, 10000)
     return () => clearInterval(interval)
   }, [])
 
@@ -649,6 +662,35 @@ export default function Home() {
     }
     setRunningSchedule(null)
     setTimeout(() => setRunToast(null), 3500)
+  }
+
+  async function submitNewClient() {
+    if (!newClientForm.name.trim() || newClientSubmitting) return
+    setNewClientSubmitting(true)
+    try {
+      const res = await fetch('/api/clients/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClientForm),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setNewClientToast({ msg: `⚠ ${data.message || 'Could not onboard — API offline.'}`, ok: false })
+      } else {
+        setNewClientToast({ msg: `✓ ${newClientForm.name} onboarded!`, ok: true })
+        setNewClientForm({ name: '', industry: '', contactName: '', contactEmail: '', notes: '' })
+        setNewClientOpen(false)
+        // Refresh status to pick up new client
+        try {
+          const sr = await fetch('/api/status')
+          if (sr.ok) { const sd = await sr.json(); if (!sd.error) setAgencyStatus(sd) }
+        } catch { /* offline */ }
+      }
+    } catch {
+      setNewClientToast({ msg: '⚠ Failed to submit — check your connection.', ok: false })
+    }
+    setNewClientSubmitting(false)
+    setTimeout(() => setNewClientToast(null), 4000)
   }
 
   return (
@@ -1186,6 +1228,7 @@ export default function Home() {
           <div className="dash-card card-clients">
             <div className="dash-card-title">
               <span className="card-icon">👤</span> Clients
+              <button className="new-client-btn" onClick={() => setNewClientOpen(true)} title="Onboard a new client">+ New Client</button>
             </div>
             <div className="client-list">
               {agencyStatus?.clients && agencyStatus.clients.length > 0 ? agencyStatus.clients.map((c, i) => (
@@ -1450,6 +1493,86 @@ export default function Home() {
           <span className="chat-unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
+
+      {/* New Client Modal */}
+      {newClientOpen && (
+        <div className="modal-backdrop" onClick={() => setNewClientOpen(false)}>
+          <div className="modal-panel" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">New Client</span>
+              <button className="modal-close" onClick={() => setNewClientOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-field">
+                <label className="modal-label">Business Name *</label>
+                <input
+                  className="modal-input"
+                  placeholder="e.g. Clearline Markets"
+                  value={newClientForm.name}
+                  onChange={e => setNewClientForm(f => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="modal-field">
+                <label className="modal-label">Industry</label>
+                <input
+                  className="modal-input"
+                  placeholder="e.g. Prop Trading, SaaS, eCommerce"
+                  value={newClientForm.industry}
+                  onChange={e => setNewClientForm(f => ({ ...f, industry: e.target.value }))}
+                />
+              </div>
+              <div className="modal-row">
+                <div className="modal-field">
+                  <label className="modal-label">Contact Name</label>
+                  <input
+                    className="modal-input"
+                    placeholder="Full name"
+                    value={newClientForm.contactName}
+                    onChange={e => setNewClientForm(f => ({ ...f, contactName: e.target.value }))}
+                  />
+                </div>
+                <div className="modal-field">
+                  <label className="modal-label">Contact Email</label>
+                  <input
+                    className="modal-input"
+                    type="email"
+                    placeholder="email@company.com"
+                    value={newClientForm.contactEmail}
+                    onChange={e => setNewClientForm(f => ({ ...f, contactEmail: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="modal-field">
+                <label className="modal-label">Notes</label>
+                <textarea
+                  className="modal-input modal-textarea"
+                  placeholder="What does this client need? Goals, context, constraints..."
+                  rows={3}
+                  value={newClientForm.notes}
+                  onChange={e => setNewClientForm(f => ({ ...f, notes: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="modal-cancel" onClick={() => setNewClientOpen(false)}>Cancel</button>
+              <button
+                className={`modal-submit${newClientSubmitting ? ' submitting' : ''}`}
+                onClick={submitNewClient}
+                disabled={newClientSubmitting || !newClientForm.name.trim()}
+              >
+                {newClientSubmitting ? 'Onboarding...' : 'Onboard Client'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Client Toast */}
+      {newClientToast && (
+        <div className={`new-client-toast${newClientToast.ok ? ' ok' : ' err'}`}>
+          {newClientToast.msg}
+        </div>
+      )}
     </>
   )
 }
