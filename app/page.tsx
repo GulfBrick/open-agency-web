@@ -595,6 +595,39 @@ function ScheduleRunItem({ name, timeStr, scheduleKey }: { name: string; timeStr
   );
 }
 
+// ─── Workflow Approve Button ────────────────────────────────────────────────
+
+function WorkflowApproveButton({ workflowId, onApproved }: { workflowId: string; onApproved?: () => void }) {
+  const [approving, setApproving] = useState(false);
+  const [approved, setApproved] = useState(false);
+
+  const handleApprove = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (approving || approved) return;
+    setApproving(true);
+    try {
+      await approveWorkflow(workflowId);
+      setApproved(true);
+      onApproved?.();
+    } catch {
+      // silent fail
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  return (
+    <button
+      className="btn-approve"
+      onClick={handleApprove}
+      disabled={approving || approved}
+      title={`Approve workflow ${workflowId}`}
+    >
+      {approving ? "…" : approved ? "✓ Approved" : "Approve"}
+    </button>
+  );
+}
+
 // ─── Nikita Chat Sidebar ────────────────────────────────────────────────────
 
 interface ChatMessage {
@@ -1799,8 +1832,9 @@ export default function Dashboard() {
                   const stepsDone = wf.steps?.filter(s => s.status === "DONE").length || 0;
                   const label = wf.name || wf.workflowId?.substring(0, 16) || "Workflow";
                   const statusLabel = st.replace("_", " ").toLowerCase();
+                  const needsApproval = st === "WAITING_APPROVAL";
                   return (
-                    <div key={i} className="sprint-item">
+                    <div key={i} className={`sprint-item${needsApproval ? " sprint-item-approval" : ""}`}>
                       <span className={`sprint-dot color-${dot}`}>●</span>
                       <span className="sprint-label">
                         {label}
@@ -1810,7 +1844,11 @@ export default function Dashboard() {
                           </span>
                         )}
                       </span>
-                      <span className={`sprint-status color-${dot}`}>{statusLabel}</span>
+                      {needsApproval ? (
+                        <WorkflowApproveButton workflowId={wf.workflowId} onApproved={fetchData} />
+                      ) : (
+                        <span className={`sprint-status color-${dot}`}>{statusLabel}</span>
+                      )}
                     </div>
                   );
                 })}
