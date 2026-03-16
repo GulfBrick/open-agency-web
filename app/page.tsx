@@ -90,6 +90,39 @@ function isOnline(status: string) {
   return status === "active" || status === "working" || status === "online";
 }
 
+const BOOT_MESSAGES = [
+  "Booting agency systems...",
+  "Waking the team...",
+  "Connecting to HQ...",
+  "Syncing agent roster...",
+  "Intelligence at work.",
+];
+
+function useTypewriter(text: string, speed = 32) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  const prevText = useRef("");
+
+  useEffect(() => {
+    if (text === prevText.current) return;
+    prevText.current = text;
+    setDone(false);
+    setDisplayed("");
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return { displayed, done };
+}
+
 function getInitials(name: string) {
   return name
     .split(/[\s()]+/)
@@ -528,13 +561,6 @@ export default function Dashboard() {
       const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setChatMessages((prev) => [...prev, { type: "nikita", text: reply, timestamp: Date.now(), time: replyTime }]);
 
-      if ("speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(reply);
-        utterance.rate = 1;
-        utterance.pitch = 1;
-        window.speechSynthesis.speak(utterance);
-      }
-
       // Start polling for agent results
       startPolling(sentAt);
     } catch {
@@ -550,6 +576,22 @@ export default function Dashboard() {
 
   // Count online agents
   const onlineCount = agents.filter((a) => isOnline(a.status)).length;
+
+  // Boot message cycle for CEO brief while API loads
+  const [bootMsgIdx, setBootMsgIdx] = useState(0);
+  useEffect(() => {
+    if (apiOnline) return;
+    const t = setInterval(() => {
+      setBootMsgIdx((i) => (i + 1) % BOOT_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(t);
+  }, [apiOnline]);
+
+  const briefText = status
+    ? `${agents.filter((a) => isOnline(a.status)).length} agents active. Pipeline: ${status.pipeline?.total ?? 0} leads. Revenue: £${status.finances?.revenue ?? 0}. Systems running smoothly.`
+    : BOOT_MESSAGES[bootMsgIdx];
+
+  const { displayed: briefDisplayed } = useTypewriter(briefText, 28);
 
   // Pipeline helpers
   const pipeTotal = status?.pipeline?.total || 1;
@@ -689,9 +731,7 @@ export default function Dashboard() {
             <div className="ceo-brief-label">CEO Briefing</div>
           </div>
           <div className={`ceo-brief-text${!status ? " empty" : ""}`}>
-            {status
-              ? `${agents.filter((a) => isOnline(a.status)).length} agents active. Pipeline: ${status.pipeline?.total ?? 0} leads. Revenue: \u00A3${status.finances?.revenue ?? 0}. Systems running smoothly.`
-              : "Awaiting first briefing..."}
+            {briefDisplayed}<span className="typewriter-cursor">|</span>
           </div>
           <div className="ceo-brief-time" />
         </div>

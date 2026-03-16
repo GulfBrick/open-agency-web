@@ -1928,6 +1928,51 @@ body {
   animation: shimmer 6s ease-in-out infinite;
 }
 
+/* ─── Typewriter Cursor ─────────────────────────────── */
+.typewriter-cursor {
+  display: inline-block;
+  color: var(--violet);
+  font-weight: 300;
+  margin-left: 1px;
+  animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ─── Floor Entrance Animations ─────────────────────── */
+@keyframes floorSlideIn {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.floor {
+  animation: floorSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.floor:nth-child(2) { animation-delay: 0.05s; }
+.floor:nth-child(3) { animation-delay: 0.10s; }
+.floor:nth-child(4) { animation-delay: 0.15s; }
+.floor:nth-child(5) { animation-delay: 0.20s; }
+.floor:nth-child(6) { animation-delay: 0.25s; }
+
+/* ─── Ground Floor Stat Entrance ──────────────────── */
+@keyframes statPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ground-stat {
+  animation: statPop 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.ground-stat:nth-child(1) { animation-delay: 0.3s; }
+.ground-stat:nth-child(2) { animation-delay: 0.38s; }
+.ground-stat:nth-child(3) { animation-delay: 0.46s; }
+.ground-stat:nth-child(4) { animation-delay: 0.54s; }
+
 /* ─── Responsive ────────────────────────────────────── */
 @media (max-width: 1280px) {
   .dashboard-grid {
