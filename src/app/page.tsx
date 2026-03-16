@@ -370,6 +370,7 @@ export default function Home() {
   const [taskCounts, setTaskCounts] = useState<TaskCounts>({ pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
   const [unreadCount, setUnreadCount] = useState(0)
   const [schedules, setSchedules] = useState<ScheduleItem[]>([])
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -448,6 +449,35 @@ export default function Home() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, chatOpen])
+
+  // Load Nikita chat history from API on mount (matches local dashboard)
+  useEffect(() => {
+    if (historyLoaded) return
+    const loadHistory = async () => {
+      try {
+        const res = await fetch('/api/chat/history')
+        if (!res.ok) return
+        const history = await res.json()
+        if (Array.isArray(history) && history.length > 0) {
+          const msgs: ChatMessage[] = history.map((m: { role: string; content: string; channel?: string; timestamp?: string }, i: number) => ({
+            id: -(i + 1), // negative IDs so they don't conflict with new msgs
+            role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
+            text: m.content || '',
+            time: m.timestamp
+              ? new Date(m.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+              : undefined,
+          }))
+          // Prepend history before the initial greeting, deduplicate
+          setMessages(prev => {
+            const historyMsgs = msgs.filter(hm => !prev.some(pm => pm.text === hm.text && pm.role === hm.role))
+            return historyMsgs.length > 0 ? [...historyMsgs, ...prev] : prev
+          })
+        }
+      } catch { /* history endpoint offline */ }
+      setHistoryLoaded(true)
+    }
+    loadHistory()
+  }, [historyLoaded])
 
   // Track which report IDs have already been shown as chat bubbles
   const seenReportIds = useRef<Set<string>>(new Set())
@@ -1273,6 +1303,14 @@ export default function Home() {
               >
                 {msg.role === 'typing' ? (
                   <div className="chat-msg-text typing-text">{msg.text}</div>
+                ) : msg.role === 'assistant' ? (
+                  <div className="chat-nikita-row">
+                    <div className="chat-nk-avatar">NK</div>
+                    <div className="chat-nikita-body">
+                      <div className="chat-msg-text">{msg.text}</div>
+                      {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <div className="chat-msg-text">{msg.text}</div>

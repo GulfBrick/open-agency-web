@@ -3421,3 +3421,33 @@ body {
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
 }
 
+/* ─── Nikita Chat — inline NK avatar on assistant messages ─── */
+.chat-nikita-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.chat-nk-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 8px;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.25);
+}
+
+.chat-nikita-body {
+  flex: 1;
+  min-width: 0;
+}
+
