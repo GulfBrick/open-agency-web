@@ -305,7 +305,12 @@ export default function Home() {
   const [reportsExpanded, setReportsExpanded] = useState(true)
   const [agencyStatus, setAgencyStatus] = useState<AgencyStatus | null>(null)
   const [taskCounts, setTaskCounts] = useState<TaskCounts>({ pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
+  const [unreadCount, setUnreadCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatHasSeeded = useRef(false)
+  const unreadReportIds = useRef<Set<string>>(new Set())
+  const chatOpenRef = useRef(chatOpen)
+  useEffect(() => { chatOpenRef.current = chatOpen }, [chatOpen])
 
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1200)
@@ -368,14 +373,22 @@ export default function Home() {
   const seenReportIds = useRef<Set<string>>(new Set())
 
   // Poll agent reports — inject NEW ones as colored dept bubbles in chat
+  // Runs always (not gated on chatOpen) so unread badge works even when panel is closed
   useEffect(() => {
-    if (!chatOpen) return
     const fetchReports = async () => {
       try {
         const res = await fetch('/api/tasks/results?limit=10')
         const data = await res.json()
         if (data.results && Array.isArray(data.results)) {
           setAgentReports(data.results)
+
+          // On first run, seed seen IDs so we don't flood old completed tasks
+          if (!chatHasSeeded.current) {
+            data.results.forEach((r: AgentReport) => seenReportIds.current.add(r.id))
+            chatHasSeeded.current = true
+            return
+          }
+
           // Inject any newly completed/failed reports as chat bubbles
           const newReports: AgentReport[] = data.results.filter(
             (r: AgentReport) => !seenReportIds.current.has(r.id) &&
@@ -402,8 +415,15 @@ export default function Home() {
                 taskStatus: r.status,
               }
             })
-            newReports.forEach((r: AgentReport) => seenReportIds.current.add(r.id))
+            newReports.forEach((r: AgentReport) => {
+              seenReportIds.current.add(r.id)
+              unreadReportIds.current.add(r.id)
+            })
             setMessages(prev => [...prev, ...bubbles])
+            // If chat is closed, bump unread count
+            if (!chatOpenRef.current) {
+              setUnreadCount(prev => prev + newReports.length)
+            }
           }
         }
       } catch { /* offline */ }
@@ -411,7 +431,7 @@ export default function Home() {
     fetchReports()
     const interval = setInterval(fetchReports, 8000)
     return () => clearInterval(interval)
-  }, [chatOpen])
+  }, [])
 
   async function sendMessage() {
     if (!input.trim() || sending) return
@@ -1070,7 +1090,7 @@ export default function Home() {
 
       {/* Nikita Chat — Slide-out Sidebar */}
       <div className={`nikita-chat ${chatOpen ? 'open' : ''}`}>
-        <button className="nikita-chat-close" onClick={() => setChatOpen(false)} title="Close chat">✕</button>
+        <button className="nikita-chat-close" onClick={() => { setChatOpen(false); setUnreadCount(0) }} title="Close chat">✕</button>
         <div className="nikita-chat-header">
           <div className="nikita-avatar">N</div>
           <div>
@@ -1150,7 +1170,12 @@ export default function Home() {
               placeholder="Message Nikita..."
               rows={1}
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => {
+                setInput(e.target.value)
+                // Auto-resize textarea
+                e.target.style.height = 'auto'
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+              }}
               onKeyDown={handleKeyDown}
             />
             <button className="nikita-chat-send" onClick={sendMessage} disabled={sending}>
@@ -1161,10 +1186,13 @@ export default function Home() {
       </div>
       <button
         className={`nikita-chat-toggle${chatOpen ? ' hidden' : ''}`}
-        onClick={() => setChatOpen(true)}
+        onClick={() => { setChatOpen(true); setUnreadCount(0) }}
         title="Chat with Nikita"
       >
         💬
+        {unreadCount > 0 && (
+          <span className="chat-unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+        )}
       </button>
     </>
   )

@@ -1555,6 +1555,7 @@ body {
   justify-content: center;
   box-shadow: 0 4px 24px rgba(124, 58, 237, 0.35);
   transition: all 0.2s;
+  /* position:fixed acts as containing block for absolute badge */
 }
 
 .nikita-chat-toggle:hover {
@@ -1781,6 +1782,33 @@ body {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.8);
+}
+
+/* ─── Unread badge on chat toggle ─── */
+.chat-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--rose);
+  color: #fff;
+  font-family: var(--heading);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--bg);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
 }
 
 /* ─── Chat message timestamps ─── */
