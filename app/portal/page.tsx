@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Nav from "@/app/components/Nav";
 
@@ -272,9 +272,65 @@ function MessagePanel() {
 
 type Tab = "overview" | "agents" | "tasks" | "reports" | "message";
 
+interface LiveStatus {
+  agents: { id: string; name: string; role: string; status: string; tasksCompleted: number; rank: string | null; lastReport: string | null }[];
+  finances: { revenue: number; expenses: number; profit: number; cashPosition: number };
+  clients: { id: string; name: string; status: string; activeAgents: number }[];
+  systemHealth: { uptimeFormatted: string; bootCount: number; registeredAgents: number };
+  lastBriefing?: string;
+}
+
+interface LiveTask {
+  id: string;
+  title: string;
+  agentId: string;
+  status: string;
+  priority: string;
+  result?: string;
+  completedAt?: string;
+}
+
 export default function PortalPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [activeReport, setActiveReport] = useState<typeof DEMO_REPORTS[0] | null>(null);
+  const [liveData, setLiveData] = useState<{ status: LiveStatus | null; tasks: LiveTask[]; isLive: boolean }>({
+    status: null, tasks: [], isLive: false
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadLive() {
+      try {
+        const res = await fetch("/api/portal/status");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status) {
+            setLiveData({
+              status: data.status,
+              tasks: data.taskResults || [],
+              isLive: true,
+            });
+          }
+        }
+      } catch { /* fall through to demo */ }
+      setLoading(false);
+    }
+    loadLive();
+    const interval = setInterval(loadLive, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Build display agents — live if available, else demo
+  const displayAgents = liveData.status?.agents?.map(a => ({
+    id: a.id,
+    name: a.name,
+    role: a.role,
+    dept: a.role,
+    emoji: "🤖",
+    status: a.status === "ONLINE" ? "active" : "idle",
+    lastActive: a.lastReport ? new Date(a.lastReport).toLocaleTimeString() : "—",
+    tasksCompleted: a.tasksCompleted,
+  })).slice(0, 6) ?? DEMO_AGENTS;
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: "overview", label: "Overview", icon: "⚡" },
@@ -284,9 +340,16 @@ export default function PortalPage() {
     { id: "message", label: "Message Nikita", icon: "💬" },
   ];
 
-  const completedTasks = DEMO_TASKS.filter((t) => t.status === "completed").length;
-  const inProgressTasks = DEMO_TASKS.filter((t) => t.status === "in_progress").length;
-  const activeAgents = DEMO_AGENTS.filter((a) => a.status === "active").length;
+  const completedTasks = liveData.isLive
+    ? liveData.tasks.filter(t => t.status === "COMPLETED").length
+    : DEMO_TASKS.filter((t) => t.status === "completed").length;
+  const inProgressTasks = liveData.isLive
+    ? liveData.tasks.filter(t => t.status === "IN_PROGRESS").length
+    : DEMO_TASKS.filter((t) => t.status === "in_progress").length;
+  const activeAgents = liveData.isLive
+    ? (liveData.status?.agents?.filter(a => a.status === "ONLINE").length ?? 0)
+    : DEMO_AGENTS.filter((a) => a.status === "active").length;
+  const liveProfit = liveData.status?.finances?.profit ?? null;
 
   return (
     <>
@@ -319,13 +382,19 @@ export default function PortalPage() {
 
           {/* Stats Bar */}
           <div className="portal-stats-bar">
+            {liveData.isLive && (
+              <div style={{ position: "absolute", top: "0.5rem", right: "1rem", fontSize: "0.7rem", color: "#10B981", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
+                LIVE
+              </div>
+            )}
             <div className="portal-stat-item">
-              <div className="portal-stat-num" style={{ color: "#10B981" }}>{activeAgents}</div>
-              <div className="portal-stat-label">Agents Active</div>
+              <div className="portal-stat-num" style={{ color: "#10B981" }}>{loading ? "…" : activeAgents}</div>
+              <div className="portal-stat-label">Agents Online</div>
             </div>
             <div className="portal-stat-divider" />
             <div className="portal-stat-item">
-              <div className="portal-stat-num" style={{ color: "#7C3AED" }}>{completedTasks}</div>
+              <div className="portal-stat-num" style={{ color: "#7C3AED" }}>{loading ? "…" : completedTasks}</div>
               <div className="portal-stat-label">Tasks Completed</div>
             </div>
             <div className="portal-stat-divider" />
@@ -340,8 +409,14 @@ export default function PortalPage() {
             </div>
             <div className="portal-stat-divider" />
             <div className="portal-stat-item">
-              <div className="portal-stat-num" style={{ color: "#3B82F6" }}>$158k</div>
-              <div className="portal-stat-label">Net Profit (Q1)</div>
+              <div className="portal-stat-num" style={{ color: "#3B82F6" }}>
+                {liveProfit !== null
+                  ? liveProfit === 0
+                    ? "$0"
+                    : `$${(liveProfit / 1000).toFixed(0)}k`
+                  : "$158k"}
+              </div>
+              <div className="portal-stat-label">Net Profit</div>
             </div>
           </div>
 
@@ -365,23 +440,41 @@ export default function PortalPage() {
             {/* Overview */}
             {tab === "overview" && (
               <div className="portal-overview">
-                {/* Latest Report Highlight */}
+                {/* Latest Briefing — live or demo */}
                 <div className="portal-section">
-                  <div className="portal-section-title">Latest Briefing</div>
-                  <div
-                    className="portal-latest-report"
-                    onClick={() => setActiveReport(DEMO_REPORTS[0])}
-                  >
-                    <div className="portal-latest-report-header">
-                      <span>{DEMO_REPORTS[0].emoji}</span>
-                      <div>
-                        <div className="portal-latest-report-title">{DEMO_REPORTS[0].title}</div>
-                        <div className="portal-latest-report-date">{DEMO_REPORTS[0].date}</div>
+                  <div className="portal-section-title">
+                    Latest Briefing
+                    {liveData.isLive && <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                  </div>
+                  {liveData.isLive && liveData.status?.lastBriefing ? (
+                    <div className="portal-latest-report" style={{ cursor: "default" }}>
+                      <div className="portal-latest-report-header">
+                        <span>👩‍💼</span>
+                        <div>
+                          <div className="portal-latest-report-title">Agency Briefing</div>
+                          <div className="portal-latest-report-date">{new Date().toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <div className="portal-latest-report-summary" style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem" }}>
+                        {liveData.status.lastBriefing.slice(0, 600)}{liveData.status.lastBriefing.length > 600 ? "…" : ""}
                       </div>
                     </div>
-                    <div className="portal-latest-report-summary">{DEMO_REPORTS[0].summary}</div>
-                    <div className="portal-latest-report-read">Read full briefing →</div>
-                  </div>
+                  ) : (
+                    <div
+                      className="portal-latest-report"
+                      onClick={() => setActiveReport(DEMO_REPORTS[0])}
+                    >
+                      <div className="portal-latest-report-header">
+                        <span>{DEMO_REPORTS[0].emoji}</span>
+                        <div>
+                          <div className="portal-latest-report-title">{DEMO_REPORTS[0].title}</div>
+                          <div className="portal-latest-report-date">{DEMO_REPORTS[0].date}</div>
+                        </div>
+                      </div>
+                      <div className="portal-latest-report-summary">{DEMO_REPORTS[0].summary}</div>
+                      <div className="portal-latest-report-read">Read full briefing →</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Active Tasks */}
@@ -396,14 +489,17 @@ export default function PortalPage() {
 
                 {/* Team Snapshot */}
                 <div className="portal-section">
-                  <div className="portal-section-title">Team Snapshot</div>
+                  <div className="portal-section-title">
+                    Team Snapshot
+                    {liveData.isLive && <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                  </div>
                   <div className="portal-agents-grid">
-                    {DEMO_AGENTS.slice(0, 3).map((agent) => (
+                    {displayAgents.slice(0, 3).map((agent) => (
                       <AgentCard key={agent.id} agent={agent} />
                     ))}
                   </div>
                   <button className="portal-view-all" onClick={() => setTab("agents")}>
-                    View all {DEMO_AGENTS.length} agents →
+                    View all {displayAgents.length} agents →
                   </button>
                 </div>
               </div>
@@ -412,9 +508,12 @@ export default function PortalPage() {
             {/* Agents */}
             {tab === "agents" && (
               <div className="portal-section">
-                <div className="portal-section-title">Your AI Team — {DEMO_AGENTS.length} agents</div>
+                <div className="portal-section-title">
+                  Your AI Team — {liveData.isLive ? (liveData.status?.agents?.length ?? displayAgents.length) : displayAgents.length} agents
+                  {liveData.isLive && <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                </div>
                 <div className="portal-agents-list">
-                  {DEMO_AGENTS.map((agent) => (
+                  {displayAgents.map((agent) => (
                     <AgentCard key={agent.id} agent={agent} />
                   ))}
                 </div>
@@ -461,11 +560,18 @@ export default function PortalPage() {
 
           </div>
 
-          {/* Demo Banner */}
-          <div className="portal-demo-banner">
-            <span>👁 Preview mode — showing demo data for Clearline Markets. </span>
-            <Link href="/onboard" className="portal-demo-link">Start your real portal →</Link>
-          </div>
+          {/* Status Banner */}
+          {liveData.isLive ? (
+            <div className="portal-demo-banner" style={{ borderColor: "#10B98122", background: "#10B98108" }}>
+              <span style={{ color: "#10B981" }}>✅ Connected to live agency data. </span>
+              <Link href="/onboard" className="portal-demo-link">Manage account →</Link>
+            </div>
+          ) : (
+            <div className="portal-demo-banner">
+              <span>👁 Preview mode — showing demo data for Clearline Markets. </span>
+              <Link href="/onboard" className="portal-demo-link">Start your real portal →</Link>
+            </div>
+          )}
 
         </div>
       </main>

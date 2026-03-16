@@ -14,7 +14,7 @@ const DEPARTMENTS = [
   { id: "tech", label: "Tech (CTO)", icon: "🏗️", agents: ["Zara (CTO)"], desc: "Architecture, infra, security" },
 ];
 
-const PLAN_DEPT_LIMITS: Record<string, number> = { starter: 1, growth: 3, enterprise: 6 };
+const PLAN_DEPT_LIMITS: Record<string, number> = { starter: 1, growth: 3, enterprise: 6, agency: 6 };
 
 const INDUSTRIES = [
   "Prop Trading / Finance",
@@ -69,6 +69,8 @@ function OnboardContent() {
     website: "",
     contactName: "",
     contactEmail: "",
+    goals: "",
+    monthlyBudget: "",
   });
   const [departments, setDepartments] = useState<string[]>([]);
   const [integrations, setIntegrations] = useState({
@@ -116,6 +118,8 @@ function OnboardContent() {
           website: form.website,
           contactName: form.contactName,
           contactEmail: form.contactEmail,
+          goals: form.goals,
+          monthlyBudget: form.monthlyBudget,
           departments,
           plan,
           integrations: Object.values(integrations).some(Boolean) ? integrations : undefined,
@@ -191,9 +195,9 @@ function OnboardContent() {
                   <label className="onboard-label">Choose your plan</label>
                   <div className="onboard-plan-selector">
                     {[
-                      { id: "starter", label: "Starter", price: "$299/mo", desc: "1 dept" },
-                      { id: "growth", label: "Growth", price: "$499/mo", desc: "3 depts", popular: true },
-                      { id: "enterprise", label: "Enterprise", price: "$999/mo", desc: "All 6" },
+                      { id: "starter", label: "Starter", price: "$299/mo", desc: "Sales team" },
+                      { id: "growth", label: "Growth", price: "$499/mo", desc: "Sales + Marketing", popular: true },
+                      { id: "agency", label: "Agency", price: "$999/mo", desc: "Full team (21 agents)" },
                     ].map((p) => (
                       <button
                         key={p.id}
@@ -278,6 +282,33 @@ function OnboardContent() {
                       onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
                     />
                   </div>
+                </div>
+
+                <div className="onboard-field">
+                  <label className="onboard-label">Primary goals</label>
+                  <input
+                    className="onboard-input"
+                    type="text"
+                    placeholder="e.g. Grow MRR to $50k, build a trading dashboard, rebrand the company"
+                    value={form.goals}
+                    onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))}
+                  />
+                </div>
+
+                <div className="onboard-field">
+                  <label className="onboard-label">Monthly budget range</label>
+                  <select
+                    className="onboard-input"
+                    value={form.monthlyBudget}
+                    onChange={(e) => setForm((f) => ({ ...f, monthlyBudget: e.target.value }))}
+                  >
+                    <option value="">Select budget range...</option>
+                    <option value="<$500">Under $500/mo</option>
+                    <option value="$500-$1k">$500 – $1,000/mo</option>
+                    <option value="$1k-$5k">$1,000 – $5,000/mo</option>
+                    <option value="$5k-$10k">$5,000 – $10,000/mo</option>
+                    <option value="$10k+">$10,000+/mo</option>
+                  </select>
                 </div>
               </div>
             )}
@@ -420,7 +451,7 @@ function OnboardContent() {
                     </div>
                     <div className="onboard-summary-row">
                       <span className="onboard-summary-label">Plan</span>
-                      <span className="onboard-summary-value capitalize">{plan} — ${plan === "starter" ? "299" : plan === "growth" ? "499" : "999"}/mo</span>
+                      <span className="onboard-summary-value capitalize">{plan} — ${plan === "starter" ? "299" : plan === "growth" ? "499" : plan === "agency" ? "999" : "999"}/mo</span>
                     </div>
                     <div className="onboard-summary-row">
                       <span className="onboard-summary-label">Departments</span>
