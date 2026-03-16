@@ -22,28 +22,28 @@ interface StatusData {
 
 // ─── Agent Config ────────────────────────────────────────────────────────────
 
-const FLOOR_CONFIG: Record<string, { floor: string; name: string; role: string }> = {
-  nikita:             { floor: "ceo", name: "Nikita", role: "CEO" },
-  "creative-director":{ floor: "creative", name: "Nova", role: "Creative Director" },
-  designer:           { floor: "creative", name: "Iris", role: "Designer" },
-  "video-editor":     { floor: "creative", name: "Finn", role: "Video" },
-  "social-media":     { floor: "creative", name: "Jade", role: "Social" },
-  copywriter:         { floor: "creative", name: "Ash", role: "Copy" },
-  "sales-lead":       { floor: "sales", name: "Jordan", role: "Sales Lead" },
-  closer:             { floor: "sales", name: "Closer", role: "Closer" },
-  "lead-qualifier":   { floor: "sales", name: "Qualifier", role: "Lead Qual" },
-  "follow-up":        { floor: "sales", name: "Follow-Up", role: "Follow-Up" },
-  proposal:           { floor: "sales", name: "Proposal", role: "Proposals" },
-  "dev-lead":         { floor: "dev", name: "Kai", role: "Dev Lead" },
-  architect:          { floor: "dev", name: "Architect", role: "Architect" },
-  frontend:           { floor: "dev", name: "Frontend", role: "Frontend" },
-  backend:            { floor: "dev", name: "Backend", role: "Backend" },
-  fullstack:          { floor: "dev", name: "Fullstack", role: "Fullstack" },
-  qa:                 { floor: "dev", name: "QA", role: "QA" },
-  "code-review":      { floor: "dev", name: "Reviewer", role: "Code Review" },
-  cfo:                { floor: "csuite", name: "Marcus", role: "CFO" },
-  cto:                { floor: "csuite", name: "Zara", role: "CTO" },
-  cmo:                { floor: "csuite", name: "Priya", role: "CMO" },
+const FLOOR_CONFIG: Record<string, { floor: string; name: string; role: string; rank: string }> = {
+  nikita:             { floor: "ceo", name: "Nikita", role: "CEO", rank: "Owner" },
+  "creative-director":{ floor: "creative", name: "Nova", role: "Creative Director", rank: "Director" },
+  designer:           { floor: "creative", name: "Iris", role: "Designer", rank: "Senior" },
+  "video-editor":     { floor: "creative", name: "Finn", role: "Video", rank: "Specialist" },
+  "social-media":     { floor: "creative", name: "Jade", role: "Social", rank: "Specialist" },
+  copywriter:         { floor: "creative", name: "Ash", role: "Copy", rank: "Senior" },
+  "sales-lead":       { floor: "sales", name: "Jordan", role: "Sales Lead", rank: "Lead" },
+  closer:             { floor: "sales", name: "Closer", role: "Closer", rank: "Senior" },
+  "lead-qualifier":   { floor: "sales", name: "Qualifier", role: "Lead Qual", rank: "Specialist" },
+  "follow-up":        { floor: "sales", name: "Follow-Up", role: "Follow-Up", rank: "Specialist" },
+  proposal:           { floor: "sales", name: "Proposal", role: "Proposals", rank: "Specialist" },
+  "dev-lead":         { floor: "dev", name: "Kai", role: "Dev Lead", rank: "Lead" },
+  architect:          { floor: "dev", name: "Architect", role: "Architect", rank: "Senior" },
+  frontend:           { floor: "dev", name: "Frontend", role: "Frontend", rank: "Engineer" },
+  backend:            { floor: "dev", name: "Backend", role: "Backend", rank: "Engineer" },
+  fullstack:          { floor: "dev", name: "Fullstack", role: "Fullstack", rank: "Engineer" },
+  qa:                 { floor: "dev", name: "QA", role: "QA", rank: "Engineer" },
+  "code-review":      { floor: "dev", name: "Reviewer", role: "Code Review", rank: "Senior" },
+  cfo:                { floor: "csuite", name: "Marcus", role: "CFO", rank: "C-Suite" },
+  cto:                { floor: "csuite", name: "Zara", role: "CTO", rank: "C-Suite" },
+  cmo:                { floor: "csuite", name: "Priya", role: "CMO", rank: "C-Suite" },
 };
 
 const AVATAR_CLASS: Record<string, string> = {
@@ -183,6 +183,42 @@ function RooftopParticles() {
   return <div ref={containerRef} className="rooftop-particles" />;
 }
 
+// ─── Agent Popup ────────────────────────────────────────────────────────────
+
+interface AgentPopupProps {
+  agent: Agent;
+  onClose: () => void;
+}
+
+function AgentPopup({ agent, onClose }: AgentPopupProps) {
+  const cfg = FLOOR_CONFIG[agent.id];
+  const rank = cfg?.rank || "Agent";
+  const avatarClass = AVATAR_CLASS[agent.floor] || "default";
+  const initials = getInitials(agent.name);
+  const online = isOnline(agent.status);
+  const statusText = agent.id === "nikita" ? "Running the agency..." : online ? "Working..." : "Standing by";
+
+  return (
+    <div className="agent-popup visible" onClick={(e) => e.stopPropagation()}>
+      <div className="popup-header">
+        <div className={`popup-avatar ${avatarClass}`}>{initials}</div>
+        <div>
+          <div className="popup-name">{agent.name}</div>
+          <div className="popup-role">{agent.role}</div>
+        </div>
+      </div>
+      <div className="popup-stats">
+        <div className="popup-stat">
+          <div className="popup-stat-value" style={{ color: "var(--text-dim)", fontSize: "13px" }}>{statusText}</div>
+          <div className="popup-stat-label">Status</div>
+        </div>
+      </div>
+      <div className="popup-rank">Rank: <span>{rank}</span></div>
+      <button className="popup-dismiss" onClick={onClose} title="Close">✕</button>
+    </div>
+  );
+}
+
 // ─── Agent Desk ─────────────────────────────────────────────────────────────
 
 function AgentDesk({ agent }: { agent: Agent }) {
@@ -192,13 +228,26 @@ function AgentDesk({ agent }: { agent: Agent }) {
   const initials = getInitials(agent.name);
   const firstName = agent.name.split(/[\s-]/)[0];
   const bubbleText = getBubbleText(agent.id, agent.status);
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  // Close popup when clicking elsewhere
+  useEffect(() => {
+    if (!popupOpen) return;
+    const handler = () => setPopupOpen(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [popupOpen]);
 
   return (
-    <div className={`agent-desk${isCeo ? " ceo-desk" : ""}${online ? " is-online" : ""}`}>
+    <div className={`agent-desk${isCeo ? " ceo-desk" : ""}${online ? " is-online" : ""}`} style={{ position: "relative" }}>
       <div className="bubble">{bubbleText}</div>
       <div className="desk-surface">
         <div className="desk-monitor">&#128187;</div>
-        <div className={`desk-avatar ${avatarClass}${isCeo ? " ceo" : ""} ${online ? "online" : "offline"}`}>
+        <div
+          className={`desk-avatar ${avatarClass}${isCeo ? " ceo" : ""} ${online ? "online" : "offline"}`}
+          onClick={(e) => { e.stopPropagation(); setPopupOpen((v) => !v); }}
+          title={`${agent.name} — click for info`}
+        >
           {initials}
           <div className={`status-indicator ${online ? "online" : "offline"}`} />
         </div>
@@ -206,6 +255,7 @@ function AgentDesk({ agent }: { agent: Agent }) {
       <div className="desk-name">{firstName}</div>
       <div className="desk-role">{agent.role}</div>
       <div className="desk-platform" />
+      {popupOpen && <AgentPopup agent={agent} onClose={() => setPopupOpen(false)} />}
     </div>
   );
 }
