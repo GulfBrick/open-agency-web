@@ -245,6 +245,17 @@ interface TaskCounts {
   total: number
 }
 
+function LiveClock() {
+  const [time, setTime] = useState<string>('')
+  useEffect(() => {
+    const update = () => setTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+    update()
+    const t = setInterval(update, 1000)
+    return () => clearInterval(t)
+  }, [])
+  return <span className="live-clock">{time}</span>
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -483,6 +494,7 @@ export default function Home() {
           </div>
         </div>
         <div className="header-right">
+          <LiveClock />
           <div className="status-badge">
             <span className="status-dot" />
             All Systems Operational
@@ -528,7 +540,7 @@ export default function Home() {
           </div>
 
           {/* Floor 05 — CEO */}
-          <div className="floor floor-ceo">
+          <div className="floor floor-ceo floor-enter" style={{ animationDelay: '0.1s' }}>
             <div className="floor-inner">
               <div className="floor-label">
                 <div className="floor-number-badge">05</div>
@@ -544,7 +556,7 @@ export default function Home() {
           </div>
 
           {/* Floor 04 — Creative */}
-          <div className="floor floor-creative">
+          <div className="floor floor-creative floor-enter" style={{ animationDelay: '0.25s' }}>
             <div className="floor-inner">
               <div className="floor-label">
                 <div className="floor-number-badge">04</div>
@@ -560,7 +572,7 @@ export default function Home() {
           </div>
 
           {/* Floor 03 — Sales */}
-          <div className="floor floor-sales">
+          <div className="floor floor-sales floor-enter" style={{ animationDelay: '0.4s' }}>
             <div className="floor-inner">
               <div className="floor-label">
                 <div className="floor-number-badge">03</div>
@@ -576,7 +588,7 @@ export default function Home() {
           </div>
 
           {/* Floor 02 — Dev */}
-          <div className="floor floor-dev">
+          <div className="floor floor-dev floor-enter" style={{ animationDelay: '0.55s' }}>
             <div className="floor-inner">
               <div className="floor-label">
                 <div className="floor-number-badge">02</div>
@@ -592,7 +604,7 @@ export default function Home() {
           </div>
 
           {/* Floor 01 — C-Suite */}
-          <div className="floor floor-csuite">
+          <div className="floor floor-csuite floor-enter" style={{ animationDelay: '0.7s' }}>
             <div className="floor-inner">
               <div className="floor-label">
                 <div className="floor-number-badge">01</div>

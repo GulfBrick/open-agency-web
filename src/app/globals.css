@@ -2275,6 +2275,43 @@ body {
 .dash-card.card-tasks::before { background: linear-gradient(180deg, var(--blue), rgba(59, 130, 246, 0.2)); }
 .dash-card.card-workflows::before { background: linear-gradient(180deg, #A78BFA, rgba(167, 139, 250, 0.2)); }
 
+/* ─── Live Clock ─── */
+.live-clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  padding: 6px 14px;
+  background: rgba(124, 58, 237, 0.04);
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  border-radius: 8px;
+  user-select: none;
+  animation: clockTick 1s ease-in-out infinite alternate;
+}
+
+@keyframes clockTick {
+  0%   { color: var(--text-dim); }
+  100% { color: var(--text); }
+}
+
+/* ─── Floor Entrance Animation ─── */
+@keyframes floorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.floor-enter {
+  opacity: 0;
+  animation: floorSlideIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* ─── Footer ─── */
 .footer {
   position: fixed;
