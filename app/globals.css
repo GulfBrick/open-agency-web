@@ -2272,14 +2272,50 @@ body {
 .schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .schedule-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.025);
+  transition: all 0.2s;
   gap: 8px;
   font-size: 12px;
+}
+
+.schedule-item:hover {
+  background: rgba(124, 58, 237, 0.03);
+  border-color: rgba(124, 58, 237, 0.1);
+}
+
+.schedule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-name {
+  font-family: var(--heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  margin-top: 2px;
 }
 
 .schedule-dot {
@@ -2299,6 +2335,34 @@ body {
   background: rgba(255,255,255,0.04);
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.btn-run {
+  padding: 5px 12px;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 6px;
+  background: rgba(124, 58, 237, 0.06);
+  color: var(--violet);
+  font-size: 10px;
+  font-family: var(--heading);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.btn-run:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(167, 139, 250, 0.15));
+  border-color: var(--violet);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.15);
+}
+
+.btn-run:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ─── Activity Log ───────────────────────────────────── */

@@ -457,6 +457,48 @@ function BuildingFloor({
   );
 }
 
+// ─── Schedule Run Item ──────────────────────────────────────────────────────
+
+function ScheduleRunItem({ name, timeStr, scheduleKey }: { name: string; timeStr: string; scheduleKey: string }) {
+  const [running, setRunning] = useState(false);
+  const [ran, setRan] = useState(false);
+
+  const handleRun = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (running) return;
+    setRunning(true);
+    try {
+      await runSchedule(scheduleKey);
+      setRan(true);
+      setTimeout(() => setRan(false), 3000);
+    } catch {
+      // silent fail
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="schedule-item">
+      <div className="schedule-info">
+        <div className="schedule-name">
+          <span className="schedule-dot color-violet">●</span>
+          {name}
+        </div>
+        <div className="schedule-time">{timeStr}</div>
+      </div>
+      <button
+        className="btn-run"
+        onClick={handleRun}
+        disabled={running}
+        title={`Run ${name} now`}
+      >
+        {running ? "..." : ran ? "✓" : "Run"}
+      </button>
+    </div>
+  );
+}
+
 // ─── Nikita Chat Sidebar ────────────────────────────────────────────────────
 
 interface ChatMessage {
@@ -1238,6 +1280,19 @@ export default function Dashboard() {
                 {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length > 0 ? "live" : "--"}
               </span>
             </div>
+            {(() => {
+              const sprintDone = taskQueue.filter(t => (t.status || "").toLowerCase() === "completed").length;
+              const sprintTotal = taskQueue.length;
+              const sprintPct = sprintTotal > 0 ? Math.round((sprintDone / sprintTotal) * 100) : 0;
+              return (
+                <>
+                  <div className="sprint-pct">{sprintPct}% complete</div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${sprintPct}%` }} />
+                  </div>
+                </>
+              );
+            })()}
             <div className="sprint-stats">
               <div className="sprint-stat">
                 <div className="sprint-stat-value color-amber">
@@ -1395,21 +1450,25 @@ export default function Dashboard() {
             {schedules.length === 0 ? (
               <div className="schedule-list">
                 {[
-                  { label: "Nikita heartbeat", interval: "5 min", dot: "green" },
-                  { label: "UI builder heartbeat", interval: "10 min", dot: "violet" },
-                  { label: "Status sync", interval: "10 sec", dot: "blue" },
-                  { label: "Task result poll", interval: "3 sec", dot: "amber" },
+                  { label: "Nikita heartbeat", time: "Every 5 min", dot: "green" },
+                  { label: "UI builder heartbeat", time: "Every 10 min", dot: "violet" },
+                  { label: "Status sync", time: "Every 10 sec", dot: "blue" },
+                  { label: "Task result poll", time: "Every 3 sec", dot: "amber" },
                 ].map((item, i) => (
                   <div key={i} className="schedule-item">
-                    <span className={`schedule-dot color-${item.dot}`}>●</span>
-                    <span className="schedule-label">{item.label}</span>
-                    <span className="schedule-interval">{item.interval}</span>
+                    <div className="schedule-info">
+                      <div className="schedule-name">
+                        <span className={`schedule-dot color-${item.dot}`}>●</span>
+                        {item.label}
+                      </div>
+                      <div className="schedule-time">{item.time}</div>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="schedule-list">
-                {schedules.slice(0, 6).map((s, i) => {
+                {schedules.slice(0, 5).map((s, i) => {
                   const sched = s.schedule || {};
                   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                   let timeStr = `${String(sched.hour ?? 0).padStart(2, "0")}:${String(sched.minute ?? 0).padStart(2, "0")}`;
@@ -1419,11 +1478,7 @@ export default function Dashboard() {
                     timeStr = `Daily ${timeStr}`;
                   }
                   return (
-                    <div key={i} className="schedule-item">
-                      <span className="schedule-dot color-green">●</span>
-                      <span className="schedule-label">{s.name || s.key}</span>
-                      <span className="schedule-interval">{timeStr}</span>
-                    </div>
+                    <ScheduleRunItem key={i} name={s.name || s.key} timeStr={timeStr} scheduleKey={s.key} />
                   );
                 })}
               </div>
