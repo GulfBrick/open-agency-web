@@ -109,11 +109,68 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?", time: chatTimeStr() },
 ]
 
+// Static per-agent "stats" for the popup — tasks done, tasks running
+const AGENT_STATS: Record<string, { done: number; active: number; rank: string }> = {
+  nikita:  { done: 247, active: 3,  rank: 'CEO · Owner' },
+  marcus:  { done: 89,  active: 1,  rank: 'CFO · Finance' },
+  zara:    { done: 134, active: 2,  rank: 'CTO · Technology' },
+  priya:   { done: 112, active: 2,  rank: 'CMO · Marketing' },
+  kai:     { done: 198, active: 4,  rank: 'Dev Lead · Shipping' },
+  sage:    { done: 76,  active: 1,  rank: 'Architect · Systems' },
+  luna:    { done: 143, active: 3,  rank: 'Frontend · UI' },
+  rex:     { done: 97,  active: 2,  rank: 'Backend · APIs' },
+  avery:   { done: 44,  active: 0,  rank: 'Fullstack · Idle' },
+  atlas:   { done: 88,  active: 1,  rank: 'QA · Reviews' },
+  orion:   { done: 67,  active: 1,  rank: 'Code Review' },
+  river:   { done: 54,  active: 1,  rank: 'Closer · Sales' },
+  jordan:  { done: 72,  active: 2,  rank: 'Sales Lead' },
+  quinn:   { done: 61,  active: 1,  rank: 'Lead Qualifier' },
+  eden:    { done: 49,  active: 1,  rank: 'Follow-Up · CRM' },
+  blake:   { done: 38,  active: 1,  rank: 'Proposals · Decks' },
+  nova:    { done: 93,  active: 2,  rank: 'Creative Director' },
+  iris:    { done: 81,  active: 2,  rank: 'Designer · Brand' },
+  finn:    { done: 57,  active: 1,  rank: 'Video · Motion' },
+  jade:    { done: 64,  active: 2,  rank: 'Social · Content' },
+  ash:     { done: 79,  active: 2,  rank: 'Copywriter · Copy' },
+}
+
 function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
+  const [hovered, setHovered] = useState(false)
   const isOnline = agent.status === 'online'
   const isCeo = agent.id === 'nikita'
+  const stats = AGENT_STATS[agent.id] || { done: 0, active: 0, rank: agent.role }
+
   return (
-    <div className={`agent-desk${isOnline ? ' is-online' : ''}${isCeo ? ' ceo-desk' : ''}`}>
+    <div
+      className={`agent-desk${isOnline ? ' is-online' : ''}${isCeo ? ' ceo-desk' : ''}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Hover Popup */}
+      <div className={`agent-popup${hovered ? ' visible' : ''}`}>
+        <div className="popup-header">
+          <div className={`popup-avatar ${agent.cls}`}>{agent.initials}</div>
+          <div>
+            <div className="popup-name">{agent.name}</div>
+            <div className="popup-role">{agent.role}</div>
+          </div>
+        </div>
+        <div className="popup-stats">
+          <div className="popup-stat">
+            <div className={`popup-stat-value color-${agent.cls === 'dev' ? 'blue' : agent.cls === 'sales' ? 'amber' : agent.cls === 'creative' ? 'rose' : 'violet'}`}>{stats.done}</div>
+            <div className="popup-stat-label">Tasks Done</div>
+          </div>
+          <div className="popup-stat">
+            <div className={`popup-stat-value color-green`}>{stats.active}</div>
+            <div className="popup-stat-label">Active Now</div>
+          </div>
+        </div>
+        <div className="popup-status-row">
+          <div className={`popup-status-dot ${agent.status}`} />
+          <span>{isOnline ? 'Online · ' : 'Offline · '}{stats.rank}</span>
+        </div>
+      </div>
+
       <div className="bubble">{agent.bubble}</div>
       <div className="desk-surface">
         <div className="desk-monitor">💻</div>
