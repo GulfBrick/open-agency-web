@@ -328,6 +328,13 @@ interface ScheduleItem {
   status?: string
 }
 
+interface CommitItem {
+  sha: string
+  message: string
+  date: string
+  author: string
+}
+
 interface TaskCounts {
   pending: number
   in_progress: number
@@ -850,6 +857,7 @@ export default function Home() {
   // Workflows
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [approvingWorkflow, setApprovingWorkflow] = useState<string | null>(null)
+  const [recentCommits, setRecentCommits] = useState<CommitItem[]>([])
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   // Derived: map of agentId → active task description (drives desk glow)
   const activeTaskMap = buildActiveTaskMap(agentReports)
@@ -1011,6 +1019,22 @@ export default function Home() {
     }
     fetchWorkflows()
     const interval = setInterval(fetchWorkflows, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch recent GitHub commits every 5 minutes
+  useEffect(() => {
+    const fetchCommits = async () => {
+      try {
+        const res = await fetch('/api/commits')
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data)) setRecentCommits(data)
+        }
+      } catch { /* offline */ }
+    }
+    fetchCommits()
+    const interval = setInterval(fetchCommits, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
 
@@ -2006,6 +2030,43 @@ export default function Home() {
                     >▶</button>
                   </div>
                 </>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Commits */}
+          <div className="dash-card card-commits">
+            <div className="dash-card-title">
+              <span className="card-icon">🔀</span> Recent Commits
+              <span className="card-badge">{recentCommits.length > 0 ? recentCommits.length : ''}</span>
+            </div>
+            <div className="commits-list">
+              {recentCommits.length === 0 ? (
+                <div className="commits-empty">No commits yet — check back shortly.</div>
+              ) : (
+                recentCommits.slice(0, 6).map((c, i) => {
+                  const shortSha = c.sha?.substring(0, 7) || '???????'
+                  const shortMsg = (c.message || '').split('\n')[0].substring(0, 72)
+                  const timeStr = c.date
+                    ? new Date(c.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                    : ''
+                  const dateStr = c.date
+                    ? new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    : ''
+                  return (
+                    <div key={c.sha || i} className="commit-item">
+                      <div className="commit-sha">{shortSha}</div>
+                      <div className="commit-body">
+                        <div className="commit-message">{shortMsg}</div>
+                        <div className="commit-meta">
+                          <span className="commit-author">{c.author || 'Kai'}</span>
+                          {timeStr && <span>{timeStr}</span>}
+                          {dateStr && <span>{dateStr}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
           </div>

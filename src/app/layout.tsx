@@ -19,10 +19,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="top-gradient-bar" />
-        <div className="scanline-overlay" />
-        <div className="noise-overlay" />
-        <div className="bg-grid" />
         {children}
       </body>
     </html>
