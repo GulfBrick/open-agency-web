@@ -888,6 +888,24 @@ body {
 /* CEO Executive Floor */
 .floor.floor-ceo {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.03), rgba(124, 58, 237, 0.03));
+  position: relative;
+}
+
+/* Sweeping executive light beam across CEO floor */
+.floor.floor-ceo::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.04) 40%, rgba(167, 139, 250, 0.06) 60%, transparent 100%);
+  animation: ceoFloorSweep 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes ceoFloorSweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
 }
 
 .floor.floor-ceo .floor-inner {
@@ -965,12 +983,21 @@ body {
   border-top: 5px solid rgba(15, 22, 35, 0.85);
 }
 
-/* Live bubble — shows real task result data */
+/* Live bubble — shows real task result data; always visible */
 .bubble.live {
   border-color: rgba(124, 58, 237, 0.25);
   color: var(--text);
   background: rgba(124, 58, 237, 0.08);
   box-shadow: 0 0 8px rgba(124, 58, 237, 0.08);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: liveBubblePulse 3s ease-in-out infinite !important;
+}
+
+/* Subtle heartbeat on live bubbles so they feel alive without disappearing */
+@keyframes liveBubblePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(124, 58, 237, 0.08); border-color: rgba(124, 58, 237, 0.25); }
+  50% { box-shadow: 0 0 16px rgba(124, 58, 237, 0.20); border-color: rgba(124, 58, 237, 0.45); }
 }
 
 @keyframes bubbleFade {
@@ -1709,6 +1736,20 @@ body {
 
 .nikita-chat.open {
   transform: translateX(0);
+  box-shadow: -8px 0 40px rgba(124, 58, 237, 0.12), -2px 0 0 rgba(124, 58, 237, 0.15);
+}
+
+/* Rainbow bar at top of chat panel — mirrors site-wide gradient bar */
+.nikita-chat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--violet), var(--blue), var(--green), var(--rose), var(--amber), var(--violet));
+  background-size: 300% 100%;
+  animation: gradientSlide 4s linear infinite;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .nikita-chat-toggle {

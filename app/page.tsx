@@ -373,15 +373,18 @@ function AgentDesk({ agent, liveBubble, tasksDone, successRate }: { agent: Agent
   const bubbleText = liveBubble || idleText;
   const [popupOpen, setPopupOpen] = useState(false);
 
-  // Cycle through phrases every 8 seconds (staggered by agent index)
+  // Cycle through phrases every 8 seconds (staggered by agent index, cleanup safe)
   useEffect(() => {
     if (!phrases || phrases.length < 2) return;
     const delay = Math.random() * 6000;
+    let interval: ReturnType<typeof setInterval> | null = null;
     const t = setTimeout(() => {
-      const interval = setInterval(() => setPhraseIdx((i) => i + 1), 8000);
-      return () => clearInterval(interval);
+      interval = setInterval(() => setPhraseIdx((i) => i + 1), 8000);
     }, delay);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (interval) clearInterval(interval);
+    };
   }, [phrases]);
 
   // Close popup when clicking elsewhere
