@@ -157,19 +157,36 @@ function chatTimeStr() {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
-// Minimal markdown renderer: **bold**, newlines → <br>, blank lines → paragraphs
-function renderBriefingMarkdown(text: string): string {
+// Shared markdown renderer: **bold**, *italic*, bullet lists, headers, newlines → HTML
+function renderMarkdown(text: string, opts: { bullets?: string } = {}): string {
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+  // Headers: ## Heading
+  const headered = escaped.replace(/^#{1,3}\s+(.+)$/gm, '<strong class="md-heading">$1</strong>')
   // Bold
-  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  const bolded = headered.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  // Italic
+  const italiced = bolded.replace(/\*([^*]+?)\*/g, '<em>$1</em>')
+  // Inline code
+  const coded = italiced.replace(/`([^`]+?)`/g, '<code class="md-code">$1</code>')
   // Bullet points
-  const bulleted = bolded.replace(/^[•\-]\s+(.+)$/gm, '<span class="brief-bullet">$1</span>')
+  const bulletCls = opts.bullets || 'brief-bullet'
+  const bulleted = coded.replace(/^[•\-\*]\s+(.+)$/gm, `<span class="${bulletCls}">$1</span>`)
   // Paragraph breaks
   const paragraphed = bulleted.replace(/\n{2,}/g, '</p><p class="brief-para">').replace(/\n/g, '<br />')
   return `<p class="brief-para">${paragraphed}</p>`
+}
+
+// Minimal markdown renderer: **bold**, newlines → <br>, blank lines → paragraphs
+function renderBriefingMarkdown(text: string): string {
+  return renderMarkdown(text, { bullets: 'brief-bullet' })
+}
+
+// Chat message markdown — same engine, chat-specific bullet class
+function renderChatMarkdown(text: string): string {
+  return renderMarkdown(text, { bullets: 'chat-bullet' })
 }
 
 
@@ -586,7 +603,7 @@ function useTypewriter(text: string, speed = 18) {
   return { displayed, done }
 }
 
-// Streaming chat message — types out text char by char
+// Streaming chat message — types out text char by char, then renders as markdown
 function StreamingMessage({ text, time, onDone }: { text: string; time?: string; onDone?: () => void }) {
   const { displayed, done } = useTypewriter(text, 16)
   const calledDone = useRef(false)
@@ -602,10 +619,17 @@ function StreamingMessage({ text, time, onDone }: { text: string; time?: string;
     <div className="chat-nikita-row">
       <div className="chat-nk-avatar">NK</div>
       <div className="chat-nikita-body">
-        <div className="chat-msg-text">
-          {displayed}
-          {!done && <span className="chat-cursor">▌</span>}
-        </div>
+        {done ? (
+          <div
+            className="chat-msg-text chat-msg-rich"
+            dangerouslySetInnerHTML={{ __html: renderChatMarkdown(text) }}
+          />
+        ) : (
+          <div className="chat-msg-text">
+            {displayed}
+            <span className="chat-cursor">▌</span>
+          </div>
+        )}
         {done && time && <div className="chat-msg-time">{time}</div>}
       </div>
     </div>
@@ -1874,7 +1898,10 @@ export default function Home() {
                     <div className="chat-nikita-row">
                       <div className="chat-nk-avatar">NK</div>
                       <div className="chat-nikita-body">
-                        <div className="chat-msg-text">{msg.text}</div>
+                        <div
+                          className="chat-msg-text chat-msg-rich"
+                          dangerouslySetInnerHTML={{ __html: renderChatMarkdown(msg.text) }}
+                        />
                         {msg.time && <div className="chat-msg-time">{msg.time}</div>}
                       </div>
                     </div>

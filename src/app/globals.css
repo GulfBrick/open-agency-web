@@ -4683,3 +4683,65 @@ body {
     padding: 0 14px 0 0;
   }
 }
+
+/* --- Chat Message Markdown Rendering --- */
+.chat-msg-rich {
+  line-height: 1.6;
+}
+
+.chat-msg-rich .brief-para {
+  margin: 0 0 8px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.chat-msg-rich .brief-para:last-child {
+  margin-bottom: 0;
+}
+
+.chat-msg-rich strong,
+.chat-msg-rich .md-heading {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.chat-msg-rich em {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.chat-msg-rich .md-code {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--violet);
+}
+
+.chat-msg-rich .chat-bullet,
+.chat-msg-rich .brief-bullet {
+  display: block;
+  padding-left: 14px;
+  position: relative;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.chat-msg-rich .chat-bullet::before,
+.chat-msg-rich .brief-bullet::before {
+  content: '›';
+  position: absolute;
+  left: 2px;
+  color: var(--violet);
+  font-weight: 700;
+}
+
+.chat-msg-rich .md-heading {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  letter-spacing: 0.1px;
+}
