@@ -335,6 +335,58 @@ const VALUE_PROPS = [
   { text: 'Every client. Smarter every day.', dept: 'ceo' },
 ]
 
+// ─── First-Visit Onboarding Panel ───
+function OnboardingPanel() {
+  const [visible, setVisible] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('oa_onboarded')
+      if (!seen) {
+        const t = setTimeout(() => setVisible(true), 2200)
+        return () => clearTimeout(t)
+      }
+    } catch { /* SSR */ }
+  }, [])
+
+  function dismiss() {
+    setDismissed(true)
+    setTimeout(() => setVisible(false), 320)
+    try { localStorage.setItem('oa_onboarded', '1') } catch { /* ok */ }
+  }
+
+  if (!visible) return null
+
+  return (
+    <div className={`onboarding-panel${dismissed ? ' dismissing' : ' entering'}`}>
+      <button className="onboarding-close" onClick={dismiss} title="Got it">✕</button>
+      <div className="onboarding-badge">What is this?</div>
+      <div className="onboarding-heading">Open Agency</div>
+      <p className="onboarding-body">
+        A fully autonomous AI agency — running in real time. Every desk you see is a live AI agent: sales, dev, creative, finance, and a CEO who runs it all.
+      </p>
+      <div className="onboarding-features">
+        <div className="onboarding-feature">
+          <span className="onboarding-feature-icon">💬</span>
+          <span>Chat with Nikita, the CEO</span>
+        </div>
+        <div className="onboarding-feature">
+          <span className="onboarding-feature-icon">📊</span>
+          <span>Watch live stats update in real time</span>
+        </div>
+        <div className="onboarding-feature">
+          <span className="onboarding-feature-icon">🚀</span>
+          <span>Agents ship code every 10 minutes</span>
+        </div>
+      </div>
+      <button className="onboarding-cta" onClick={dismiss}>
+        Got it — show me the agency →
+      </button>
+    </div>
+  )
+}
+
 function ValuePropTicker() {
   const [idx, setIdx] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -701,6 +753,9 @@ export default function Home() {
         <div className="load-spinner" />
         <div className="load-text">Initialising systems...</div>
       </div>
+
+      {/* First-Visit Onboarding */}
+      <OnboardingPanel />
 
       {/* Hero Section */}
       <section className="hero">
