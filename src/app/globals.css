@@ -2685,3 +2685,59 @@ body {
 .building {
   animation: buildingBreathe 8s ease-in-out infinite;
 }
+
+/* ─── CEO Brief Live Badge ─── */
+.ceo-brief-live-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ─── CEO Brief Rich Markdown ─── */
+.ceo-brief-rich {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.15) transparent;
+}
+
+.ceo-brief-rich::-webkit-scrollbar { width: 3px; }
+.ceo-brief-rich::-webkit-scrollbar-track { background: transparent; }
+.ceo-brief-rich::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 3px; }
+
+.ceo-brief-rich p.brief-para {
+  margin-bottom: 10px;
+}
+
+.ceo-brief-rich p.brief-para:last-child {
+  margin-bottom: 0;
+}
+
+.ceo-brief-rich strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.ceo-brief-rich .brief-bullet {
+  display: block;
+  padding-left: 12px;
+  position: relative;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.ceo-brief-rich .brief-bullet::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--violet);
+}
+
+/* ─── AgentStatus interface extension for tasksCompleted ─── */

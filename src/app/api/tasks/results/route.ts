@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
-  const agencyUrl = process.env.AGENCY_API_URL || 'http://localhost:3721'
+  const agencyUrl = process.env.AGENCY_API_URL || 'https://api.oagencyconsulting.com'
+  const apiKey = process.env.AGENCY_API_KEY || ''
   const { searchParams } = new URL(req.url)
-  const limit = searchParams.get('limit') || '5'
+  const limit = searchParams.get('limit') || '10'
+
+  const headers: Record<string, string> = {}
+  if (apiKey) headers['X-API-Key'] = apiKey
 
   try {
     const res = await fetch(`${agencyUrl}/api/tasks/results?limit=${limit}`, {
-      signal: AbortSignal.timeout(5000),
+      headers,
+      signal: AbortSignal.timeout(6000),
+      next: { revalidate: 0 },
     })
     const data = await res.json()
     return NextResponse.json(data)

@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   const { message } = await req.json()
 
   // Forward to the OpenClaw Agency backend Nikita chat endpoint
-  const agencyUrl = process.env.AGENCY_API_URL || 'http://localhost:3001'
+  const agencyUrl = process.env.AGENCY_API_URL || 'https://api.oagencyconsulting.com'
   const apiKey = process.env.AGENCY_API_KEY || ''
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }

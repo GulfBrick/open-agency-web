@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const agencyUrl = process.env.AGENCY_API_URL || 'http://localhost:3001'
+  const agencyUrl = process.env.AGENCY_API_URL || 'https://api.oagencyconsulting.com'
   const apiKey = process.env.AGENCY_API_KEY || ''
 
   const headers: Record<string, string> = {}

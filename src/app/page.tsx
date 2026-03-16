@@ -142,6 +142,21 @@ function chatTimeStr() {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
+// Minimal markdown renderer: **bold**, newlines → <br>, blank lines → paragraphs
+function renderBriefingMarkdown(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  // Bold
+  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  // Bullet points
+  const bulleted = bolded.replace(/^[•\-]\s+(.+)$/gm, '<span class="brief-bullet">$1</span>')
+  // Paragraph breaks
+  const paragraphed = bulleted.replace(/\n{2,}/g, '</p><p class="brief-para">').replace(/\n/g, '<br />')
+  return `<p class="brief-para">${paragraphed}</p>`
+}
+
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?", time: chatTimeStr() },
@@ -242,7 +257,7 @@ function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
 }
 
 interface AgencyStatus {
-  agents?: Array<{ id: string; name: string; status: string; floor: string }>
+  agents?: Array<{ id: string; name: string; status: string; floor: string; tasksCompleted?: number; successRate?: number; rank?: string | null }>
   clients?: Array<{ id: string; name: string; status: string }>
   finances?: { revenue?: number; expenses?: number; profit?: number; cashPosition?: number }
   pipeline?: { hot?: number; warm?: number; cold?: number; won?: number; wonThisMonth?: number; total?: number }
@@ -253,7 +268,7 @@ interface AgencyStatus {
   }>
   recentLogs?: Array<{ timestamp: string; agent: string; type: string; data?: Record<string, unknown> }>
   lastBriefing?: string
-  systemHealth?: { uptime?: number; uptimeFormatted?: string; bootCount?: number; schedulerActive?: boolean; registeredAgents?: number }
+  systemHealth?: { uptime?: number; uptimeFormatted?: string; bootCount?: number; schedulerActive?: boolean; registeredAgents?: number; lastBriefing?: string }
 }
 
 interface ScheduleItem {
@@ -810,7 +825,11 @@ export default function Home() {
               <div className="ground-stat-icon color-blue">✓</div>
               <div className="ground-stat-value">
                 <AnimatedStat
-                  value={taskCounts.completed}
+                  value={
+                    agencyStatus?.agents
+                      ? agencyStatus.agents.reduce((sum, a) => sum + (a.tasksCompleted || 0), 0)
+                      : taskCounts.completed
+                  }
                   className="color-blue"
                 />
               </div>
@@ -839,13 +858,24 @@ export default function Home() {
           <div className="ceo-brief-header">
             <div className="ceo-brief-avatar">N</div>
             <div className="ceo-brief-label">CEO Briefing</div>
+            {agencyStatus?.lastBriefing && (
+              <span className="ceo-brief-live-badge">● LIVE</span>
+            )}
           </div>
-          <div className={`ceo-brief-text${agencyStatus?.lastBriefing ? '' : ' empty'}`}>
-            {agencyStatus?.lastBriefing || 'Agency is live. Building is up. Dev team shipping every 10 minutes. Clearline Markets is our first active client. No blockers. All systems green.'}
-          </div>
+          {agencyStatus?.lastBriefing ? (
+            <div
+              className="ceo-brief-text ceo-brief-rich"
+              dangerouslySetInnerHTML={{ __html: renderBriefingMarkdown(agencyStatus.lastBriefing) }}
+            />
+          ) : (
+            <div className="ceo-brief-text empty">
+              Agency is live. Building is up. Dev team shipping every 10 minutes. Clearline Markets is our first active client. No blockers. All systems green.
+            </div>
+          )}
           <div className="ceo-brief-time">
-            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            {' '}— {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+            {agencyStatus?.systemHealth?.lastBriefing
+              ? `Last briefing: ${new Date(agencyStatus.systemHealth.lastBriefing as string).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+              : `${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} — ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`}
           </div>
         </div>
 
