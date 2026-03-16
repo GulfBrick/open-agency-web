@@ -951,26 +951,26 @@ export default function Dashboard() {
               <div className="ground-stat">
                 <div className="ground-stat-icon color-violet">&#9679;</div>
                 <div className="ground-stat-value color-violet">
-                  {status?.systemHealth?.registeredAgents ?? agents.length}
+                  {status ? (status.systemHealth?.registeredAgents ?? agents.length) : "\u2014"}
                 </div>
                 <div className="ground-stat-label">Agents Online</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-green">&#9670;</div>
-                <div className="ground-stat-value color-green">{status?.pipeline?.total ?? 0}</div>
+                <div className="ground-stat-value color-green">{status ? (status.pipeline?.total ?? 0) : "\u2014"}</div>
                 <div className="ground-stat-label">Pipeline</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-purple">&#163;</div>
                 <div className="ground-stat-value color-purple">
-                  {status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u00A30"}
+                  {status?.finances?.revenue != null ? `\u00A3${status.finances.revenue}` : "\u2014"}
                 </div>
                 <div className="ground-stat-label">Revenue</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-amber">&#9889;</div>
                 <div className="ground-stat-value color-amber">
-                  {status?.systemHealth?.bootCount ?? 0}
+                  {status ? (status.systemHealth?.bootCount ?? 0) : "\u2014"}
                 </div>
                 <div className="ground-stat-label">Boot Count</div>
               </div>
@@ -1007,30 +1007,31 @@ export default function Dashboard() {
           <div className="dash-card card-financials">
             <div className="dash-card-title">
               <span className="card-icon">&#163;</span> Financials
+              {status && <span className="card-badge" style={{ color: "var(--green)", borderColor: "rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.08)" }}>live</span>}
             </div>
             <div className="finance-grid">
               <div className="finance-item">
                 <div className="finance-label">Revenue</div>
                 <div className="finance-value color-green">
-                  &pound;{status?.finances?.revenue ?? 0}
+                  {status ? `\u00A3${status.finances?.revenue ?? 0}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Expenses</div>
                 <div className="finance-value color-rose">
-                  &pound;{status?.finances?.expenses ?? 0}
+                  {status ? `\u00A3${status.finances?.expenses ?? 0}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Profit</div>
                 <div className="finance-value">
-                  &pound;{status?.finances?.profit ?? 0}
+                  {status ? `\u00A3${status.finances?.profit ?? 0}` : "\u2014"}
                 </div>
               </div>
               <div className="finance-item">
                 <div className="finance-label">Cash Position</div>
                 <div className="finance-value color-violet">
-                  &pound;{(status?.finances as Record<string, number>)?.cashPosition ?? 0}
+                  {status ? `\u00A3${(status?.finances as Record<string, number>)?.cashPosition ?? 0}` : "\u2014"}
                 </div>
               </div>
             </div>
