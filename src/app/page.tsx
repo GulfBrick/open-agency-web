@@ -115,6 +115,19 @@ interface AgentReport {
   createdAt?: string
 }
 
+interface WorkflowStep {
+  status: string
+}
+
+interface WorkflowItem {
+  workflowId: string
+  name: string
+  status: 'PENDING' | 'RUNNING' | 'WAITING_APPROVAL' | 'DONE' | 'FAILED'
+  clientId?: string
+  steps?: WorkflowStep[]
+  createdAt?: string
+}
+
 // Map agentId → display info
 const AGENT_INFO: Record<string, { name: string; initials: string; dept: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative' }> = {
   nikita: { name: 'Nikita', initials: 'N',   dept: 'ceo' },
@@ -504,6 +517,9 @@ export default function Home() {
   const [newClientForm, setNewClientForm] = useState<NewClientForm>({ name: '', industry: '', contactName: '', contactEmail: '', notes: '' })
   const [newClientSubmitting, setNewClientSubmitting] = useState(false)
   const [newClientToast, setNewClientToast] = useState<{ msg: string; ok: boolean } | null>(null)
+  // Workflows
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
+  const [approvingWorkflow, setApprovingWorkflow] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -581,6 +597,22 @@ export default function Home() {
     }
     fetchSchedules()
     const interval = setInterval(fetchSchedules, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch live workflows every 30s
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const res = await fetch('/api/workflows')
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data)) setWorkflows(data)
+        }
+      } catch { /* backend offline */ }
+    }
+    fetchWorkflows()
+    const interval = setInterval(fetchWorkflows, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -822,6 +854,25 @@ export default function Home() {
     }
     setNewClientSubmitting(false)
     setTimeout(() => setNewClientToast(null), 4000)
+  }
+
+  async function approveWorkflow(workflowId: string) {
+    if (approvingWorkflow) return
+    setApprovingWorkflow(workflowId)
+    try {
+      const res = await fetch('/api/workflows/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workflowId }),
+      })
+      const data = await res.json()
+      if (!data.error) {
+        // Refresh workflows
+        const wr = await fetch('/api/workflows')
+        if (wr.ok) { const wd = await wr.json(); if (Array.isArray(wd)) setWorkflows(wd) }
+      }
+    } catch { /* offline */ }
+    setApprovingWorkflow(null)
   }
 
   return (
@@ -1294,6 +1345,56 @@ export default function Home() {
                 </div>
               </>
             )}
+          </div>
+
+          {/* Workflows */}
+          <div className="dash-card card-workflows">
+            <div className="dash-card-title">
+              <span className="card-icon">⚙</span> Workflows
+              <span className="card-badge">{workflows.length > 0 ? workflows.length : ''}</span>
+            </div>
+            <div className="workflow-list">
+              {workflows.length === 0 ? (
+                <div className="workflow-empty">No active workflows</div>
+              ) : (
+                workflows.slice(0, 8).map((wf, i) => {
+                  const stepsTotal = wf.steps?.length || 0
+                  const stepsDone = wf.steps?.filter(s => s.status === 'DONE').length || 0
+                  const shortId = wf.workflowId.substring(0, 8)
+                  const needsApproval = wf.status === 'WAITING_APPROVAL'
+                  const statusColor = wf.status === 'RUNNING' ? 'var(--blue)'
+                    : wf.status === 'WAITING_APPROVAL' ? 'var(--amber)'
+                    : wf.status === 'DONE' ? 'var(--green)'
+                    : wf.status === 'FAILED' ? 'var(--rose)'
+                    : 'var(--text-muted)'
+                  const isApproving = approvingWorkflow === wf.workflowId
+                  return (
+                    <div key={wf.workflowId || i} className="workflow-item">
+                      <div className="workflow-row">
+                        <div className="workflow-name">{wf.name}</div>
+                        <span className="workflow-status" style={{ color: statusColor }}>
+                          {wf.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="workflow-meta">
+                        {wf.clientId && <span>{wf.clientId} &middot; </span>}
+                        {stepsTotal > 0 && <span>{stepsDone}/{stepsTotal} steps &middot; </span>}
+                        <span className="workflow-id">{shortId}</span>
+                      </div>
+                      {needsApproval && (
+                        <button
+                          className={`workflow-approve-btn${isApproving ? ' approving' : ''}`}
+                          onClick={() => approveWorkflow(wf.workflowId)}
+                          disabled={!!approvingWorkflow}
+                        >
+                          {isApproving ? '…' : '✓ Approve'}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
 
           {/* Live Task Queue — spans 2 columns */}
