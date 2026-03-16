@@ -371,6 +371,9 @@ export default function Home() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [schedules, setSchedules] = useState<ScheduleItem[]>([])
   const [historyLoaded, setHistoryLoaded] = useState(false)
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null)
+  const [runningSchedule, setRunningSchedule] = useState<string | null>(null)
+  const [runToast, setRunToast] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -382,16 +385,23 @@ export default function Home() {
     return () => clearTimeout(t)
   }, [])
 
-  // Fetch live agency status every 30s
+  // Fetch live agency status every 30s — also tracks API online/offline
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const res = await fetch('/api/status')
         if (res.ok) {
           const data = await res.json()
-          if (!data.error) setAgencyStatus(data)
+          if (!data.error) {
+            setAgencyStatus(data)
+            setApiOnline(true)
+          } else {
+            setApiOnline(false)
+          }
+        } else {
+          setApiOnline(false)
         }
-      } catch { /* backend offline */ }
+      } catch { setApiOnline(false) }
     }
     fetchStatus()
     const interval = setInterval(fetchStatus, 30000)
@@ -618,6 +628,29 @@ export default function Home() {
     }
   }
 
+  async function runScheduleNow(name: string) {
+    if (runningSchedule) return
+    setRunningSchedule(name)
+    setRunToast(null)
+    try {
+      const res = await fetch('/api/schedules/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setRunToast(`⚠ ${name}: API offline — couldn't trigger`)
+      } else {
+        setRunToast(`✓ ${name} triggered`)
+      }
+    } catch {
+      setRunToast(`⚠ ${name}: failed to trigger`)
+    }
+    setRunningSchedule(null)
+    setTimeout(() => setRunToast(null), 3500)
+  }
+
   return (
     <>
       {/* Loading Overlay */}
@@ -676,9 +709,9 @@ export default function Home() {
         </div>
         <div className="header-right">
           <LiveClock />
-          <div className="status-badge">
+          <div className={`status-badge${apiOnline === false ? ' offline' : ''}`}>
             <span className="status-dot" />
-            All Systems Operational
+            {apiOnline === false ? 'API Offline' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
           </div>
           <span className="uptime">{agencyStatus?.systemHealth?.uptimeFormatted ? `↑ ${agencyStatus.systemHealth.uptimeFormatted}` : '99.9% uptime'}</span>
           <button
@@ -919,6 +952,14 @@ export default function Home() {
               Agency is live. Building is up. Dev team shipping every 10 minutes. Clearline Markets is our first active client. No blockers. All systems green.
             </div>
           )}
+          {/* Department status pills */}
+          <div className="ceo-brief-dept-row">
+            <span className="ceo-brief-dept-pill dept-pill-ceo">👑 CEO</span>
+            <span className="ceo-brief-dept-pill dept-pill-creative">🎨 Creative</span>
+            <span className="ceo-brief-dept-pill dept-pill-sales">📈 Sales</span>
+            <span className="ceo-brief-dept-pill dept-pill-dev">💻 Dev</span>
+            <span className="ceo-brief-dept-pill dept-pill-csuite">👔 C-Suite</span>
+          </div>
           <div className="ceo-brief-time">
             {agencyStatus?.systemHealth?.lastBriefing
               ? `Last briefing: ${new Date(agencyStatus.systemHealth.lastBriefing as string).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
@@ -1175,9 +1216,13 @@ export default function Home() {
               <span className="card-icon">🕐</span> Scheduled Tasks
               <span className="card-badge">{schedules.length > 0 ? schedules.length : ''}</span>
             </div>
+            {runToast && (
+              <div className="schedule-run-toast">{runToast}</div>
+            )}
             <div className="schedule-list">
               {schedules.length > 0 ? schedules.slice(0, 6).map((s, i) => {
                 const isRunning = s.enabled !== false && (s.status === 'running' || s.status === 'active' || s.enabled)
+                const isTriggering = runningSchedule === s.name
                 return (
                   <div key={i} className="schedule-item">
                     <div className="schedule-info">
@@ -1187,6 +1232,14 @@ export default function Home() {
                     <span className={`badge badge-${isRunning ? 'green' : 'amber'}`}>
                       {isRunning ? 'Running' : 'Paused'}
                     </span>
+                    <button
+                      className={`schedule-run-btn${isTriggering ? ' triggering' : ''}`}
+                      onClick={() => runScheduleNow(s.name)}
+                      disabled={!!runningSchedule}
+                      title={`Run ${s.name} now`}
+                    >
+                      {isTriggering ? '…' : '▶'}
+                    </button>
                   </div>
                 )
               }) : (
@@ -1197,6 +1250,12 @@ export default function Home() {
                       <div className="schedule-time">Every 10 minutes</div>
                     </div>
                     <span className="badge badge-green">Running</span>
+                    <button
+                      className="schedule-run-btn"
+                      onClick={() => runScheduleNow('UI Builder heartbeat')}
+                      disabled={!!runningSchedule}
+                      title="Run now"
+                    >▶</button>
                   </div>
                   <div className="schedule-item">
                     <div className="schedule-info">
@@ -1204,6 +1263,12 @@ export default function Home() {
                       <div className="schedule-time">08:00 daily</div>
                     </div>
                     <span className="badge badge-blue">Scheduled</span>
+                    <button
+                      className="schedule-run-btn"
+                      onClick={() => runScheduleNow('Daily brief')}
+                      disabled={!!runningSchedule}
+                      title="Run now"
+                    >▶</button>
                   </div>
                 </>
               )}
