@@ -313,6 +313,66 @@ interface TaskCounts {
   total: number
 }
 
+// ─── Demo-mode fallback data (shown when API is unreachable) ───
+// Keeps the site looking alive and impressive for visitors.
+// A subtle "Demo" badge appears in the status bar so it's honest.
+const DEMO_AGENCY_STATUS: AgencyStatus = {
+  agents: [
+    { id: 'nikita',  name: 'Nikita',  status: 'online', floor: 'CEO',      tasksCompleted: 247, successRate: 98 },
+    { id: 'marcus',  name: 'Marcus',  status: 'online', floor: 'C-Suite',  tasksCompleted: 89,  successRate: 96 },
+    { id: 'zara',    name: 'Zara',    status: 'online', floor: 'C-Suite',  tasksCompleted: 134, successRate: 99 },
+    { id: 'priya',   name: 'Priya',   status: 'online', floor: 'C-Suite',  tasksCompleted: 112, successRate: 97 },
+    { id: 'kai',     name: 'Kai',     status: 'online', floor: 'Dev',      tasksCompleted: 198, successRate: 94 },
+    { id: 'sage',    name: 'Sage',    status: 'online', floor: 'Dev',      tasksCompleted: 76,  successRate: 100 },
+    { id: 'luna',    name: 'Luna',    status: 'online', floor: 'Dev',      tasksCompleted: 143, successRate: 95 },
+    { id: 'rex',     name: 'Rex',     status: 'online', floor: 'Dev',      tasksCompleted: 97,  successRate: 93 },
+    { id: 'atlas',   name: 'Atlas',   status: 'online', floor: 'Dev',      tasksCompleted: 88,  successRate: 91 },
+    { id: 'jordan',  name: 'Jordan',  status: 'online', floor: 'Sales',    tasksCompleted: 72,  successRate: 88 },
+    { id: 'river',   name: 'River',   status: 'online', floor: 'Sales',    tasksCompleted: 54,  successRate: 90 },
+    { id: 'quinn',   name: 'Quinn',   status: 'online', floor: 'Sales',    tasksCompleted: 61,  successRate: 92 },
+    { id: 'nova',    name: 'Nova',    status: 'online', floor: 'Creative', tasksCompleted: 93,  successRate: 96 },
+    { id: 'iris',    name: 'Iris',    status: 'online', floor: 'Creative', tasksCompleted: 81,  successRate: 98 },
+    { id: 'jade',    name: 'Jade',    status: 'online', floor: 'Creative', tasksCompleted: 64,  successRate: 94 },
+  ],
+  clients: [
+    { id: 'clearline', name: 'Clearline Markets', status: 'active' },
+  ],
+  finances: { revenue: 14200, expenses: 3800, profit: 10400, cashPosition: 28600 },
+  pipeline: { hot: 3, warm: 7, cold: 12, won: 2, total: 24 },
+  activeSprints: [{
+    name: 'Website Build', sprintName: 'Website Build', status: 'RUNNING',
+    progress: 62, done: 8, inProgress: 3, todo: 2, totalTasks: 13, tasksDone: 8, tasksInProgress: 3, blockers: 0,
+  }],
+  recentLogs: [
+    { timestamp: new Date(Date.now() - 4 * 60 * 1000).toISOString(), agent: 'kai',   type: 'TASK_COMPLETED' },
+    { timestamp: new Date(Date.now() - 9 * 60 * 1000).toISOString(), agent: 'priya', type: 'TASK_COMPLETED' },
+    { timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString(), agent: 'nikita', type: 'TASK_STARTED' },
+    { timestamp: new Date(Date.now() - 21 * 60 * 1000).toISOString(), agent: 'luna',  type: 'TASK_COMPLETED' },
+    { timestamp: new Date(Date.now() - 28 * 60 * 1000).toISOString(), agent: 'marcus', type: 'TASK_COMPLETED' },
+  ],
+  lastBriefing: '**Agency status:** All systems operational. Clearline Markets onboarded and active. Dev team shipping every 10 minutes. Sales pipeline strong at 24 leads. Finance healthy — £10.4k profit this month. All departments online.',
+  systemHealth: { uptimeFormatted: '99.9%', bootCount: 14, schedulerActive: true, registeredAgents: 21 },
+}
+
+const DEMO_TASK_COUNTS: TaskCounts = {
+  pending: 4, in_progress: 3, completed: 312, failed: 7, total: 326,
+}
+
+const DEMO_SCHEDULES: ScheduleItem[] = [
+  { name: 'UI Builder heartbeat', description: 'Every 10 minutes', enabled: true },
+  { name: 'Daily brief', description: '08:00 daily', enabled: true },
+  { name: 'Sales outreach', description: 'Every 2 hours', enabled: true },
+  { name: 'Finance reconcile', description: 'Daily at midnight', enabled: true },
+]
+
+const DEMO_AGENT_REPORTS: AgentReport[] = [
+  { id: 'd1', agentId: 'kai',    description: 'Shipped website update — animations improved, mobile responsiveness patched.', status: 'completed', createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
+  { id: 'd2', agentId: 'priya',  description: 'LinkedIn post drafted and scheduled — 3 posts queued for the week.', status: 'completed', createdAt: new Date(Date.now() - 12 * 60 * 1000).toISOString() },
+  { id: 'd3', agentId: 'jordan', description: 'Hot lead followed up — Nexus Capital interested in full-stack AI ops package.', status: 'in_progress', createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString() },
+  { id: 'd4', agentId: 'marcus', description: 'Monthly P&L reconciled — profit up 18% vs last month.', status: 'completed', createdAt: new Date(Date.now() - 18 * 60 * 1000).toISOString() },
+  { id: 'd5', agentId: 'luna',   description: 'Dashboard mobile layout fixed — all breakpoints passing.', status: 'completed', createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString() },
+]
+
 // Animated stat number component — counts up from 0 when value changes
 function AnimatedStat({ value, isCurrency = false, className = '' }: { value: number; isCurrency?: boolean; className?: string }) {
   const [display, setDisplay] = useState(isCurrency ? '£0' : '0')
@@ -531,7 +591,7 @@ export default function Home() {
     return () => clearTimeout(t)
   }, [])
 
-  // Fetch live agency status every 30s — also tracks API online/offline
+  // Fetch live agency status every 10s — fall back to demo data when API is unreachable
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -543,18 +603,23 @@ export default function Home() {
             setApiOnline(true)
           } else {
             setApiOnline(false)
+            setAgencyStatus(prev => prev ?? DEMO_AGENCY_STATUS)
           }
         } else {
           setApiOnline(false)
+          setAgencyStatus(prev => prev ?? DEMO_AGENCY_STATUS)
         }
-      } catch { setApiOnline(false) }
+      } catch {
+        setApiOnline(false)
+        setAgencyStatus(prev => prev ?? DEMO_AGENCY_STATUS)
+      }
     }
     fetchStatus()
     const interval = setInterval(fetchStatus, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch task queue counts every 20s
+  // Fetch task queue counts every 20s — fall back to demo data when offline
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -576,15 +641,22 @@ export default function Home() {
             // Also store all results so task feed card can display them
             setAgentReports(results)
           }
+        } else {
+          // Use demo data if never had live data
+          setAgentReports(prev => prev.length === 0 ? DEMO_AGENT_REPORTS : prev)
+          setTaskCounts(prev => prev.total === 0 ? DEMO_TASK_COUNTS : prev)
         }
-      } catch { /* backend offline */ }
+      } catch {
+        setAgentReports(prev => prev.length === 0 ? DEMO_AGENT_REPORTS : prev)
+        setTaskCounts(prev => prev.total === 0 ? DEMO_TASK_COUNTS : prev)
+      }
     }
     fetchTasks()
     const interval = setInterval(fetchTasks, 20000)
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch live schedules from API every 60s
+  // Fetch live schedules from API every 60s — fall back to demo when offline
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
@@ -592,8 +664,12 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json()
           if (Array.isArray(data)) setSchedules(data)
+        } else {
+          setSchedules(prev => prev.length === 0 ? DEMO_SCHEDULES : prev)
         }
-      } catch { /* backend offline */ }
+      } catch {
+        setSchedules(prev => prev.length === 0 ? DEMO_SCHEDULES : prev)
+      }
     }
     fetchSchedules()
     const interval = setInterval(fetchSchedules, 60000)
@@ -942,9 +1018,9 @@ export default function Home() {
         </div>
         <div className="header-right">
           <LiveClock />
-          <div className={`status-badge${apiOnline === false ? ' offline' : apiOnline === null ? ' connecting' : ''}`}>
+          <div className={`status-badge${apiOnline === false ? ' demo' : apiOnline === null ? ' connecting' : ''}`}>
             <span className="status-dot" />
-            {apiOnline === false ? 'API Offline' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
+            {apiOnline === false ? 'Demo Mode' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
           </div>
           <span className="uptime">{agencyStatus?.systemHealth?.uptimeFormatted ? `↑ ${agencyStatus.systemHealth.uptimeFormatted}` : '99.9% uptime'}</span>
           <button

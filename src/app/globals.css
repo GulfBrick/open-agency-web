@@ -3575,6 +3575,18 @@ body {
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
 }
 
+/* Demo mode — amber tint, not alarming */
+.status-badge.demo {
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--amber);
+  border-color: rgba(245, 158, 11, 0.12);
+}
+
+.status-badge.demo .status-dot {
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
 .status-badge.connecting {
   background: rgba(245, 158, 11, 0.08);
   color: var(--amber);
