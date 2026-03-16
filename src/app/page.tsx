@@ -265,7 +265,7 @@ function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
         </div>
       </div>
 
-      <div className="bubble">{bubbles[bubbleIdx]}</div>
+      <div className="bubble" key={bubbleIdx}>{bubbles[bubbleIdx]}</div>
       <div className="desk-surface">
         <div className="desk-monitor">💻</div>
         <div className={`desk-avatar ${agent.cls} ${agent.status}`}>
@@ -942,7 +942,7 @@ export default function Home() {
         </div>
         <div className="header-right">
           <LiveClock />
-          <div className={`status-badge${apiOnline === false ? ' offline' : ''}`}>
+          <div className={`status-badge${apiOnline === false ? ' offline' : apiOnline === null ? ' connecting' : ''}`}>
             <span className="status-dot" />
             {apiOnline === false ? 'API Offline' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
           </div>

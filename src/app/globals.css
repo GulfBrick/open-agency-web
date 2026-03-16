@@ -3575,6 +3575,18 @@ body {
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
 }
 
+.status-badge.connecting {
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--amber);
+  border-color: rgba(245, 158, 11, 0.15);
+}
+
+.status-badge.connecting .status-dot {
+  background: var(--amber);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  animation: pulse 1s ease-in-out infinite;
+}
+
 /* ─── Rooftop status offline ─── */
 .rooftop-status.offline {
   background: rgba(244, 63, 94, 0.08);
