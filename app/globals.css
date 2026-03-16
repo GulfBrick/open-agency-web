@@ -396,6 +396,26 @@ body {
   font-weight: 500;
 }
 
+.header-clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--violet);
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  padding: 5px 12px;
+  border-radius: 8px;
+  min-width: 72px;
+  text-align: center;
+  animation: clockGlow 4s ease-in-out infinite;
+}
+
+@keyframes clockGlow {
+  0%, 100% { box-shadow: none; border-color: rgba(124, 58, 237, 0.14); }
+  50% { box-shadow: 0 0 10px rgba(124, 58, 237, 0.18); border-color: rgba(124, 58, 237, 0.30); }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
   50% { opacity: 0.5; box-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
@@ -867,6 +887,38 @@ body {
     );
 }
 
+/* ─── Floor Window Panel Lights ─────────────────────── */
+/* Tiny lit windows on right edge of each floor — night-time office effect */
+.floor-desks::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 24px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      currentColor 0px,
+      currentColor 6px,
+      transparent 6px,
+      transparent 10px
+    );
+  opacity: 0.06;
+  border-radius: 2px;
+}
+.floor.floor-ceo .floor-desks::after    { color: #F59E0B; opacity: 0.10; }
+.floor.floor-creative .floor-desks::after { color: #F43F5E; opacity: 0.07; }
+.floor.floor-sales .floor-desks::after  { color: #F59E0B; opacity: 0.07; }
+.floor.floor-dev .floor-desks::after    { color: #3B82F6; opacity: 0.08; }
+.floor.floor-csuite .floor-desks::after { color: #7C3AED; opacity: 0.08; }
+
+/* When agents are online on a floor, make the windows brighter */
+.floor.has-online .floor-desks::after { opacity: 0.16; }
+.floor.floor-ceo.has-online .floor-desks::after { opacity: 0.22; }
+
 /* Window glow behind desks */
 .window-glow {
   position: absolute;
@@ -890,6 +942,23 @@ body {
 .floor.floor-ceo {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.03), rgba(124, 58, 237, 0.03));
   position: relative;
+}
+
+/* Sweeping executive light beam across CEO floor */
+.floor.floor-ceo::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.04) 40%, rgba(167, 139, 250, 0.06) 60%, transparent 100%);
+  animation: ceoFloorSweep 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes ceoFloorSweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
 }
 
 /* Sweeping executive light beam across CEO floor */
@@ -1131,6 +1200,18 @@ body {
   width: 28px; height: 100%;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 2px;
+}
+
+/* Room divider between agents */
+.agent-desk + .agent-desk::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
 }
 
 /* ─── Desk Surface & Monitor ──────────────────────── */

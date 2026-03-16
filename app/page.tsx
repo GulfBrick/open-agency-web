@@ -133,6 +133,25 @@ const BOOT_MESSAGES = [
   "Intelligence at work.",
 ];
 
+function useLiveClock() {
+  const [time, setTime] = useState("");
+
+  useEffect(() => {
+    function update() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+      const s = String(now.getSeconds()).padStart(2, "0");
+      setTime(`${h}:${m}:${s}`);
+    }
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return time;
+}
+
 function useTypewriter(text: string, speed = 32) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
@@ -1012,6 +1031,9 @@ export default function Dashboard() {
   // Count online agents
   const onlineCount = agents.filter((a) => isOnline(a.status)).length;
 
+  // Live clock
+  const liveClock = useLiveClock();
+
   // Boot message cycle for CEO brief while API loads
   const [bootMsgIdx, setBootMsgIdx] = useState(0);
   useEffect(() => {
@@ -1079,6 +1101,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="header-right">
+          {liveClock && (
+            <span className="header-clock">{liveClock}</span>
+          )}
           <span className="uptime">{status?.systemHealth?.uptimeFormatted || "--"}</span>
           <div className={`status-badge${apiOnline ? "" : " offline"}`}>
             <div className="status-dot" />
