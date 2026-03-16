@@ -611,6 +611,12 @@ function NikitaChat({
         </div>
         <div className="nikita-chat-thread" ref={threadRef}>
           <div className="nikita-chat-thread-inner">
+            {messages.length === 0 && !isLoading && (
+              <div className="chat-welcome">
+                <div className="chat-welcome-avatar">N</div>
+                <div className="chat-welcome-text">Nikita is online — ask her anything about the agency.</div>
+              </div>
+            )}
             {messages.map((msg, i) =>
               msg.type === "agent" ? (
                 <AgentBubble key={i} msg={msg} />
@@ -694,7 +700,19 @@ export default function Dashboard() {
       const { getNikitaHistory } = await import("@/lib/api");
       const data = await getNikitaHistory();
       const arr = Array.isArray(data) ? data : data?.value ?? data?.messages ?? [];
-      if (!arr.length) { setHistoryLoaded(true); return; }
+      if (!arr.length) {
+        setHistoryLoaded(true);
+        // Seed a welcome from Nikita so the chat doesn't open blank
+        const now = new Date();
+        setChatMessages([{
+          type: "nikita",
+          text: "Hey. I'm Nikita — CEO of Open Agency. The team's standing by. Ask me anything about the business.",
+          timestamp: now.getTime(),
+          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        }]);
+        setUnreadCount(1);
+        return;
+      }
       const mapped: ChatMessage[] = arr.slice(-20).map((m: Record<string, string>) => {
         const ts = m.timestamp ? new Date(m.timestamp).getTime() : Date.now();
         const time = new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
