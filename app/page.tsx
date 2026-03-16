@@ -808,8 +808,11 @@ export default function Dashboard() {
           <div className="ceo-brief-time" />
         </div>
 
-        {/* Dashboard Grid */}
+        {/* Dashboard Grid — matches local dashboard layout exactly */}
         <section className="dashboard-grid">
+
+          {/* ROW 1: Financials | Sales Pipeline | Active Sprint */}
+
           {/* Financials */}
           <div className="dash-card card-financials">
             <div className="dash-card-title">
@@ -852,48 +855,91 @@ export default function Dashboard() {
               <div className="pipeline-row">
                 <div className="pipeline-label">Hot</div>
                 <div className="pipeline-bar-track">
-                  <div
-                    className="pipeline-bar-fill rose"
-                    style={{ width: `${pipeTotal ? (pipeHot / pipeTotal) * 100 : 0}%` }}
-                  />
+                  <div className="pipeline-bar-fill rose" style={{ width: `${pipeTotal ? (pipeHot / pipeTotal) * 100 : 0}%` }} />
                 </div>
                 <div className="pipeline-count color-rose">{pipeHot}</div>
               </div>
               <div className="pipeline-row">
                 <div className="pipeline-label">Warm</div>
                 <div className="pipeline-bar-track">
-                  <div
-                    className="pipeline-bar-fill amber"
-                    style={{ width: `${pipeTotal ? (pipeWarm / pipeTotal) * 100 : 0}%` }}
-                  />
+                  <div className="pipeline-bar-fill amber" style={{ width: `${pipeTotal ? (pipeWarm / pipeTotal) * 100 : 0}%` }} />
                 </div>
                 <div className="pipeline-count color-amber">{pipeWarm}</div>
               </div>
               <div className="pipeline-row">
                 <div className="pipeline-label">Cold</div>
                 <div className="pipeline-bar-track">
-                  <div
-                    className="pipeline-bar-fill violet"
-                    style={{ width: `${pipeTotal ? (pipeCold / pipeTotal) * 100 : 0}%` }}
-                  />
+                  <div className="pipeline-bar-fill violet" style={{ width: `${pipeTotal ? (pipeCold / pipeTotal) * 100 : 0}%` }} />
                 </div>
                 <div className="pipeline-count color-violet">{pipeCold}</div>
               </div>
               <div className="pipeline-row">
                 <div className="pipeline-label">Won</div>
                 <div className="pipeline-bar-track">
-                  <div
-                    className="pipeline-bar-fill green"
-                    style={{ width: `${pipeTotal ? (pipeWon / pipeTotal) * 100 : 0}%` }}
-                  />
+                  <div className="pipeline-bar-fill green" style={{ width: `${pipeTotal ? (pipeWon / pipeTotal) * 100 : 0}%` }} />
                 </div>
                 <div className="pipeline-count color-green">{pipeWon}</div>
               </div>
             </div>
           </div>
 
-          {/* Live Task Queue */}
+          {/* Active Sprint */}
           <div className="dash-card card-sprint">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128640;</span> Active Sprint
+              <span className="card-badge sprint-badge">
+                {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length > 0 ? "live" : "--"}
+              </span>
+            </div>
+            <div className="sprint-stats">
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-amber">
+                  {taskQueue.filter(t => (t.status || "").toLowerCase() === "pending").length}
+                </div>
+                <div className="sprint-stat-label">Queued</div>
+              </div>
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-blue">
+                  {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length}
+                </div>
+                <div className="sprint-stat-label">Active</div>
+              </div>
+              <div className="sprint-stat">
+                <div className="sprint-stat-value color-green">
+                  {taskQueue.filter(t => (t.status || "").toLowerCase() === "completed").length}
+                </div>
+                <div className="sprint-stat-label">Done</div>
+              </div>
+            </div>
+            <div className="sprint-list" style={{ marginTop: 14 }}>
+              {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length === 0 ? (
+                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                  {apiOnline ? "No active sprint" : "Loading..."}
+                </div>
+              ) : (
+                taskQueue
+                  .filter(t => (t.status || "").toLowerCase() === "in_progress")
+                  .slice(0, 4)
+                  .map((task, i) => {
+                    const cfg = FLOOR_CONFIG[task.agentId || ""];
+                    const name = cfg?.name || task.agentName || task.agentId || "Agent";
+                    const desc = task.description || "Task";
+                    return (
+                      <div key={task.id || i} className="sprint-item">
+                        <span className="sprint-dot color-blue">●</span>
+                        <span className="sprint-label">{name}: {desc.length > 30 ? desc.slice(0, 30) + "…" : desc}</span>
+                        <span className="sprint-status color-blue">active</span>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+          </div>
+
+          {/* ROW 2: Live Task Queue (span 2) | Workflows */}
+
+          {/* Live Task Queue — spans 2 columns */}
+          <div className="dash-card card-tasks" style={{ gridColumn: "span 2" }}>
             <div className="dash-card-title">
               <span className="card-icon">&#9889;</span> Live Task Queue
               <span className="card-badge sprint-badge">{taskQueue.length || "0"}</span>
@@ -902,7 +948,7 @@ export default function Dashboard() {
               {(["pending","in_progress","completed","failed"] as const).map((st) => {
                 const count = taskQueue.filter(t => (t.status || "").toLowerCase() === st).length;
                 const colorMap: Record<string,string> = { pending: "amber", in_progress: "blue", completed: "green", failed: "rose" };
-                const labelMap: Record<string,string> = { pending: "Pending", in_progress: "Active", completed: "Done", failed: "Failed" };
+                const labelMap: Record<string,string> = { pending: "Pending", in_progress: "In Progress", completed: "Completed", failed: "Failed" };
                 return (
                   <div key={st} className={`tq-stat color-${colorMap[st]}`}>
                     <div className="tq-stat-value">{count}</div>
@@ -915,23 +961,51 @@ export default function Dashboard() {
               {taskQueue.length === 0 ? (
                 <div className="task-feed-empty">{apiOnline ? "No tasks yet" : "Loading..."}</div>
               ) : (
-                taskQueue.slice(0, 6).map((task, i) => {
+                taskQueue.slice(0, 8).map((task, i) => {
                   const st = (task.status || "pending").toLowerCase();
                   const dotColor = st === "completed" ? "green" : st === "in_progress" ? "blue" : st === "failed" ? "rose" : "amber";
                   const cfg = FLOOR_CONFIG[task.agentId || ""];
                   const name = cfg?.name || task.agentName || task.agentId || "Agent";
                   const desc = task.description || "Task";
+                  const ts = task.createdAt ? new Date(task.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
                   return (
                     <div key={task.id || i} className="task-feed-item">
                       <span className={`task-feed-dot color-${dotColor}`}>●</span>
                       <span className="task-feed-agent">{name}</span>
-                      <span className="task-feed-desc">{desc.length > 38 ? desc.slice(0, 38) + "…" : desc}</span>
+                      <span className="task-feed-desc">{desc.length > 52 ? desc.slice(0, 52) + "…" : desc}</span>
+                      {ts && <span style={{ marginLeft: "auto", fontFamily: "var(--mono)", fontSize: 9, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{ts}</span>}
                     </div>
                   );
                 })
               )}
             </div>
           </div>
+
+          {/* Workflows */}
+          <div className="dash-card card-workflows">
+            <div className="dash-card-title">
+              <span className="card-icon">&#128736;</span> Workflows
+              <span className="card-badge">
+                {taskQueue.filter(t => t.description?.toLowerCase().includes("workflow")).length || "0"}
+              </span>
+            </div>
+            <div className="sprint-list">
+              {[
+                { label: "Lead → Close pipeline", status: "running", dot: "green" },
+                { label: "Content calendar auto-post", status: "paused", dot: "amber" },
+                { label: "Dev PR → Deploy cycle", status: "running", dot: "green" },
+                { label: "Weekly CFO report", status: "scheduled", dot: "violet" },
+              ].map((wf, i) => (
+                <div key={i} className="sprint-item">
+                  <span className={`sprint-dot color-${wf.dot}`}>●</span>
+                  <span className="sprint-label">{wf.label}</span>
+                  <span className={`sprint-status color-${wf.dot}`}>{wf.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ROW 3: Clients | Scheduled Tasks | Activity Log */}
 
           {/* Clients */}
           <div className="dash-card card-clients">
@@ -960,8 +1034,9 @@ export default function Dashboard() {
             <div className="schedule-list">
               {[
                 { label: "Nikita heartbeat", interval: "5 min", dot: "green" },
+                { label: "UI builder heartbeat", interval: "10 min", dot: "violet" },
                 { label: "Status sync", interval: "10 sec", dot: "blue" },
-                { label: "Task result poll", interval: "3 sec", dot: "violet" },
+                { label: "Task result poll", interval: "3 sec", dot: "amber" },
               ].map((item, i) => (
                 <div key={i} className="schedule-item">
                   <span className={`schedule-dot color-${item.dot}`}>●</span>
@@ -986,7 +1061,7 @@ export default function Dashboard() {
               ) : (
                 [...chatMessages]
                   .filter(m => m.type === "nikita" || m.type === "agent")
-                  .slice(-5)
+                  .slice(-6)
                   .reverse()
                   .map((msg, i) => (
                     <div key={i} className="activity-item">
@@ -999,6 +1074,7 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
         </section>
       </main>
 

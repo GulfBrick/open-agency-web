@@ -1307,6 +1307,50 @@ body {
 .dash-card.card-tasks::before { background: linear-gradient(180deg, var(--amber), rgba(245, 158, 11, 0.2)); }
 .dash-card.card-workflows::before { background: linear-gradient(180deg, var(--blue), rgba(59, 130, 246, 0.2)); }
 
+/* ─── Sprint Stats (3-up grid) ───────────────────────── */
+.sprint-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sprint-stat {
+  text-align: center;
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.018);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.sprint-stat-value {
+  font-family: var(--heading);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sprint-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+/* Task feed wider when card spans 2 columns */
+.card-tasks .task-feed-list {
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.15) transparent;
+}
+
+.card-tasks .task-feed-item {
+  grid-template-columns: 12px 60px 1fr auto;
+}
+
 .dash-card-title {
   font-family: var(--heading);
   font-size: 11px;
