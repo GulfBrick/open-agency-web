@@ -824,18 +824,42 @@ export default function Dashboard() {
           <div className="dash-card card-sprint">
             <div className="dash-card-title">
               <span className="card-icon">&#128640;</span> Active Sprint
-              <span className="card-badge">--</span>
+              <span className="card-badge sprint-badge">LIVE</span>
             </div>
-            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>No active sprint</div>
+            <div className="sprint-list">
+              {[
+                { label: "Web dashboard v2", status: "done", color: "green" },
+                { label: "Animated building + floors", status: "done", color: "green" },
+                { label: "Agent chat bubbles", status: "done", color: "green" },
+                { label: "Live activity log", status: "building", color: "amber" },
+                { label: "Client onboarding flow", status: "queued", color: "muted" },
+              ].map((item, i) => (
+                <div key={i} className="sprint-item">
+                  <span className={`sprint-dot color-${item.color}`}>
+                    {item.status === "done" ? "✓" : item.status === "building" ? "⟳" : "○"}
+                  </span>
+                  <span className={`sprint-label${item.status === "done" ? " done" : ""}`}>{item.label}</span>
+                  <span className={`sprint-status color-${item.color}`}>{item.status}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Clients */}
           <div className="dash-card card-clients">
             <div className="dash-card-title">
               <span className="card-icon">&#128100;</span> Clients
+              <span className="card-badge">1 active</span>
             </div>
-            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-              {apiOnline ? "No active clients" : "Loading..."}
+            <div className="client-list">
+              <div className="client-item">
+                <div className="client-avatar client-clearline">CL</div>
+                <div className="client-info">
+                  <div className="client-name">Clearline Markets</div>
+                  <div className="client-sub">Prop trading · Aquas platform</div>
+                </div>
+                <div className="client-status-pill">Active</div>
+              </div>
             </div>
           </div>
 
@@ -843,9 +867,20 @@ export default function Dashboard() {
           <div className="dash-card card-schedules">
             <div className="dash-card-title">
               <span className="card-icon">&#128337;</span> Scheduled Tasks
+              <span className="card-badge">{apiOnline ? "auto" : "--"}</span>
             </div>
-            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-              {apiOnline ? "No scheduled tasks" : "Loading..."}
+            <div className="schedule-list">
+              {[
+                { label: "Nikita heartbeat", interval: "5 min", dot: "green" },
+                { label: "Status sync", interval: "10 sec", dot: "blue" },
+                { label: "Task result poll", interval: "3 sec", dot: "violet" },
+              ].map((item, i) => (
+                <div key={i} className="schedule-item">
+                  <span className={`schedule-dot color-${item.dot}`}>●</span>
+                  <span className="schedule-label">{item.label}</span>
+                  <span className="schedule-interval">{item.interval}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -853,12 +888,27 @@ export default function Dashboard() {
           <div className="dash-card card-activity">
             <div className="dash-card-title">
               <span className="card-icon">&#128196;</span> Activity Log
-              <span className="card-badge">--</span>
+              <span className="card-badge">{chatMessages.filter(m => m.type === "agent" || m.type === "nikita").length || "--"}</span>
             </div>
             <div className="activity-ticker">
-              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-                {apiOnline ? "No recent activity" : "Loading..."}
-              </div>
+              {chatMessages.length === 0 ? (
+                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                  {apiOnline ? "Agents standing by" : "Loading..."}
+                </div>
+              ) : (
+                [...chatMessages]
+                  .filter(m => m.type === "nikita" || m.type === "agent")
+                  .slice(-5)
+                  .reverse()
+                  .map((msg, i) => (
+                    <div key={i} className="activity-item">
+                      <span className={`activity-dot ${msg.type === "agent" ? "color-blue" : "color-violet"}`}>●</span>
+                      <span className="activity-agent">{msg.type === "agent" ? (msg.agentName || "Agent") : "Nikita"}</span>
+                      <span className="activity-text">{msg.text.length > 48 ? msg.text.slice(0, 48) + "…" : msg.text}</span>
+                      <span className="activity-time">{msg.time}</span>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         </section>
