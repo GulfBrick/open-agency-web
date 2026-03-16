@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 
 const AGENTS = {
+  ceo: [
+    { id: 'nikita', name: 'Nikita', role: 'CEO · Owner', initials: 'N', cls: 'ceo', status: 'online', bubble: 'Reviewing agency status...' },
+  ],
   csuite: [
-    { id: 'nikita', name: 'Nikita', role: 'CEO', initials: 'N', cls: 'csuite', status: 'online', bubble: 'Reviewing Q1 roadmap...' },
     { id: 'marcus', name: 'Marcus', role: 'CFO', initials: 'M', cls: 'csuite', status: 'online', bubble: 'Reconciling accounts...' },
     { id: 'zara', name: 'Zara', role: 'CTO', initials: 'Z', cls: 'csuite', status: 'online', bubble: 'Reviewing infra...' },
     { id: 'priya', name: 'Priya', role: 'CMO', initials: 'P', cls: 'csuite', status: 'online', bubble: 'Drafting campaigns...' },
@@ -38,6 +40,16 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   star: i % 4 === 0,
 }))
 
+const HERO_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 5.3) % 100}%`,
+  top: `${(i * 7.7) % 100}%`,
+  size: i % 4 === 0 ? 3 : 2,
+  duration: `${4 + (i * 0.5)}s`,
+  delay: `${(i * 0.3)}s`,
+  star: i % 5 === 0,
+}))
+
 interface ChatMessage {
   id: number
   role: 'user' | 'assistant' | 'typing'
@@ -50,7 +62,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 
 function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
   return (
-    <div className="agent-desk">
+    <div className={`agent-desk ${agent.id === 'nikita' ? 'ceo-desk' : ''}`}>
       <div className="bubble">{agent.bubble}</div>
       <div className={`desk-avatar ${agent.cls} ${agent.status}`}>
         {agent.initials}
@@ -68,7 +80,14 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Fade out loading overlay after a short delay
+    const t = setTimeout(() => setLoaded(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (chatOpen) {
@@ -116,6 +135,40 @@ export default function Home() {
 
   return (
     <>
+      {/* Loading Overlay */}
+      <div className={`loading-overlay${loaded ? ' hidden' : ''}`}>
+        <div className="load-logo">Open Agency</div>
+        <div className="load-spinner" />
+        <div className="load-text">Initialising systems...</div>
+      </div>
+
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="hero-particles">
+          {HERO_PARTICLES.map(p => (
+            <div
+              key={p.id}
+              className={`hero-particle${p.star ? ' star' : ''}`}
+              style={{
+                left: p.left,
+                top: p.top,
+                width: p.size,
+                height: p.size,
+                animationDuration: p.duration,
+                animationDelay: p.delay,
+              }}
+            />
+          ))}
+        </div>
+        <h1 className="hero-wordmark"><span>Open Agency</span></h1>
+        <p className="hero-subtitle">Intelligence at work.</p>
+        <div className="hero-ticker">
+          <div className="pulse-dot" />
+          <span className="ticker-text"><span className="ticker-count">13</span> agents online</span>
+        </div>
+        <div className="hero-scroll">Scroll</div>
+      </section>
+
       {/* Header */}
       <header className="header">
         <div className="header-left">
@@ -165,11 +218,27 @@ export default function Home() {
             <div className="rooftop-tagline">Intelligence at work.</div>
             <div className="rooftop-status">
               <span className="dot" />
-              12 agents online · all departments active
+              13 agents online · all departments active
             </div>
           </div>
 
-          {/* C-Suite Floor */}
+          {/* Floor 05 — CEO */}
+          <div className="floor floor-ceo">
+            <div className="floor-inner">
+              <div className="floor-label">
+                <div className="floor-number-badge">05</div>
+                <div className="floor-icon">👑</div>
+                <div className="floor-number">Floor 05</div>
+                <div className="floor-name">CEO · Nikita 👑</div>
+              </div>
+              <div className="floor-desks">
+                <div className="window-glow" />
+                {AGENTS.ceo.map(a => <AgentDesk key={a.id} agent={a} />)}
+              </div>
+            </div>
+          </div>
+
+          {/* Floor 04 — C-Suite */}
           <div className="floor floor-csuite">
             <div className="floor-inner">
               <div className="floor-label">
@@ -185,7 +254,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Dev Floor */}
+          {/* Floor 03 — Dev */}
           <div className="floor floor-dev">
             <div className="floor-inner">
               <div className="floor-label">
@@ -201,7 +270,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Sales Floor */}
+          {/* Floor 02 — Sales */}
           <div className="floor floor-sales">
             <div className="floor-inner">
               <div className="floor-label">
@@ -217,7 +286,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Creative Floor */}
+          {/* Floor 01 — Creative */}
           <div className="floor floor-creative">
             <div className="floor-inner">
               <div className="floor-label">
@@ -275,7 +344,7 @@ export default function Home() {
           <div className="ceo-brief-text">
             Agency is live. Building is up. Dev team is shipping the website every 10 minutes. Clearline Markets is our first active client — Aquas Trading integration in progress. No blockers. All systems green.
           </div>
-          <div className="ceo-brief-time">Monday, 16 March 2026 — 09:27 AM</div>
+          <div className="ceo-brief-time">Monday, 16 March 2026 — 09:37 AM</div>
         </div>
 
         {/* Dashboard Grid */}
