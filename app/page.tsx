@@ -3,6 +3,83 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule, getElevenLabsKey, onboardClient } from "@/lib/api";
 
+// ─── Markdown Renderer ───────────────────────────────────────────────────────
+// Lightweight inline markdown → JSX (no external deps)
+// Handles: **bold**, *italic*, `code`, [link](url), — bare URLs
+function renderInline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  // Pattern: **bold** | *italic* | `code` | [text](url) | bare https?://...
+  const re = /\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    if (match[1] !== undefined) parts.push(<strong key={match.index}>{match[1]}</strong>);
+    else if (match[2] !== undefined) parts.push(<em key={match.index}>{match[2]}</em>);
+    else if (match[3] !== undefined) parts.push(<code key={match.index} className="md-code">{match[3]}</code>);
+    else if (match[4] !== undefined) parts.push(<a key={match.index} href={match[5]} target="_blank" rel="noopener noreferrer" className="md-link">{match[4]}</a>);
+    else if (match[6] !== undefined) parts.push(<a key={match.index} href={match[6]} target="_blank" rel="noopener noreferrer" className="md-link">{match[6]}</a>);
+    last = re.lastIndex;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+function renderMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // Heading: ## or ###
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const cls = level === 1 ? "md-h1" : level === 2 ? "md-h2" : "md-h3";
+      elements.push(<div key={i} className={cls}>{renderInline(headingMatch[2])}</div>);
+      i++;
+      continue;
+    }
+    // Bullet: - or * or •
+    if (/^[\-\*•]\s+/.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^[\-\*•]\s+/.test(lines[i])) {
+        items.push(<li key={i}>{renderInline(lines[i].replace(/^[\-\*•]\s+/, ""))}</li>);
+        i++;
+      }
+      elements.push(<ul key={`ul-${i}`} className="md-list">{items}</ul>);
+      continue;
+    }
+    // Numbered list: 1. or 1)
+    if (/^\d+[\.\)]\s+/.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^\d+[\.\)]\s+/.test(lines[i])) {
+        items.push(<li key={i}>{renderInline(lines[i].replace(/^\d+[\.\)]\s+/, ""))}</li>);
+        i++;
+      }
+      elements.push(<ol key={`ol-${i}`} className="md-list">{items}</ol>);
+      continue;
+    }
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      elements.push(<hr key={i} className="md-hr" />);
+      i++;
+      continue;
+    }
+    // Empty line
+    if (line.trim() === "") {
+      elements.push(<br key={i} />);
+      i++;
+      continue;
+    }
+    // Regular paragraph / inline
+    elements.push(<p key={i} className="md-p">{renderInline(line)}</p>);
+    i++;
+  }
+  return <>{elements}</>;
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Agent {
@@ -855,7 +932,7 @@ function NikitaChat({
               ) : (
                 <div key={i} className={`chat-msg ${msg.type}`}>
                   <div className="chat-msg-text">
-                    {msg.text}
+                    {msg.type === "nikita" ? renderMarkdown(msg.text) : msg.text}
                     {msg.dispatched && (
                       <span className="chat-dispatch-badge">→ agents dispatched</span>
                     )}
