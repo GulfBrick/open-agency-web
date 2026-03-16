@@ -818,6 +818,38 @@ body {
   position: relative;
 }
 
+/* ─── Floor Window Panel Lights ─────────────────────── */
+/* Tiny lit windows on each floor's right edge — like a night-time office building */
+.floor-desks::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 24px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      currentColor 0px,
+      currentColor 6px,
+      transparent 6px,
+      transparent 10px
+    );
+  opacity: 0.06;
+  border-radius: 2px;
+}
+.floor.floor-ceo .floor-desks::after    { color: #F59E0B; opacity: 0.10; }
+.floor.floor-creative .floor-desks::after { color: #F43F5E; opacity: 0.07; }
+.floor.floor-sales .floor-desks::after  { color: #F59E0B; opacity: 0.07; }
+.floor.floor-dev .floor-desks::after    { color: #3B82F6; opacity: 0.08; }
+.floor.floor-csuite .floor-desks::after { color: #7C3AED; opacity: 0.08; }
+
+/* When agents are online on a floor, make the windows brighter */
+.floor.has-online .floor-desks::after { opacity: 0.16; }
+.floor.floor-ceo.has-online .floor-desks::after { opacity: 0.22; }
+
 /* Subtle floor texture (thin horizontal grid lines) */
 .floor-desks::before {
   content: '';
