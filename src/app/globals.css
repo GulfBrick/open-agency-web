@@ -1180,6 +1180,22 @@ body {
   margin-top: 2px;
 }
 
+/* ─── Popup Rank Badge (matches local dashboard) ─── */
+.popup-rank {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  background: rgba(124, 58, 237, 0.06);
+  border-radius: 6px;
+}
+.popup-rank span {
+  color: var(--violet);
+  font-weight: 600;
+}
+
 .popup-status-row {
   display: flex;
   align-items: center;
@@ -1204,7 +1220,7 @@ body {
 /* ─── Ground Floor Stats ─── */
 .ground-floor {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1px;
   background: rgba(255, 255, 255, 0.02);
   border-top: 2px solid rgba(124, 58, 237, 0.08);
@@ -1420,6 +1436,8 @@ body {
 .ground-stat:nth-child(2)::after { background: var(--green); }
 .ground-stat:nth-child(3)::after { background: #A78BFA; }
 .ground-stat:nth-child(4)::after { background: var(--amber); }
+.ground-stat:nth-child(5)::after { background: var(--blue); }
+.ground-stat:nth-child(6)::after { background: var(--rose); }
 
 /* ─── Dashboard Grid ─── */
 .dashboard-grid {

@@ -213,13 +213,16 @@ function AgentDesk({ agent }: { agent: typeof AGENTS.csuite[0] }) {
             <div className="popup-stat-label">Tasks Done</div>
           </div>
           <div className="popup-stat">
-            <div className={`popup-stat-value color-green`}>{stats.active}</div>
+            <div className="popup-stat-value color-green">{stats.active}</div>
             <div className="popup-stat-label">Active Now</div>
           </div>
         </div>
+        <div className="popup-rank">
+          <span>{stats.rank}</span>
+        </div>
         <div className="popup-status-row">
           <div className={`popup-status-dot ${agent.status}`} />
-          <span>{isOnline ? 'Online · ' : 'Offline · '}{stats.rank}</span>
+          <span>{isOnline ? 'Online' : 'Offline'}</span>
         </div>
       </div>
 
@@ -758,20 +761,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Ground Floor Stats — animated live data */}
+          {/* Ground Floor Stats — 6 live data cards */}
           <div className="ground-floor">
             <div className="ground-stat">
-              <div className="ground-stat-icon">🤖</div>
+              <div className="ground-stat-icon color-violet">●</div>
               <div className="ground-stat-value">
                 <AnimatedStat
                   value={agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}
                   className="color-violet"
                 />
               </div>
-              <div className="ground-stat-label">Active Agents</div>
+              <div className="ground-stat-label">Agents Online</div>
             </div>
             <div className="ground-stat">
-              <div className="ground-stat-icon">💼</div>
+              <div className="ground-stat-icon color-green">◆</div>
               <div className="ground-stat-value">
                 <AnimatedStat
                   value={agencyStatus?.pipeline
@@ -783,18 +786,18 @@ export default function Home() {
               <div className="ground-stat-label">Pipeline</div>
             </div>
             <div className="ground-stat">
-              <div className="ground-stat-icon">£</div>
+              <div className="ground-stat-icon color-purple">£</div>
               <div className="ground-stat-value">
                 <AnimatedStat
                   value={agencyStatus?.finances?.revenue || 0}
                   isCurrency={true}
-                  className="color-green"
+                  className="color-purple"
                 />
               </div>
               <div className="ground-stat-label">Revenue</div>
             </div>
             <div className="ground-stat">
-              <div className="ground-stat-icon">⚡</div>
+              <div className="ground-stat-icon color-amber">⚡</div>
               <div className="ground-stat-value">
                 <AnimatedStat
                   value={agencyStatus?.systemHealth?.bootCount ?? 0}
@@ -802,6 +805,23 @@ export default function Home() {
                 />
               </div>
               <div className="ground-stat-label">Boot Count</div>
+            </div>
+            <div className="ground-stat">
+              <div className="ground-stat-icon color-blue">✓</div>
+              <div className="ground-stat-value">
+                <AnimatedStat
+                  value={taskCounts.completed}
+                  className="color-blue"
+                />
+              </div>
+              <div className="ground-stat-label">Tasks Done</div>
+            </div>
+            <div className="ground-stat">
+              <div className="ground-stat-icon color-rose">↑</div>
+              <div className="ground-stat-value color-rose">
+                {agencyStatus?.systemHealth?.uptimeFormatted || '99.9%'}
+              </div>
+              <div className="ground-stat-label">Uptime</div>
             </div>
           </div>
 
