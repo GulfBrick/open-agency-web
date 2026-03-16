@@ -95,7 +95,7 @@ const HERO_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
 
 interface ChatMessage {
   id: number
-  role: 'user' | 'assistant' | 'typing' | 'agent'
+  role: 'user' | 'assistant' | 'typing' | 'agent' | 'dispatch'
   text: string
   time?: string
   agentId?: string
@@ -103,6 +103,7 @@ interface ChatMessage {
   agentInitials?: string
   agentDept?: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative'
   taskStatus?: 'completed' | 'failed' | 'pending' | 'in_progress'
+  dispatchedAgents?: string[]
 }
 
 interface AgentReport {
@@ -639,7 +640,21 @@ export default function Home() {
       const data = await res.json()
       setMessages(prev => {
         const filtered = prev.filter(m => m.role !== 'typing')
-        return [...filtered, { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() }]
+        const next: ChatMessage[] = [
+          ...filtered,
+          { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() },
+        ]
+        // If Nikita dispatched agents, inject a dispatch card immediately below the reply
+        if (data.dispatched && Array.isArray(data.agents) && data.agents.length > 0) {
+          next.push({
+            id: Date.now() + 3,
+            role: 'dispatch',
+            text: '',
+            time: chatTimeStr(),
+            dispatchedAgents: data.agents as string[],
+          })
+        }
+        return next
       })
       // Refresh reports after message — inject new ones as bubbles
       try {
@@ -1446,6 +1461,30 @@ export default function Home() {
         </div>
         <div className="nikita-messages">
           {messages.map(msg => {
+            if (msg.role === 'dispatch') {
+              const agents = msg.dispatchedAgents || []
+              return (
+                <div key={msg.id} className="chat-dispatch-card">
+                  <div className="dispatch-card-header">
+                    <span className="dispatch-card-icon">⚡</span>
+                    <span className="dispatch-card-label">Agents Deployed</span>
+                    <span className="dispatch-card-count">{agents.length}</span>
+                  </div>
+                  <div className="dispatch-agent-row">
+                    {agents.map((agId, i) => {
+                      const info = AGENT_INFO[agId?.toLowerCase()] || { name: agId, initials: (agId || 'A').charAt(0).toUpperCase(), dept: 'csuite' as const }
+                      return (
+                        <div key={i} className={`dispatch-agent-chip dept-${info.dept}`}>
+                          <span className={`dispatch-chip-avatar dept-${info.dept}`}>{info.initials}</span>
+                          <span className="dispatch-chip-name">{info.name}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                </div>
+              )
+            }
             if (msg.role === 'agent') {
               return (
                 <div key={msg.id} className={`chat-msg agent-bubble dept-${msg.agentDept}`}>
