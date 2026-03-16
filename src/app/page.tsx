@@ -654,6 +654,107 @@ function StreamingMessage({ text, time, onDone }: { text: string; time?: string;
   )
 }
 
+// ─── Work With Us Lead Capture Form ───
+function WorkWithUsForm() {
+  const [form, setForm] = useState({ name: '', industry: '', contactName: '', contactEmail: '', notes: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.contactEmail.trim() || submitting) return
+    setSubmitting(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/clients/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setResult({ ok: false, msg: data.message || 'Something went wrong — please email us directly.' })
+      } else {
+        setResult({ ok: true, msg: `We've got you, ${form.contactName || form.name}. Nikita will be in touch shortly.` })
+        setForm({ name: '', industry: '', contactName: '', contactEmail: '', notes: '' })
+      }
+    } catch {
+      setResult({ ok: false, msg: 'Could not send — please try again or email us directly.' })
+    }
+    setSubmitting(false)
+  }
+
+  return (
+    <form className="wwu-form" onSubmit={submit} noValidate>
+      <div className="wwu-form-row">
+        <div className="wwu-form-field">
+          <label className="wwu-form-label">Business Name *</label>
+          <input
+            className="wwu-form-input"
+            placeholder="e.g. Clearline Markets"
+            value={form.name}
+            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="wwu-form-field">
+          <label className="wwu-form-label">Industry</label>
+          <input
+            className="wwu-form-input"
+            placeholder="e.g. SaaS, eCommerce, Finance"
+            value={form.industry}
+            onChange={e => setForm(f => ({ ...f, industry: e.target.value }))}
+          />
+        </div>
+      </div>
+      <div className="wwu-form-row">
+        <div className="wwu-form-field">
+          <label className="wwu-form-label">Your Name</label>
+          <input
+            className="wwu-form-input"
+            placeholder="Full name"
+            value={form.contactName}
+            onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))}
+          />
+        </div>
+        <div className="wwu-form-field">
+          <label className="wwu-form-label">Email *</label>
+          <input
+            className="wwu-form-input"
+            type="email"
+            placeholder="you@yourcompany.com"
+            value={form.contactEmail}
+            onChange={e => setForm(f => ({ ...f, contactEmail: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+      <div className="wwu-form-field">
+        <label className="wwu-form-label">What do you need?</label>
+        <textarea
+          className="wwu-form-input wwu-form-textarea"
+          placeholder="Tell us about your business and what you want to automate or grow..."
+          rows={3}
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+        />
+      </div>
+      {result && (
+        <div className={`wwu-form-result ${result.ok ? 'ok' : 'err'}`}>
+          {result.ok ? '✓ ' : '⚠ '}{result.msg}
+        </div>
+      )}
+      <button
+        type="submit"
+        className={`wwu-form-submit${submitting ? ' submitting' : ''}`}
+        disabled={submitting || !form.name.trim() || !form.contactEmail.trim()}
+      >
+        {submitting ? 'Sending...' : 'Get in touch →'}
+      </button>
+    </form>
+  )
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -1105,6 +1206,9 @@ export default function Home() {
           </button>
           <a className="hero-cta-secondary" href="#building">
             See the team →
+          </a>
+          <a className="hero-cta-secondary" href="#work-with-us">
+            Work with us →
           </a>
         </div>
         <div className="hero-scroll">Scroll</div>
@@ -1833,6 +1937,28 @@ export default function Home() {
 
         </div>
       </main>
+
+      {/* ─── Work With Us ─── */}
+      <section className="work-with-us" id="work-with-us">
+        <div className="wwu-inner">
+          <div className="wwu-left">
+            <div className="wwu-badge">Open Agency</div>
+            <h2 className="wwu-heading">Ready to run your business smarter?</h2>
+            <p className="wwu-sub">
+              Tell us about your business. We&apos;ll deploy a dedicated AI team — sales, dev, creative, ops — that learns your world and never stops working.
+            </p>
+            <div className="wwu-features">
+              <div className="wwu-feature"><span className="wwu-feat-icon">⚡</span>Live in 48 hours</div>
+              <div className="wwu-feature"><span className="wwu-feat-icon">🤖</span>Full AI team — not just a chatbot</div>
+              <div className="wwu-feature"><span className="wwu-feat-icon">📈</span>Gets smarter every day</div>
+              <div className="wwu-feature"><span className="wwu-feat-icon">🔒</span>Your data stays yours</div>
+            </div>
+          </div>
+          <div className="wwu-right">
+            <WorkWithUsForm />
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="footer">

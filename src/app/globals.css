@@ -4904,3 +4904,214 @@ body {
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+
+/* --- Work With Us Section --- */
+.work-with-us {
+  position: relative;
+  z-index: 1;
+  padding: 80px 32px 96px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.wwu-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+.wwu-badge {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 20px;
+}
+
+.wwu-heading {
+  font-family: var(--heading);
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+.wwu-sub {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin-bottom: 28px;
+  max-width: 480px;
+}
+
+.wwu-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wwu-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.wwu-feat-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Form panel */
+.wwu-right {
+  background: var(--card);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wwu-right::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--violet), var(--blue), var(--green));
+  border-radius: 16px 16px 0 0;
+}
+
+.wwu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wwu-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.wwu-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wwu-form-label {
+  font-family: var(--heading);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wwu-form-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+.wwu-form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.wwu-form-input:focus {
+  border-color: rgba(124, 58, 237, 0.5);
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.wwu-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.wwu-form-result {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.wwu-form-result.ok {
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--green);
+}
+
+.wwu-form-result.err {
+  background: rgba(244, 63, 94, 0.10);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: var(--rose);
+}
+
+.wwu-form-submit {
+  background: linear-gradient(135deg, var(--violet), #5B21B6);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: var(--heading);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
+  width: 100%;
+}
+
+.wwu-form-submit:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(124, 58, 237, 0.5);
+}
+
+.wwu-form-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wwu-form-submit.submitting {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .wwu-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .work-with-us {
+    padding: 60px 20px 80px;
+  }
+
+  .wwu-form-row {
+    grid-template-columns: 1fr;
+  }
+}
