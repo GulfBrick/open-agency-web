@@ -451,42 +451,46 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Nikita Chat */}
-      <div className="nikita-chat-overlay">
-        <div className={`nikita-panel ${chatOpen ? '' : 'hidden'}`}>
-          <div className="nikita-panel-header">
-            <div className="nikita-avatar">N</div>
-            <div>
-              <div className="nikita-panel-name">Nikita</div>
-              <div className="nikita-panel-role">CEO · Open Agency</div>
+      {/* Nikita Chat — Slide-out Sidebar */}
+      <div className={`nikita-chat ${chatOpen ? 'open' : ''}`}>
+        <button className="nikita-chat-close" onClick={() => setChatOpen(false)}>✕</button>
+        <div className="nikita-chat-header">
+          <div className="nikita-avatar">N</div>
+          <div>
+            <div className="nikita-panel-name">Nikita</div>
+            <div className="nikita-panel-role">CEO · Open Agency</div>
+          </div>
+        </div>
+        <div className="nikita-messages">
+          {messages.map(msg => (
+            <div
+              key={msg.id}
+              className={`chat-msg ${msg.role === 'user' ? 'user' : msg.role === 'typing' ? 'typing' : 'nikita'}`}
+            >
+              {msg.text}
             </div>
-          </div>
-          <div className="nikita-messages">
-            {messages.map(msg => (
-              <div key={msg.id} className={`chat-msg ${msg.role === 'user' ? 'outgoing' : 'incoming'} ${msg.role === 'typing' ? 'typing' : ''}`}>
-                <div className="chat-bubble">{msg.text}</div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="nikita-input-area">
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+        <div className="nikita-chat-bar">
+          <div className="nikita-chat-bar-inner">
             <textarea
-              className="nikita-input"
+              className="nikita-chat-input"
               placeholder="Message Nikita..."
               rows={1}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <button className="nikita-send" onClick={sendMessage} disabled={sending}>
+            <button className="nikita-chat-send" onClick={sendMessage} disabled={sending}>
               ↑
             </button>
           </div>
         </div>
-        <button className="nikita-toggle" onClick={() => setChatOpen(o => !o)}>
-          {chatOpen ? '✕' : '👩‍💼'}
-        </button>
       </div>
+      <button className="nikita-chat-toggle" onClick={() => setChatOpen(o => !o)}>
+        {chatOpen ? '✕' : '👩‍💼'}
+      </button>
     </>
   )
 }
