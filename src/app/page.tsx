@@ -419,6 +419,62 @@ const VALUE_PROPS = [
   { text: 'Every client. Smarter every day.', dept: 'ceo' },
 ]
 
+// Static ticker events — combined with live log data when available
+const STATIC_TICKER_EVENTS = [
+  { agent: 'Kai',    dept: 'dev',      text: 'shipped PR #47 — website animations polished' },
+  { agent: 'Priya',  dept: 'csuite',   text: 'posted Monday thread to LinkedIn — 3 posts queued' },
+  { agent: 'Jordan', dept: 'sales',    text: 'followed up with Nexus Capital — hot lead confirmed' },
+  { agent: 'Marcus', dept: 'csuite',   text: 'reconciled monthly P&L — profit up 18%' },
+  { agent: 'Luna',   dept: 'dev',      text: 'fixed mobile layout — all breakpoints passing' },
+  { agent: 'Jade',   dept: 'creative', text: 'scheduled 5 Instagram stories for the week' },
+  { agent: 'Rex',    dept: 'dev',      text: 'deployed API endpoint — response time 48ms' },
+  { agent: 'Quinn',  dept: 'sales',    text: 'qualified 2 inbound leads — both moved to warm' },
+  { agent: 'Atlas',  dept: 'dev',      text: 'reviewed PR #51 — 3 comments, approved' },
+  { agent: 'Ash',    dept: 'creative', text: 'delivered 4 blog posts — SEO scores all above 90' },
+  { agent: 'Nikita', dept: 'ceo',      text: 'issued morning brief — all departments confirmed' },
+  { agent: 'Zara',   dept: 'csuite',   text: 'scaled infra — uptime holding at 99.9%' },
+  { agent: 'Nova',   dept: 'creative', text: 'delivered brand refresh assets — client approved' },
+  { agent: 'River',  dept: 'sales',    text: 'sent contract to warm lead — awaiting signature' },
+  { agent: 'Finn',   dept: 'creative', text: 'exported 3 promo videos — ready to publish' },
+]
+
+// Activity ticker strip — horizontally scrolling live event tape
+function ActivityTicker({ recentLogs }: { recentLogs?: AgencyStatus['recentLogs'] }) {
+  // Blend live logs into ticker events
+  const events = (() => {
+    const live = (recentLogs || []).map(log => {
+      const agentId = log.agent?.toLowerCase() || ''
+      const name = AGENT_INFO[agentId]?.name || log.agent || 'Agent'
+      const dept = AGENT_INFO[agentId]?.dept || 'csuite'
+      const action = log.type === 'TASK_COMPLETED' ? 'completed task'
+        : log.type === 'TASK_FAILED' ? 'task failed'
+        : log.type === 'TASK_STARTED' ? 'started task'
+        : (log.type || 'logged activity').toLowerCase().replace(/_/g, ' ')
+      return { agent: name, dept, text: action }
+    })
+    const merged = [...live, ...STATIC_TICKER_EVENTS]
+    // Duplicate so the scroll loops seamlessly
+    return [...merged, ...merged]
+  })()
+
+  return (
+    <div className="activity-ticker-strip">
+      <div className="activity-ticker-label">⚡ LIVE</div>
+      <div className="activity-ticker-track">
+        <div className="activity-ticker-inner">
+          {events.map((ev, i) => (
+            <span key={i} className="activity-ticker-event">
+              <span className={`ticker-agent-chip ticker-dept-${ev.dept}`}>{ev.agent}</span>
+              <span className="ticker-event-text">{ev.text}</span>
+              <span className="ticker-dot">·</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── First-Visit Onboarding Panel ───
 function OnboardingPanel() {
   const [visible, setVisible] = useState(false)
@@ -1241,6 +1297,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Live Activity Ticker Strip */}
+        <ActivityTicker recentLogs={agencyStatus?.recentLogs} />
 
         {/* CEO Brief */}
         <div className="ceo-brief">
