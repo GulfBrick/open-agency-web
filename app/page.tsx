@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue } from "@/lib/api";
+import { getStatus, getAgents, sendNikitaMessage, getTaskResults, getTaskQueue, getWorkflows, getSchedules, approveWorkflow, runSchedule } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,6 +27,30 @@ interface Task {
   description?: string;
   status?: string;
   createdAt?: string;
+  completedAt?: string;
+  result?: unknown;
+}
+
+interface Workflow {
+  workflowId: string;
+  name?: string;
+  status?: string;
+  clientId?: string;
+  steps?: { status: string }[];
+}
+
+interface Schedule {
+  key: string;
+  name?: string;
+  agentId?: string;
+  schedule?: { hour?: number; minute?: number; type?: string; dayOfWeek?: number | null };
+}
+
+interface AgentReport {
+  agent?: string;
+  agentId?: string;
+  description?: string;
+  status?: string;
   completedAt?: string;
   result?: unknown;
 }
@@ -405,6 +429,59 @@ function AgentBubble({ msg }: { msg: ChatMessage }) {
   );
 }
 
+// ─── Agent Reports Panel ─────────────────────────────────────────────────────
+
+function AgentReportsPanel({ reports }: { reports: AgentReport[] }) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="agent-reports-panel">
+      <div className="agent-reports-header" onClick={() => setExpanded((v) => !v)}>
+        <span>Agent Reports</span>
+        <span className="agent-reports-badge">{reports.length}</span>
+      </div>
+      {expanded && (
+        <div className="agent-reports-list">
+          {reports.length === 0 ? (
+            <div style={{ color: "var(--text-muted)", fontSize: 11, padding: "8px" }}>No reports yet</div>
+          ) : (
+            reports.map((r, i) => {
+              const shortDesc = (r.description || "").split(".")[0].substring(0, 60);
+              const st = (r.status || "").toLowerCase();
+              const statusClass = st === "completed" ? "completed" : st === "failed" ? "failed" : "pending";
+              const statusLabel = st === "completed" ? "Done" : st === "failed" ? "Failed" : "Pending";
+              const timeStr = r.completedAt
+                ? new Date(r.completedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "--:--";
+              const resultText = r.result
+                ? typeof r.result === "string"
+                  ? r.result.substring(0, 80)
+                  : JSON.stringify(r.result).substring(0, 80)
+                : "";
+              const agentName = r.agent || r.agentId || "Agent";
+              return (
+                <div key={i} className="agent-report-item">
+                  <div className="report-agent">{agentName}</div>
+                  {shortDesc && <div className="report-desc">{shortDesc}</div>}
+                  {resultText && (
+                    <div className="report-desc" style={{ color: "var(--text)", marginTop: 2, fontStyle: "italic" }}>
+                      {resultText}
+                    </div>
+                  )}
+                  <div className="report-meta">
+                    <span className={`report-status ${statusClass}`}>{statusLabel}</span>
+                    <span>{timeStr}</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NikitaChat({
   onSend,
   isLoading,
@@ -412,6 +489,7 @@ function NikitaChat({
   isPolling,
   unreadCount,
   onOpen,
+  agentReports,
 }: {
   onSend: (msg: string) => void;
   isLoading: boolean;
@@ -419,6 +497,7 @@ function NikitaChat({
   isPolling: boolean;
   unreadCount: number;
   onOpen: () => void;
+  agentReports: AgentReport[];
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -497,6 +576,9 @@ function NikitaChat({
             )}
           </div>
         </div>
+        {/* Agent Reports Panel — matches local dashboard exactly */}
+        <AgentReportsPanel reports={agentReports} />
+
         <div className="nikita-chat-bar">
           <form onSubmit={handleSubmit} className="nikita-chat-bar-inner">
             <input
@@ -536,6 +618,9 @@ export default function Dashboard() {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [taskQueue, setTaskQueue] = useState<Task[]>([]);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [agentReports, setAgentReports] = useState<AgentReport[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const seenResultsRef = useRef<Set<string>>(new Set());
 
@@ -566,7 +651,14 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, agentsRes, taskRes] = await Promise.allSettled([getStatus(), getAgents(), getTaskQueue()]);
+      const [statusRes, agentsRes, taskRes, workflowRes, scheduleRes, reportsRes] = await Promise.allSettled([
+        getStatus(),
+        getAgents(),
+        getTaskQueue(),
+        getWorkflows(),
+        getSchedules(),
+        getTaskResults(),
+      ]);
 
       if (statusRes.status === "fulfilled" && statusRes.value) {
         setStatus(statusRes.value);
@@ -594,6 +686,24 @@ export default function Dashboard() {
         const raw = taskRes.value;
         const arr: Task[] = Array.isArray(raw) ? raw : Array.isArray(raw?.tasks) ? raw.tasks : [];
         setTaskQueue(arr.slice(-50).reverse()); // most recent first, cap at 50
+      }
+
+      if (workflowRes.status === "fulfilled") {
+        const raw = workflowRes.value;
+        const arr: Workflow[] = Array.isArray(raw) ? raw : [];
+        setWorkflows(arr);
+      }
+
+      if (scheduleRes.status === "fulfilled") {
+        const raw = scheduleRes.value;
+        const arr: Schedule[] = Array.isArray(raw) ? raw : [];
+        setSchedules(arr);
+      }
+
+      if (reportsRes.status === "fulfilled") {
+        const raw = reportsRes.value;
+        const arr: AgentReport[] = Array.isArray(raw) ? raw.slice(0, 5) : [];
+        setAgentReports(arr);
       }
     } catch {
       setApiOnline(false);
@@ -1026,28 +1136,42 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Workflows */}
+          {/* Workflows — live from API */}
           <div className="dash-card card-workflows">
             <div className="dash-card-title">
               <span className="card-icon">&#128736;</span> Workflows
-              <span className="card-badge">
-                {taskQueue.filter(t => t.description?.toLowerCase().includes("workflow")).length || "0"}
-              </span>
+              <span className="card-badge">{workflows.length || "0"}</span>
             </div>
-            <div className="sprint-list">
-              {[
-                { label: "Lead → Close pipeline", status: "running", dot: "green" },
-                { label: "Content calendar auto-post", status: "paused", dot: "amber" },
-                { label: "Dev PR → Deploy cycle", status: "running", dot: "green" },
-                { label: "Weekly CFO report", status: "scheduled", dot: "violet" },
-              ].map((wf, i) => (
-                <div key={i} className="sprint-item">
-                  <span className={`sprint-dot color-${wf.dot}`}>●</span>
-                  <span className="sprint-label">{wf.label}</span>
-                  <span className={`sprint-status color-${wf.dot}`}>{wf.status}</span>
-                </div>
-              ))}
-            </div>
+            {workflows.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                {apiOnline ? "No active workflows" : "Loading..."}
+              </div>
+            ) : (
+              <div className="sprint-list">
+                {workflows.slice(0, 6).map((wf, i) => {
+                  const st = (wf.status || "").toUpperCase();
+                  const dot = st === "RUNNING" ? "blue" : st === "DONE" ? "green" : st === "FAILED" ? "rose" : st === "WAITING_APPROVAL" ? "amber" : "violet";
+                  const stepsTotal = wf.steps?.length || 0;
+                  const stepsDone = wf.steps?.filter(s => s.status === "DONE").length || 0;
+                  const label = wf.name || wf.workflowId?.substring(0, 16) || "Workflow";
+                  const statusLabel = st.replace("_", " ").toLowerCase();
+                  return (
+                    <div key={i} className="sprint-item">
+                      <span className={`sprint-dot color-${dot}`}>●</span>
+                      <span className="sprint-label">
+                        {label}
+                        {stepsTotal > 0 && (
+                          <span style={{ color: "var(--text-muted)", fontSize: 10, marginLeft: 4 }}>
+                            {stepsDone}/{stepsTotal}
+                          </span>
+                        )}
+                      </span>
+                      <span className={`sprint-status color-${dot}`}>{statusLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* ROW 3: Clients | Scheduled Tasks | Activity Log */}
@@ -1070,26 +1194,48 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Scheduled Tasks */}
+          {/* Scheduled Tasks — live from API */}
           <div className="dash-card card-schedules">
             <div className="dash-card-title">
               <span className="card-icon">&#128337;</span> Scheduled Tasks
-              <span className="card-badge">{apiOnline ? "auto" : "--"}</span>
+              <span className="card-badge">{schedules.length > 0 ? `${schedules.length} tasks` : (apiOnline ? "auto" : "--")}</span>
             </div>
-            <div className="schedule-list">
-              {[
-                { label: "Nikita heartbeat", interval: "5 min", dot: "green" },
-                { label: "UI builder heartbeat", interval: "10 min", dot: "violet" },
-                { label: "Status sync", interval: "10 sec", dot: "blue" },
-                { label: "Task result poll", interval: "3 sec", dot: "amber" },
-              ].map((item, i) => (
-                <div key={i} className="schedule-item">
-                  <span className={`schedule-dot color-${item.dot}`}>●</span>
-                  <span className="schedule-label">{item.label}</span>
-                  <span className="schedule-interval">{item.interval}</span>
-                </div>
-              ))}
-            </div>
+            {schedules.length === 0 ? (
+              <div className="schedule-list">
+                {[
+                  { label: "Nikita heartbeat", interval: "5 min", dot: "green" },
+                  { label: "UI builder heartbeat", interval: "10 min", dot: "violet" },
+                  { label: "Status sync", interval: "10 sec", dot: "blue" },
+                  { label: "Task result poll", interval: "3 sec", dot: "amber" },
+                ].map((item, i) => (
+                  <div key={i} className="schedule-item">
+                    <span className={`schedule-dot color-${item.dot}`}>●</span>
+                    <span className="schedule-label">{item.label}</span>
+                    <span className="schedule-interval">{item.interval}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="schedule-list">
+                {schedules.slice(0, 6).map((s, i) => {
+                  const sched = s.schedule || {};
+                  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  let timeStr = `${String(sched.hour ?? 0).padStart(2, "0")}:${String(sched.minute ?? 0).padStart(2, "0")}`;
+                  if (sched.type === "weekly" && sched.dayOfWeek != null) {
+                    timeStr = `${dayNames[sched.dayOfWeek]} ${timeStr}`;
+                  } else {
+                    timeStr = `Daily ${timeStr}`;
+                  }
+                  return (
+                    <div key={i} className="schedule-item">
+                      <span className="schedule-dot color-green">●</span>
+                      <span className="schedule-label">{s.name || s.key}</span>
+                      <span className="schedule-interval">{timeStr}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Activity Log */}
@@ -1136,6 +1282,7 @@ export default function Dashboard() {
         isPolling={chatPolling}
         unreadCount={unreadCount}
         onOpen={() => setUnreadCount(0)}
+        agentReports={agentReports}
       />
     </>
   );

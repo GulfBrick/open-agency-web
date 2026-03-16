@@ -56,3 +56,29 @@ export async function getTaskQueue() {
   if (!res.ok) throw new Error(`Task queue API error: ${res.status}`);
   return res.json();
 }
+
+export async function getWorkflows() {
+  const res = await fetchAgency("/api/workflows");
+  if (!res.ok) throw new Error(`Workflows API error: ${res.status}`);
+  return res.json();
+}
+
+export async function getSchedules() {
+  const res = await fetchAgency("/api/schedules");
+  if (!res.ok) throw new Error(`Schedules API error: ${res.status}`);
+  return res.json();
+}
+
+export async function approveWorkflow(workflowId: string) {
+  const res = await fetchAgency(`/api/workflows/${encodeURIComponent(workflowId)}/approve`, {
+    method: "POST",
+  });
+  return res.json();
+}
+
+export async function runSchedule(key: string) {
+  const res = await fetchAgency(`/api/schedules/${encodeURIComponent(key)}/run`, {
+    method: "POST",
+  });
+  return res.json();
+}
