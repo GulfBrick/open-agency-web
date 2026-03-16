@@ -39,11 +39,11 @@
   --glow-blue: rgba(59, 130, 246, 0.15);
   --glow-purple: rgba(139, 92, 246, 0.15);
   --glow-green: rgba(16, 185, 129, 0.15);
-  --heading: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  --font: 'Inter', -apple-system, sans-serif;
-  --mono: 'JetBrains Mono', 'Consolas', monospace;
-  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --heading: var(--font-plus-jakarta), 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font: var(--font-inter), 'Inter', -apple-system, sans-serif;
+  --mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'Consolas', monospace;
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", "Fira Code", monospace;
 }
 
 @theme inline {
