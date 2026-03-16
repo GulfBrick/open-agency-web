@@ -946,14 +946,14 @@ export default function Dashboard() {
               return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} />;
             })}
 
-            {/* GROUND FLOOR — STATS */}
+            {/* GROUND FLOOR — STATS (6 live cards) */}
             <div className="ground-floor">
               <div className="ground-stat">
                 <div className="ground-stat-icon color-violet">&#9679;</div>
                 <div className="ground-stat-value color-violet">
                   {status ? (status.systemHealth?.registeredAgents ?? agents.length) : "\u2014"}
                 </div>
-                <div className="ground-stat-label">Agents Online</div>
+                <div className="ground-stat-label">Agents</div>
               </div>
               <div className="ground-stat">
                 <div className="ground-stat-icon color-green">&#9670;</div>
@@ -968,11 +968,29 @@ export default function Dashboard() {
                 <div className="ground-stat-label">Revenue</div>
               </div>
               <div className="ground-stat">
+                <div className="ground-stat-icon color-blue">&#9889;</div>
+                <div className="ground-stat-value color-blue">
+                  {taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length > 0
+                    ? taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length
+                    : status ? taskQueue.length : "\u2014"}
+                </div>
+                <div className="ground-stat-label">Active Tasks</div>
+              </div>
+              <div className="ground-stat">
+                <div className="ground-stat-icon color-green">&#8679;</div>
+                <div className="ground-stat-value color-green" style={{ fontSize: "18px", letterSpacing: "-0.5px" }}>
+                  {status?.systemHealth?.uptimeFormatted
+                    ? status.systemHealth.uptimeFormatted.split(" ")[0]
+                    : "\u2014"}
+                </div>
+                <div className="ground-stat-label">Uptime</div>
+              </div>
+              <div className="ground-stat">
                 <div className="ground-stat-icon color-amber">&#9889;</div>
                 <div className="ground-stat-value color-amber">
                   {status ? (status.systemHealth?.bootCount ?? 0) : "\u2014"}
                 </div>
-                <div className="ground-stat-label">Boot Count</div>
+                <div className="ground-stat-label">Boots</div>
               </div>
             </div>
           </div>
