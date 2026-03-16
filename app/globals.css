@@ -409,6 +409,8 @@ body {
 
 .agent-desk {
   animation: agentBreathe 4s ease-in-out infinite;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .agent-desk:nth-child(2) { animation-delay: 0.5s; }
 .agent-desk:nth-child(3) { animation-delay: 1.0s; }
@@ -416,6 +418,32 @@ body {
 .agent-desk:nth-child(5) { animation-delay: 0.3s; }
 .agent-desk:nth-child(6) { animation-delay: 0.8s; }
 .agent-desk:nth-child(7) { animation-delay: 1.3s; }
+
+/* Hover: lift desk, stop bobbing, snap bubble visible */
+.agent-desk:hover {
+  transform: translateY(-4px) !important;
+  animation: none !important;
+}
+
+.agent-desk:hover .bubble {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: none !important;
+  border-color: rgba(124, 58, 237, 0.35);
+  color: var(--text);
+  background: rgba(124, 58, 237, 0.08);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.12);
+}
+
+.agent-desk:hover .desk-avatar {
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+.agent-desk:hover .desk-monitor {
+  opacity: 1;
+  filter: grayscale(0) drop-shadow(0 0 4px rgba(124, 58, 237, 0.4));
+}
 
 /* ─── Window Glow Pulse ──────────────────────────── */
 @keyframes windowPulse {
