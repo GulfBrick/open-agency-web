@@ -622,6 +622,17 @@ export default function Home() {
           <div className="pulse-dot" />
           <span className="ticker-text"><span className="ticker-count">{agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}</span> agents online</span>
         </div>
+        <div className="hero-ctas">
+          <button
+            className="hero-cta-primary"
+            onClick={() => { setChatOpen(true); setUnreadCount(0) }}
+          >
+            Talk to Nikita <span className="hero-cta-arrow">↓</span>
+          </button>
+          <a className="hero-cta-secondary" href="#building">
+            See the team →
+          </a>
+        </div>
         <div className="hero-scroll">Scroll</div>
       </section>
 
@@ -640,13 +651,19 @@ export default function Home() {
             All Systems Operational
           </div>
           <span className="uptime">{agencyStatus?.systemHealth?.uptimeFormatted ? `↑ ${agencyStatus.systemHealth.uptimeFormatted}` : '99.9% uptime'}</span>
+          <button
+            className="header-cta"
+            onClick={() => { setChatOpen(true); setUnreadCount(0) }}
+          >
+            💬 Chat
+          </button>
         </div>
       </header>
 
       {/* Main */}
       <main className="main">
         {/* The Building */}
-        <div className="building">
+        <div className="building" id="building">
           <div className="building-corner building-corner--tl" />
           <div className="building-corner building-corner--tr" />
           <div className="building-corner building-corner--bl" />
