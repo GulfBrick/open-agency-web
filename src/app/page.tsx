@@ -69,7 +69,18 @@ const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
   duration: `${4 + (i * 0.4) % 6}s`,
   delay: `${(i * 0.27) % 8}s`,
   star: i % 5 === 0,
+  twinkle: false,
   opacity: 0.4 + (i % 4) * 0.15,
+}))
+
+// Twinkling star particles for rooftop (matches local dashboard)
+const TWINKLE_STARS = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 5.13) % 100}%`,
+  top: `${(i * 7.3) % 70}%`,
+  size: 2 + (i % 4 === 0 ? 3 : i % 3 === 0 ? 2 : 1),
+  duration: `${2 + (i * 0.37) % 4}s`,
+  delay: `${(i * 0.24) % 5}s`,
 }))
 
 const HERO_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
@@ -130,6 +141,7 @@ const AGENT_INFO: Record<string, { name: string; initials: string; dept: 'ceo' |
 function chatTimeStr() {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
+
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   { id: 1, role: 'assistant', text: "Hey Harry. Nikita here. Agency is running — what do you need?", time: chatTimeStr() },
@@ -243,6 +255,33 @@ interface TaskCounts {
   completed: number
   failed: number
   total: number
+}
+
+// Animated stat number component — counts up from 0 when value changes
+function AnimatedStat({ value, isCurrency = false, className = '' }: { value: number; isCurrency?: boolean; className?: string }) {
+  const [display, setDisplay] = useState(isCurrency ? '£0' : '0')
+  const prevValue = useRef(-1)
+
+  useEffect(() => {
+    if (value === prevValue.current) return
+    prevValue.current = value
+
+    const duration = 1200
+    const start = performance.now()
+
+    function update(now: number) {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const current = Math.round(value * eased)
+      setDisplay(isCurrency ? `£${current.toLocaleString()}` : current.toLocaleString())
+      if (progress < 1) requestAnimationFrame(update)
+    }
+
+    requestAnimationFrame(update)
+  }, [value, isCurrency])
+
+  return <span className={className}>{display}</span>
 }
 
 function LiveClock() {
@@ -526,6 +565,23 @@ export default function Home() {
                     height: p.size,
                     animationDuration: p.duration,
                     animationDelay: p.delay,
+                    opacity: p.opacity,
+                  }}
+                />
+              ))}
+              {/* Twinkling stars — faithful to local dashboard */}
+              {TWINKLE_STARS.map(s => (
+                <div
+                  key={`tw-${s.id}`}
+                  className="particle twinkle star"
+                  style={{
+                    left: s.left,
+                    top: s.top,
+                    width: s.size,
+                    height: s.size,
+                    animationDuration: s.duration,
+                    animationDelay: s.delay,
+                    bottom: 'auto',
                   }}
                 />
               ))}
@@ -619,33 +675,46 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Ground Floor Stats — live data */}
+          {/* Ground Floor Stats — animated live data */}
           <div className="ground-floor">
             <div className="ground-stat">
               <div className="ground-stat-icon">🤖</div>
-              <div className="ground-stat-value color-violet">
-                {agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}
+              <div className="ground-stat-value">
+                <AnimatedStat
+                  value={agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}
+                  className="color-violet"
+                />
               </div>
               <div className="ground-stat-label">Active Agents</div>
             </div>
             <div className="ground-stat">
               <div className="ground-stat-icon">💼</div>
-              <div className="ground-stat-value color-amber">
-                {agencyStatus?.pipeline ? (agencyStatus.pipeline.hot || 0) + (agencyStatus.pipeline.warm || 0) + (agencyStatus.pipeline.cold || 0) + (agencyStatus.pipeline.won || 0) : '—'}
+              <div className="ground-stat-value">
+                <AnimatedStat
+                  value={agencyStatus?.pipeline ? (agencyStatus.pipeline.hot || 0) + (agencyStatus.pipeline.warm || 0) + (agencyStatus.pipeline.cold || 0) + (agencyStatus.pipeline.won || 0) : 0}
+                  className="color-amber"
+                />
               </div>
               <div className="ground-stat-label">Pipeline</div>
             </div>
             <div className="ground-stat">
               <div className="ground-stat-icon">£</div>
-              <div className="ground-stat-value color-green">
-                {agencyStatus?.finances ? `£${(agencyStatus.finances.revenue || 0).toLocaleString()}` : '£0'}
+              <div className="ground-stat-value">
+                <AnimatedStat
+                  value={agencyStatus?.finances?.revenue || 0}
+                  isCurrency={true}
+                  className="color-green"
+                />
               </div>
               <div className="ground-stat-label">Revenue</div>
             </div>
             <div className="ground-stat">
               <div className="ground-stat-icon">🏢</div>
-              <div className="ground-stat-value color-purple">
-                {agencyStatus?.clients ? agencyStatus.clients.filter((c) => c.status === 'active').length : 1}
+              <div className="ground-stat-value">
+                <AnimatedStat
+                  value={agencyStatus?.clients ? agencyStatus.clients.filter((c) => c.status === 'active').length : 1}
+                  className="color-purple"
+                />
               </div>
               <div className="ground-stat-label">Active Clients</div>
             </div>
