@@ -242,11 +242,25 @@ interface AgencyStatus {
   agents?: Array<{ id: string; name: string; status: string; floor: string }>
   clients?: Array<{ id: string; name: string; status: string }>
   finances?: { revenue?: number; expenses?: number; profit?: number; cashPosition?: number }
-  pipeline?: { hot?: number; warm?: number; cold?: number; won?: number }
-  activeSprints?: Array<{ name: string; progress?: number; done?: number; inProgress?: number; todo?: number }>
+  pipeline?: { hot?: number; warm?: number; cold?: number; won?: number; wonThisMonth?: number; total?: number }
+  activeSprints?: Array<{
+    name?: string; sprintName?: string; clientId?: string; status?: string;
+    progress?: number; done?: number; inProgress?: number; todo?: number;
+    tasksDone?: number; tasksInProgress?: number; totalTasks?: number; blockers?: number;
+  }>
   recentLogs?: Array<{ timestamp: string; agent: string; type: string; data?: Record<string, unknown> }>
   lastBriefing?: string
-  systemHealth?: { uptime?: number }
+  systemHealth?: { uptime?: number; uptimeFormatted?: string; bootCount?: number; schedulerActive?: boolean; registeredAgents?: number }
+}
+
+interface ScheduleItem {
+  name: string
+  description?: string
+  interval?: string
+  nextRun?: string
+  lastRun?: string
+  enabled?: boolean
+  status?: string
 }
 
 interface TaskCounts {
@@ -295,6 +309,37 @@ function LiveClock() {
   return <span className="live-clock">{time}</span>
 }
 
+const VALUE_PROPS = [
+  { text: 'Sales team. Fully autonomous.', dept: 'sales' },
+  { text: 'Dev team. Ships around the clock.', dept: 'dev' },
+  { text: 'Creative. Always on brief.', dept: 'creative' },
+  { text: 'Finance & ops. Zero overhead.', dept: 'csuite' },
+  { text: 'Every client. Smarter every day.', dept: 'ceo' },
+]
+
+function ValuePropTicker() {
+  const [idx, setIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setIdx(i => (i + 1) % VALUE_PROPS.length)
+        setVisible(true)
+      }, 350)
+    }, 3200)
+    return () => clearInterval(interval)
+  }, [])
+
+  const prop = VALUE_PROPS[idx]
+  return (
+    <div className={`value-prop-ticker value-prop-${prop.dept}${visible ? ' visible' : ''}`}>
+      {prop.text}
+    </div>
+  )
+}
+
 export default function Home() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -306,6 +351,7 @@ export default function Home() {
   const [agencyStatus, setAgencyStatus] = useState<AgencyStatus | null>(null)
   const [taskCounts, setTaskCounts] = useState<TaskCounts>({ pending: 0, in_progress: 0, completed: 0, failed: 0, total: 0 })
   const [unreadCount, setUnreadCount] = useState(0)
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -360,6 +406,22 @@ export default function Home() {
     }
     fetchTasks()
     const interval = setInterval(fetchTasks, 20000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch live schedules from API every 60s
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const res = await fetch('/api/schedules')
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data)) setSchedules(data)
+        }
+      } catch { /* backend offline */ }
+    }
+    fetchSchedules()
+    const interval = setInterval(fetchSchedules, 60000)
     return () => clearInterval(interval)
   }, [])
 
@@ -537,6 +599,7 @@ export default function Home() {
         </div>
         <h1 className="hero-wordmark"><span>Open Agency</span></h1>
         <p className="hero-subtitle">Intelligence at work.</p>
+        <ValuePropTicker />
         <div className="hero-ticker">
           <div className="pulse-dot" />
           <span className="ticker-text"><span className="ticker-count">{agencyStatus?.agents ? agencyStatus.agents.filter((a) => a.status === 'online' || a.status === 'ACTIVE').length : 20}</span> agents online</span>
@@ -558,7 +621,7 @@ export default function Home() {
             <span className="status-dot" />
             All Systems Operational
           </div>
-          <span className="uptime">99.9% uptime</span>
+          <span className="uptime">{agencyStatus?.systemHealth?.uptimeFormatted ? `↑ ${agencyStatus.systemHealth.uptimeFormatted}` : '99.9% uptime'}</span>
         </div>
       </header>
 
@@ -711,8 +774,10 @@ export default function Home() {
               <div className="ground-stat-icon">💼</div>
               <div className="ground-stat-value">
                 <AnimatedStat
-                  value={agencyStatus?.pipeline ? (agencyStatus.pipeline.hot || 0) + (agencyStatus.pipeline.warm || 0) + (agencyStatus.pipeline.cold || 0) + (agencyStatus.pipeline.won || 0) : 0}
-                  className="color-amber"
+                  value={agencyStatus?.pipeline
+                    ? (agencyStatus.pipeline.total ?? (agencyStatus.pipeline.hot || 0) + (agencyStatus.pipeline.warm || 0) + (agencyStatus.pipeline.cold || 0) + (agencyStatus.pipeline.won || 0))
+                    : 0}
+                  className="color-green"
                 />
               </div>
               <div className="ground-stat-label">Pipeline</div>
@@ -729,14 +794,14 @@ export default function Home() {
               <div className="ground-stat-label">Revenue</div>
             </div>
             <div className="ground-stat">
-              <div className="ground-stat-icon">🏢</div>
+              <div className="ground-stat-icon">⚡</div>
               <div className="ground-stat-value">
                 <AnimatedStat
-                  value={agencyStatus?.clients ? agencyStatus.clients.filter((c) => c.status === 'active').length : 1}
-                  className="color-purple"
+                  value={agencyStatus?.systemHealth?.bootCount ?? 0}
+                  className="color-amber"
                 />
               </div>
-              <div className="ground-stat-label">Active Clients</div>
+              <div className="ground-stat-label">Boot Count</div>
             </div>
           </div>
 
@@ -852,19 +917,22 @@ export default function Home() {
             <div className="dash-card-title">
               <span className="card-icon">🚀</span> Active Sprint
               <span className="card-badge">
-                {agencyStatus?.activeSprints?.[0] ? agencyStatus.activeSprints[0].name : 'Sprint 1'}
+                {agencyStatus?.activeSprints?.[0]
+                  ? (agencyStatus.activeSprints[0].name || agencyStatus.activeSprints[0].sprintName || 'Sprint 1')
+                  : 'Sprint 1'}
               </span>
             </div>
             {agencyStatus?.activeSprints?.[0] ? (() => {
               const s = agencyStatus.activeSprints![0]
-              const done = s.done || 0
-              const inProg = s.inProgress || 0
-              const todo = s.todo || 0
-              const total = done + inProg + todo
+              const done = s.done ?? s.tasksDone ?? 0
+              const inProg = s.inProgress ?? s.tasksInProgress ?? 0
+              const todo = s.todo ?? Math.max(0, (s.totalTasks ?? 0) - done - inProg)
+              const total = s.totalTasks ?? (done + inProg + todo)
               const pct = total > 0 ? Math.round((done / total) * 100) : (s.progress || 0)
+              const sprintLabel = s.name || s.sprintName || 'Sprint'
               return (
                 <>
-                  <div className="sprint-pct">{s.name} · {pct}% complete</div>
+                  <div className="sprint-pct">{sprintLabel} · {pct}% complete</div>
                   <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${pct}%` }} />
                   </div>
@@ -1008,22 +1076,40 @@ export default function Home() {
           <div className="dash-card card-schedules">
             <div className="dash-card-title">
               <span className="card-icon">🕐</span> Scheduled Tasks
+              <span className="card-badge">{schedules.length > 0 ? schedules.length : ''}</span>
             </div>
             <div className="schedule-list">
-              <div className="schedule-item">
-                <div className="schedule-info">
-                  <div className="schedule-name">UI Builder heartbeat</div>
-                  <div className="schedule-time">Every 10 minutes</div>
-                </div>
-                <span className="badge badge-green">Running</span>
-              </div>
-              <div className="schedule-item">
-                <div className="schedule-info">
-                  <div className="schedule-name">Daily brief</div>
-                  <div className="schedule-time">08:00 daily</div>
-                </div>
-                <span className="badge badge-blue">Scheduled</span>
-              </div>
+              {schedules.length > 0 ? schedules.slice(0, 6).map((s, i) => {
+                const isRunning = s.enabled !== false && (s.status === 'running' || s.status === 'active' || s.enabled)
+                return (
+                  <div key={i} className="schedule-item">
+                    <div className="schedule-info">
+                      <div className="schedule-name">{s.name}</div>
+                      <div className="schedule-time">{s.description || s.interval || ''}</div>
+                    </div>
+                    <span className={`badge badge-${isRunning ? 'green' : 'amber'}`}>
+                      {isRunning ? 'Running' : 'Paused'}
+                    </span>
+                  </div>
+                )
+              }) : (
+                <>
+                  <div className="schedule-item">
+                    <div className="schedule-info">
+                      <div className="schedule-name">UI Builder heartbeat</div>
+                      <div className="schedule-time">Every 10 minutes</div>
+                    </div>
+                    <span className="badge badge-green">Running</span>
+                  </div>
+                  <div className="schedule-item">
+                    <div className="schedule-info">
+                      <div className="schedule-name">Daily brief</div>
+                      <div className="schedule-time">08:00 daily</div>
+                    </div>
+                    <span className="badge badge-blue">Scheduled</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

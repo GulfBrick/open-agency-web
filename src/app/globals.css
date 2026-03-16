@@ -2397,6 +2397,38 @@ body {
   border-color: rgba(16, 185, 129, 0.2);
 }
 
+/* ─── Value Prop Ticker (hero) ─── */
+.value-prop-ticker {
+  margin-top: 20px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.value-prop-ticker.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.value-prop-ticker.value-prop-sales   { color: var(--amber); }
+.value-prop-ticker.value-prop-dev     { color: var(--blue); }
+.value-prop-ticker.value-prop-creative { color: var(--rose); }
+.value-prop-ticker.value-prop-csuite  { color: var(--violet); }
+.value-prop-ticker.value-prop-ceo {
+  background: linear-gradient(135deg, #F59E0B, #A78BFA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ─── Agent Report Bubbles (colored dept chat messages) ─── */
 .chat-msg.agent-bubble {
   align-self: flex-start;
