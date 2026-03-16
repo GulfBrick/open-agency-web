@@ -2064,3 +2064,104 @@ body {
   color: var(--green);
   border-color: rgba(16, 185, 129, 0.2);
 }
+
+/* ─── Agent Report Bubbles (colored dept chat messages) ─── */
+.chat-msg.agent-bubble {
+  align-self: flex-start;
+  max-width: 95%;
+  padding: 10px 14px;
+  border-radius: 14px 14px 14px 4px;
+  font-size: 12px;
+  line-height: 1.55;
+  animation: chatMsgIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  word-wrap: break-word;
+  border: 1px solid transparent;
+}
+
+/* Dept color variants */
+.chat-msg.agent-bubble.dept-ceo {
+  background: rgba(124, 58, 237, 0.10);
+  border-color: rgba(124, 58, 237, 0.20);
+}
+.chat-msg.agent-bubble.dept-csuite {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.15);
+}
+.chat-msg.agent-bubble.dept-dev {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+.chat-msg.agent-bubble.dept-sales {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.18);
+}
+.chat-msg.agent-bubble.dept-creative {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.18);
+}
+
+.agent-bubble-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.agent-bubble-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 9px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.agent-bubble-avatar.dept-ceo    { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.agent-bubble-avatar.dept-csuite { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.agent-bubble-avatar.dept-dev    { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+.agent-bubble-avatar.dept-sales  { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+.agent-bubble-avatar.dept-creative { background: linear-gradient(135deg, #F43F5E, #FB7185); }
+
+.agent-bubble-name {
+  font-family: var(--heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.agent-bubble-name + .agent-bubble-name { display: none; }
+
+/* Dept color for agent name */
+.dept-ceo .agent-bubble-name,
+.dept-csuite .agent-bubble-name { color: #A78BFA; }
+.dept-dev .agent-bubble-name    { color: #60A5FA; }
+.dept-sales .agent-bubble-name  { color: #FBBF24; }
+.dept-creative .agent-bubble-name { color: #FB7185; }
+
+.agent-bubble-status {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.agent-bubble-status.completed  { color: var(--green); background: var(--green-dim); }
+.agent-bubble-status.failed     { color: var(--rose);  background: var(--rose-dim); }
+.agent-bubble-status.pending,
+.agent-bubble-status.in_progress { color: var(--amber); background: var(--amber-dim); }
+
+/* Agent bubble body text */
+.chat-msg.agent-bubble .chat-msg-text {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.chat-msg.agent-bubble .chat-msg-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 4px;
+}

@@ -52,9 +52,14 @@ const HERO_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
 
 interface ChatMessage {
   id: number
-  role: 'user' | 'assistant' | 'typing'
+  role: 'user' | 'assistant' | 'typing' | 'agent'
   text: string
   time?: string
+  agentId?: string
+  agentName?: string
+  agentInitials?: string
+  agentDept?: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative'
+  taskStatus?: 'completed' | 'failed' | 'pending' | 'in_progress'
 }
 
 interface AgentReport {
@@ -63,6 +68,25 @@ interface AgentReport {
   description: string
   status: 'completed' | 'failed' | 'pending' | 'in_progress'
   createdAt?: string
+}
+
+// Map agentId → display info
+const AGENT_INFO: Record<string, { name: string; initials: string; dept: 'ceo' | 'csuite' | 'dev' | 'sales' | 'creative' }> = {
+  nikita: { name: 'Nikita', initials: 'N', dept: 'ceo' },
+  marcus: { name: 'Marcus', initials: 'M', dept: 'csuite' },
+  zara:   { name: 'Zara',   initials: 'Z', dept: 'csuite' },
+  priya:  { name: 'Priya',  initials: 'P', dept: 'csuite' },
+  kai:    { name: 'Kai',    initials: 'K', dept: 'dev' },
+  sage:   { name: 'Sage',   initials: 'S', dept: 'dev' },
+  luna:   { name: 'Luna',   initials: 'L', dept: 'dev' },
+  rex:    { name: 'Rex',    initials: 'R', dept: 'dev' },
+  avery:  { name: 'Avery',  initials: 'A', dept: 'dev' },
+  quinn:  { name: 'Quinn',  initials: 'Q', dept: 'dev' },
+  atlas:  { name: 'Atlas',  initials: 'At', dept: 'dev' },
+  river:  { name: 'River',  initials: 'Ri', dept: 'sales' },
+  jordan: { name: 'Jordan', initials: 'J', dept: 'sales' },
+  nova:   { name: 'Nova',   initials: 'No', dept: 'creative' },
+  echo:   { name: 'Echo',   initials: 'E', dept: 'creative' },
 }
 
 function chatTimeStr() {
@@ -109,15 +133,47 @@ export default function Home() {
     }
   }, [messages, chatOpen])
 
-  // Poll agent reports when chat is open
+  // Track which report IDs have already been shown as chat bubbles
+  const seenReportIds = useRef<Set<string>>(new Set())
+
+  // Poll agent reports — inject NEW ones as colored dept bubbles in chat
   useEffect(() => {
     if (!chatOpen) return
     const fetchReports = async () => {
       try {
-        const res = await fetch('/api/tasks/results?limit=5')
+        const res = await fetch('/api/tasks/results?limit=10')
         const data = await res.json()
         if (data.results && Array.isArray(data.results)) {
           setAgentReports(data.results)
+          // Inject any newly completed/failed reports as chat bubbles
+          const newReports: AgentReport[] = data.results.filter(
+            (r: AgentReport) => !seenReportIds.current.has(r.id) &&
+            (r.status === 'completed' || r.status === 'failed')
+          )
+          if (newReports.length > 0) {
+            const bubbles: ChatMessage[] = newReports.map((r: AgentReport) => {
+              const info = AGENT_INFO[r.agentId?.toLowerCase()] || {
+                name: r.agentId || 'Agent',
+                initials: (r.agentId || 'A').charAt(0).toUpperCase(),
+                dept: 'csuite' as const,
+              }
+              return {
+                id: Date.now() + Math.random(),
+                role: 'agent' as const,
+                text: r.description,
+                time: r.createdAt
+                  ? new Date(r.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  : chatTimeStr(),
+                agentId: r.agentId,
+                agentName: info.name,
+                agentInitials: info.initials,
+                agentDept: info.dept,
+                taskStatus: r.status,
+              }
+            })
+            newReports.forEach((r: AgentReport) => seenReportIds.current.add(r.id))
+            setMessages(prev => [...prev, ...bubbles])
+          }
         }
       } catch { /* offline */ }
     }
@@ -149,11 +205,41 @@ export default function Home() {
         const filtered = prev.filter(m => m.role !== 'typing')
         return [...filtered, { id: Date.now() + 2, role: 'assistant', text: data.reply || "On it.", time: chatTimeStr() }]
       })
-      // Refresh reports after message
+      // Refresh reports after message — inject new ones as bubbles
       try {
-        const rr = await fetch('/api/tasks/results?limit=5')
+        const rr = await fetch('/api/tasks/results?limit=10')
         const rd = await rr.json()
-        if (rd.results && Array.isArray(rd.results)) setAgentReports(rd.results)
+        if (rd.results && Array.isArray(rd.results)) {
+          setAgentReports(rd.results)
+          const newReports: AgentReport[] = rd.results.filter(
+            (r: AgentReport) => !seenReportIds.current.has(r.id) &&
+            (r.status === 'completed' || r.status === 'failed')
+          )
+          if (newReports.length > 0) {
+            const bubbles: ChatMessage[] = newReports.map((r: AgentReport) => {
+              const info = AGENT_INFO[r.agentId?.toLowerCase()] || {
+                name: r.agentId || 'Agent',
+                initials: (r.agentId || 'A').charAt(0).toUpperCase(),
+                dept: 'csuite' as const,
+              }
+              return {
+                id: Date.now() + Math.random(),
+                role: 'agent' as const,
+                text: r.description,
+                time: r.createdAt
+                  ? new Date(r.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  : chatTimeStr(),
+                agentId: r.agentId,
+                agentName: info.name,
+                agentInitials: info.initials,
+                agentDept: info.dept,
+                taskStatus: r.status,
+              }
+            })
+            newReports.forEach((r: AgentReport) => seenReportIds.current.add(r.id))
+            setMessages(prev => [...prev, ...bubbles])
+          }
+        }
       } catch { /* offline */ }
     } catch {
       setMessages(prev => {
@@ -597,21 +683,36 @@ export default function Home() {
           </div>
         </div>
         <div className="nikita-messages">
-          {messages.map(msg => (
-            <div
-              key={msg.id}
-              className={`chat-msg ${msg.role === 'user' ? 'user' : msg.role === 'typing' ? 'typing' : 'nikita'}`}
-            >
-              {msg.role === 'typing' ? (
-                <div className="chat-msg-text typing-text">{msg.text}</div>
-              ) : (
-                <>
+          {messages.map(msg => {
+            if (msg.role === 'agent') {
+              return (
+                <div key={msg.id} className={`chat-msg agent-bubble dept-${msg.agentDept}`}>
+                  <div className="agent-bubble-header">
+                    <span className={`agent-bubble-avatar dept-${msg.agentDept}`}>{msg.agentInitials}</span>
+                    <span className="agent-bubble-name">{msg.agentName}</span>
+                    <span className={`agent-bubble-status ${msg.taskStatus}`}>{msg.taskStatus}</span>
+                  </div>
                   <div className="chat-msg-text">{msg.text}</div>
                   {msg.time && <div className="chat-msg-time">{msg.time}</div>}
-                </>
-              )}
-            </div>
-          ))}
+                </div>
+              )
+            }
+            return (
+              <div
+                key={msg.id}
+                className={`chat-msg ${msg.role === 'user' ? 'user' : msg.role === 'typing' ? 'typing' : 'nikita'}`}
+              >
+                {msg.role === 'typing' ? (
+                  <div className="chat-msg-text typing-text">{msg.text}</div>
+                ) : (
+                  <>
+                    <div className="chat-msg-text">{msg.text}</div>
+                    {msg.time && <div className="chat-msg-time">{msg.time}</div>}
+                  </>
+                )}
+              </div>
+            )
+          })}
           <div ref={messagesEndRef} />
         </div>
 
