@@ -4732,7 +4732,7 @@ body {
 
 .chat-msg-rich .chat-bullet::before,
 .chat-msg-rich .brief-bullet::before {
-  content: '�';
+  content: '�';
   position: absolute;
   left: 2px;
   color: var(--violet);
@@ -4744,4 +4744,71 @@ body {
   margin-bottom: 6px;
   font-size: 13.5px;
   letter-spacing: 0.1px;
+}
+
+/* ─── Last Refreshed Indicator ─── */
+.last-refreshed {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+}
+
+.last-refreshed:hover {
+  opacity: 1;
+  color: var(--green);
+}
+
+@media (max-width: 768px) {
+  .last-refreshed { display: none; }
+}
+
+/* ─── Agent Report Chip (in chat sidebar reports panel) ─── */
+.report-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.report-agent-chip {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 8px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.report-agent-chip.dept-ceo     { background: linear-gradient(135deg, #7C3AED, #F59E0B); }
+.report-agent-chip.dept-csuite  { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.report-agent-chip.dept-dev     { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+.report-agent-chip.dept-sales   { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+.report-agent-chip.dept-creative { background: linear-gradient(135deg, #F43F5E, #FB7185); }
+
+.report-agent-name {
+  font-family: var(--heading);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.report-agent-name.dept-ceo     { color: var(--amber); }
+.report-agent-name.dept-csuite  { color: var(--violet); }
+.report-agent-name.dept-dev     { color: var(--blue); }
+.report-agent-name.dept-sales   { color: var(--amber); }
+.report-agent-name.dept-creative { color: var(--rose); }
+
+.report-time {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }

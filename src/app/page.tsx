@@ -428,6 +428,24 @@ function LiveClock() {
   return <span className="live-clock">{time}</span>
 }
 
+function LastRefreshed({ ts }: { ts: number | null }) {
+  const [label, setLabel] = useState<string>('—')
+  useEffect(() => {
+    if (!ts) return
+    const update = () => {
+      const s = Math.floor((Date.now() - ts) / 1000)
+      if (s < 5) setLabel('just now')
+      else if (s < 60) setLabel(`${s}s ago`)
+      else setLabel(`${Math.floor(s / 60)}m ago`)
+    }
+    update()
+    const t = setInterval(update, 1000)
+    return () => clearInterval(t)
+  }, [ts])
+  if (!ts) return null
+  return <span className="last-refreshed">↻ {label}</span>
+}
+
 const VALUE_PROPS = [
   { text: 'Sales team. Fully autonomous.', dept: 'sales' },
   { text: 'Dev team. Ships around the clock.', dept: 'dev' },
@@ -660,6 +678,7 @@ export default function Home() {
   // Workflows
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([])
   const [approvingWorkflow, setApprovingWorkflow] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHasSeeded = useRef(false)
   const unreadReportIds = useRef<Set<string>>(new Set())
@@ -681,6 +700,7 @@ export default function Home() {
           if (!data.error) {
             setAgencyStatus(data)
             setApiOnline(true)
+            setLastUpdated(Date.now())
           } else {
             setApiOnline(false)
             setAgencyStatus(prev => prev ?? DEMO_AGENCY_STATUS)
@@ -692,6 +712,8 @@ export default function Home() {
       } catch {
         setApiOnline(false)
         setAgencyStatus(prev => prev ?? DEMO_AGENCY_STATUS)
+        // Still update timestamp even on offline — shows when demo data was last "refreshed"
+        setLastUpdated(Date.now())
       }
     }
     fetchStatus()
@@ -1098,6 +1120,7 @@ export default function Home() {
         </div>
         <div className="header-right">
           <LiveClock />
+          <LastRefreshed ts={lastUpdated} />
           <div className={`status-badge${apiOnline === false ? ' demo' : apiOnline === null ? ' connecting' : ''}`}>
             <span className="status-dot" />
             {apiOnline === false ? 'Demo Mode' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
@@ -1991,18 +2014,29 @@ export default function Home() {
               {agentReports.length === 0 ? (
                 <div className="agent-reports-empty">No reports yet — agents standing by.</div>
               ) : (
-                agentReports.map(r => (
-                  <div key={r.id} className="agent-report-item">
-                    <div className="report-agent">{r.agentId}</div>
-                    <div className="report-desc">{r.description}</div>
-                    <div className="report-meta">
-                      <span className={`report-status ${r.status}`}>{r.status}</span>
+                agentReports.slice(0, 8).map(r => {
+                  const info = AGENT_INFO[r.agentId?.toLowerCase()] || {
+                    name: r.agentId || 'Agent',
+                    initials: (r.agentId || 'A').charAt(0).toUpperCase(),
+                    dept: 'csuite' as const,
+                  }
+                  const shortDesc = (r.description || '').replace(/\[ONBOARDING\]\s*/i, '').split('.')[0].substring(0, 80)
+                  return (
+                    <div key={r.id} className="agent-report-item">
+                      <div className="report-agent-row">
+                        <span className={`report-agent-chip dept-${info.dept}`}>{info.initials}</span>
+                        <span className={`report-agent-name dept-${info.dept}`}>{info.name}</span>
+                        <span className={`report-status ${r.status}`}>{r.status === 'in_progress' ? 'running' : r.status}</span>
+                      </div>
+                      <div className="report-desc">{shortDesc || r.description}</div>
                       {r.createdAt && (
-                        <span>{new Date(r.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="report-time">
+                          {new Date(r.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           )}
