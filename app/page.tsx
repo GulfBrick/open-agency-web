@@ -1702,16 +1702,15 @@ export default function Dashboard() {
           </div>
           <div className="hero-stat-pill">
             <span className="hero-stat-icon">⚡</span>
-            <span>{taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length || 3} active tasks</span>
+            <span>{taskQueue.filter(t => (t.status || "").toLowerCase() === "in_progress").length || 0} active tasks</span>
           </div>
           <div className="hero-stat-pill">
-            <span className="hero-stat-icon">$</span>
-            <span>{status ? `$${(status.finances?.revenue ?? 48200).toLocaleString()}` : "$48,200"} revenue</span>
+            <span className="hero-stat-icon">🏢</span>
+            <span>6 departments</span>
           </div>
         </div>
         <div className="hero-cta-row">
-          <a href="/onboard" className="hero-cta-primary">Start Free Trial →</a>
-          <a href="/pricing" className="hero-cta-secondary">View Pricing</a>
+          <a href="/pricing" className="hero-cta-primary">Get Started →</a>
         </div>
         <div className="hero-scroll">Scroll to explore HQ ↓</div>
       </section>
