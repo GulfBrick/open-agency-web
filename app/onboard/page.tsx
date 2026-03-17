@@ -127,10 +127,14 @@ function OnboardContent() {
         }),
       });
       const data = await res.json();
-      if (data.error) {
+      if (data.error && !data.success) {
         setError(data.error);
         setSubmitting(false);
         return;
+      }
+      // Store clientId for portal and integrations pages
+      if (data.clientId) {
+        try { localStorage.setItem("oa_client_id", data.clientId); } catch { /* noop */ }
       }
       setDone(true);
     } catch {

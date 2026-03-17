@@ -265,10 +265,28 @@ export default function PortalPage() {
         <span style={{ color: '#333', fontSize: 20 }}>|</span>
         <span style={{ color: '#666', fontSize: 14 }}>Client Portal</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          {!isDemo && clientId && (
+            <button
+              onClick={() => {
+                localStorage.removeItem('oa_client_id')
+                localStorage.removeItem('oa_business_name')
+                localStorage.removeItem('oa_tier')
+                window.location.href = '/login'
+              }}
+              style={{ background: 'none', border: '1px solid #222', borderRadius: 8, color: '#555', fontSize: 12, padding: '5px 12px', cursor: 'pointer' }}
+            >
+              Sign out
+            </button>
+          )}
           {isDemo && (
             <span style={{ background: '#1a1a1a', border: '1px solid #333', color: '#666', fontSize: 11, padding: '3px 10px', borderRadius: 20 }}>
               DEMO MODE
             </span>
+          )}
+          {isDemo && (
+            <a href="/login" style={{ color: '#7c3aed', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}>
+              Sign in →
+            </a>
           )}
           <span style={{ background: `${tierColor}22`, border: `1px solid ${tierColor}`, color: tierColor, fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 }}>
             {profile.tier.toUpperCase()}

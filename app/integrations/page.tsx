@@ -147,18 +147,41 @@ export default function IntegrationsPage() {
 
   const handleSaveProvider = async (provider: "github" | "gitlab" | "bitbucket") => {
     setSaving(true);
+    const clientId = typeof window !== "undefined" ? localStorage.getItem("oa_client_id") || "" : "";
+    const tokenMap: Record<string, string> = {
+      github: form.githubToken,
+      gitlab: form.gitlabToken,
+      bitbucket: form.bitbucketAppPassword,
+    };
+    const token = tokenMap[provider];
+
     try {
-      await fetch("/api/integrations/save", {
+      const res = await fetch("/api/integrations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          clientId,
+          platform: provider,
+          token,
+        }),
       });
-    } catch { /* fallback to local */ }
-    saveToLocal(form);
-    setSaved(loadFromLocal());
+      const data = await res.json();
+      if (data.ok || data.success) {
+        saveToLocal(form);
+        setSaved(loadFromLocal());
+        const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
+        showToast(data.message || `${names[provider]} connected successfully`);
+      } else {
+        showToast(data.error || `Failed to connect ${provider}`);
+      }
+    } catch {
+      // Fallback to local storage
+      saveToLocal(form);
+      setSaved(loadFromLocal());
+      const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
+      showToast(`${names[provider]} saved locally (backend offline)`);
+    }
     setSaving(false);
-    const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
-    showToast(`${names[provider]} connected successfully`);
   };
 
   const handleDisconnect = (provider: "github" | "gitlab" | "bitbucket") => {

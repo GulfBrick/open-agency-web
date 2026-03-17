@@ -1352,11 +1352,11 @@ export default function Home() {
           >
             Talk to Nikita <span className="hero-cta-arrow">↓</span>
           </button>
-          <a className="hero-cta-secondary" href="#building">
-            See the team →
+          <a className="hero-cta-secondary" href="/pricing">
+            View plans →
           </a>
-          <a className="hero-cta-secondary" href="#work-with-us">
-            Work with us →
+          <a className="hero-cta-secondary" href="/login">
+            Client login →
           </a>
         </div>
         <div className="hero-scroll">Scroll</div>
@@ -1378,6 +1378,9 @@ export default function Home() {
             {apiOnline === false ? 'Demo Mode' : apiOnline === true ? 'All Systems Operational' : 'Connecting...'}
           </div>
           <span className="uptime">{agencyStatus?.systemHealth?.uptimeFormatted ? `↑ ${agencyStatus.systemHealth.uptimeFormatted}` : '99.9% uptime'}</span>
+          <a href="/login" style={{ color: '#a78bfa', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>
+            Portal →
+          </a>
           <button
             className="header-cta"
             onClick={() => { setChatOpen(true); setUnreadCount(0) }}
