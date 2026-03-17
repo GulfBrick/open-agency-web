@@ -554,22 +554,16 @@ function BuildingFloor({
       {locked && (
         <div style={{
           position: "absolute", inset: 0, zIndex: 10,
-          background: "rgba(10, 10, 20, 0.55)",
-          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+          background: "rgba(10,11,20,0.7)",
+          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
           borderRadius: "inherit",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          pointerEvents: "none",
+          display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center",
+          gap: 8,
         }}>
-          <div style={{
-            background: "rgba(124, 58, 237, 0.15)",
-            border: "1px solid rgba(124, 58, 237, 0.4)",
-            borderRadius: 6, padding: "4px 14px",
-            fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em",
-            color: "#a78bfa", textTransform: "uppercase" as const,
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-            <span style={{ fontSize: "0.75rem" }}>&#128274;</span> Locked
-          </div>
+          <span style={{ fontSize: "1.4rem" }}>&#128274;</span>
+          <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#a78bfa", letterSpacing: "0.02em" }}>
+            Subscribe to unlock your team
+          </span>
         </div>
       )}
     </div>
@@ -1124,11 +1118,8 @@ function NikitaChatTeaser() {
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: "1.2rem", fontWeight: 800, color: "#fff", marginBottom: 16,
             }}>N</div>
-            <div style={{ fontSize: "0.9rem", color: "#e2e8f0", fontWeight: 600, marginBottom: 8, lineHeight: 1.4 }}>
-              Hi, I&apos;m Nikita — CEO of Open Agency.
-            </div>
-            <div style={{ fontSize: "0.78rem", color: "rgba(148,163,184,0.8)", lineHeight: 1.5, marginBottom: 20, maxWidth: 280 }}>
-              Subscribe to start working with me and your full team. I&apos;ll brief the agents, dispatch tasks, and report results — all from this chat.
+            <div style={{ fontSize: "0.88rem", color: "#e2e8f0", fontWeight: 600, marginBottom: 20, lineHeight: 1.5, maxWidth: 280 }}>
+              Hi, I am Nikita, CEO of Open Agency. Subscribe to start working with me.
             </div>
             <a
               href="/pricing"
@@ -1142,17 +1133,6 @@ function NikitaChatTeaser() {
             >
               Get Started →
             </a>
-          </div>
-        </div>
-        <div className="nikita-chat-bar">
-          <div className="nikita-chat-bar-inner" style={{ opacity: 0.4, pointerEvents: "none" as const }}>
-            <input
-              type="text"
-              className="nikita-chat-input"
-              placeholder="Subscribe to message Nikita..."
-              disabled
-            />
-            <button type="button" className="nikita-chat-send" disabled title="Send">&#9654;</button>
           </div>
         </div>
       </div>
@@ -1799,23 +1779,20 @@ export default function Dashboard() {
 
             {/* CTA Banner — gate */}
             <div style={{
-              margin: "0 auto", padding: "28px 24px",
-              background: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(236,72,153,0.10))",
+              margin: "18px auto 0", padding: "28px 24px",
+              background: "rgba(10,11,20,0.85)",
               border: "1px solid rgba(124,58,237,0.25)",
               borderRadius: 12, textAlign: "center" as const,
               maxWidth: 520,
             }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#e2e8f0", marginBottom: 6, lineHeight: 1.3 }}>
+              <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "#e2e8f0", marginBottom: 14, lineHeight: 1.4 }}>
                 Your AI team is ready. Choose your plan to unlock them.
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "rgba(148,163,184,0.8)", marginBottom: 16 }}>
-                21 agents across 6 departments — standing by for your first brief.
               </div>
               <a
                 href="/pricing"
                 style={{
                   display: "inline-block", padding: "10px 28px",
-                  background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                  background: "#7C3AED",
                   color: "#fff", fontWeight: 700, fontSize: "0.85rem",
                   borderRadius: 8, textDecoration: "none",
                   letterSpacing: "0.02em",
