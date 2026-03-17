@@ -1687,6 +1687,10 @@ export default function Dashboard() {
 
       {/* Hero Section */}
       <section className="hero">
+        <div className="hero-logo-wrap">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Open Agency Logo" className="hero-logo" />
+        </div>
         <h1 className="hero-wordmark">
           <span>Open Agency</span>
         </h1>
@@ -1718,7 +1722,8 @@ export default function Dashboard() {
       {/* Header */}
       <header className="header">
         <div className="header-left">
-          <div className="logo">OA</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="OA" className="header-logo-img" />
           <div className="header-brand">
             <div className="header-title">Open Agency</div>
             <div className="header-tagline">Intelligence at work</div>

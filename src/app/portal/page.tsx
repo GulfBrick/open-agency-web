@@ -45,6 +45,23 @@ interface Message {
   createdAt: string
 }
 
+interface ActivityItem {
+  id: string
+  kind: 'report' | 'task'
+  agentId: string
+  type: string
+  summary: string
+  status: string
+  createdAt: string
+}
+
+interface ActivityData {
+  activities: ActivityItem[]
+  agentLevels: Record<string, { level: number; xp: number }>
+  totalReports: number
+  totalTasks: number
+}
+
 // ─── Demo fallback data ──────────────────────────────────────
 
 const DEMO_PROFILE: ClientProfile = {
@@ -108,7 +125,8 @@ export default function PortalPage() {
   const [agents, setAgents] = useState<AgentRow[]>([])
   const [reports, setReports] = useState<Report[]>([])
   const [messages, setMessages] = useState<Message[]>([])
-  const [activeTab, setActiveTab] = useState<'overview' | 'agents' | 'reports' | 'chat'>('overview')
+  const [activityData, setActivityData] = useState<ActivityData | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'agents' | 'reports' | 'activity' | 'chat'>('overview')
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
@@ -151,11 +169,12 @@ export default function PortalPage() {
 
   async function loadClientData(id: string) {
     try {
-      const [profileRes, agentsRes, reportsRes, messagesRes] = await Promise.all([
+      const [profileRes, agentsRes, reportsRes, messagesRes, activityRes] = await Promise.all([
         fetch(`/api/clients/${id}`),
         fetch(`/api/clients/${id}/agents`),
         fetch(`/api/clients/${id}/reports`),
         fetch(`/api/clients/${id}/messages`),
+        fetch(`/api/clients/${id}/activity`),
       ])
 
       if (profileRes.ok) {
@@ -175,6 +194,7 @@ export default function PortalPage() {
       else setReports(DEMO_REPORTS)
 
       if (messagesRes.ok) setMessages(await messagesRes.json())
+      if (activityRes.ok) setActivityData(await activityRes.json())
     } catch {
       setIsDemo(true)
       setProfile(DEMO_PROFILE)
@@ -370,7 +390,7 @@ export default function PortalPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid #1a1a1a', paddingBottom: 0 }}>
-          {(['overview', 'agents', 'reports', 'chat'] as const).map(tab => (
+          {(['overview', 'activity', 'agents', 'reports', 'chat'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
