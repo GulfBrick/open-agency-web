@@ -6,15 +6,15 @@ import Link from "next/link";
 import Nav from "@/app/components/Nav";
 
 const DEPARTMENTS = [
-  { id: "sales", label: "Sales Team", icon: "📈", agents: ["Jordan (Lead)", "Closer", "Lead Qualifier", "Follow-Up", "Proposal"], desc: "Prospect, qualify, close" },
-  { id: "dev", label: "Dev Team", icon: "🚀", agents: ["Kai (Lead)", "Architect", "Frontend", "Backend", "QA", "Reviewer"], desc: "Build, ship, scale" },
-  { id: "creative", label: "Creative Team", icon: "🎨", agents: ["Nova (Director)", "Iris (Design)", "Finn (Video)", "Jade (Social)", "Ash (Copy)"], desc: "Brand, content, visual" },
-  { id: "finance", label: "Finance (CFO)", icon: "💰", agents: ["Marcus (CFO)"], desc: "P&L, forecasts, cash" },
-  { id: "marketing", label: "Marketing (CMO)", icon: "📣", agents: ["Priya (CMO)"], desc: "Campaigns, brand, growth" },
-  { id: "tech", label: "Tech (CTO)", icon: "🏗️", agents: ["Zara (CTO)"], desc: "Architecture, infra, security" },
+  { id: "sales", label: "Sales Team", icon: "📈", agents: ["Rex (Director)", "Lena (Lead Gen)", "Cleo (Outreach)", "Sam (CRM)"], desc: "Prospect, qualify, close" },
+  { id: "marketing", label: "Marketing", icon: "📣", agents: ["Priya (Director)", "Mia (Social)", "Theo (SEO)", "Luna (Ads)"], desc: "Campaigns, content, growth" },
+  { id: "dev", label: "Dev Team", icon: "🚀", agents: ["Kai (Lead)", "Rio (Frontend)", "Nova (Backend)", "Byte (QA)"], desc: "Build, ship, scale" },
+  { id: "creative", label: "Creative", icon: "🎨", agents: ["Zara (Director)", "Eli (Copy)", "Nora (Design)"], desc: "Brand, content, visual" },
+  { id: "finance", label: "Finance", icon: "💰", agents: ["Marcus (Director)", "Iris (Books)", "Felix (Forecasting)"], desc: "P&L, forecasts, cash flow" },
+  { id: "operations", label: "Operations", icon: "⚙️", agents: ["Otto (Ops)", "Vera (Admin)"], desc: "SOPs, automation, coordination" },
 ];
 
-const PLAN_DEPT_LIMITS: Record<string, number> = { starter: 1, growth: 3, enterprise: 6, agency: 6 };
+const PLAN_DEPT_LIMITS: Record<string, number> = { starter: 1, growth: 3, enterprise: 6 };
 
 const INDUSTRIES = [
   "Prop Trading / Finance",
@@ -199,9 +199,9 @@ function OnboardContent() {
                   <label className="onboard-label">Choose your plan</label>
                   <div className="onboard-plan-selector">
                     {[
-                      { id: "starter", label: "Starter", price: "$299/mo", desc: "Sales team" },
-                      { id: "growth", label: "Growth", price: "$499/mo", desc: "Sales + Marketing", popular: true },
-                      { id: "agency", label: "Agency", price: "$999/mo", desc: "Full team (21 agents)" },
+                      { id: "starter", label: "Starter", price: "$299/mo", desc: "Nikita + 1 department" },
+                      { id: "growth", label: "Growth", price: "$499/mo", desc: "Nikita + 3 departments", popular: true },
+                      { id: "enterprise", label: "Enterprise", price: "$999/mo", desc: "All 27 agents — full agency" },
                     ].map((p) => (
                       <button
                         key={p.id}
@@ -455,7 +455,7 @@ function OnboardContent() {
                     </div>
                     <div className="onboard-summary-row">
                       <span className="onboard-summary-label">Plan</span>
-                      <span className="onboard-summary-value capitalize">{plan} — ${plan === "starter" ? "299" : plan === "growth" ? "499" : plan === "agency" ? "999" : "999"}/mo</span>
+                      <span className="onboard-summary-value capitalize">{plan} — ${plan === "starter" ? "299" : plan === "growth" ? "499" : "999"}/mo</span>
                     </div>
                     <div className="onboard-summary-row">
                       <span className="onboard-summary-label">Departments</span>
