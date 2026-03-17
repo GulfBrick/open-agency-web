@@ -138,6 +138,24 @@ export default function IntegrationsPage() {
   useEffect(() => {
     setSaved(loadFromLocal());
     setRepos(loadRepos());
+
+    // Try to load live integration status from backend
+    const clientId = typeof window !== "undefined" ? localStorage.getItem("oa_client_id") : null;
+    if (clientId) {
+      fetch(`/api/integrations/status?clientId=${clientId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && (data.github !== undefined || data.gitlab !== undefined || data.bitbucket !== undefined)) {
+            setSaved({
+              github: !!data.github,
+              gitlab: !!data.gitlab,
+              bitbucket: !!data.bitbucket,
+              savedAt: data.updatedAt || data.createdAt,
+            });
+          }
+        })
+        .catch(() => { /* keep local fallback */ });
+    }
   }, []);
 
   const showToast = (msg: string) => {

@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "/onboard", label: "Get Started" },
   { href: "/integrations", label: "Integrations" },
   { href: "/portal", label: "Client Portal" },
+  { href: "/login", label: "Login" },
 ];
 
 export default function Nav() {
