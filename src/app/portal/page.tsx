@@ -114,6 +114,11 @@ export default function PortalPage() {
   const [isDemo, setIsDemo] = useState(false)
   const [triggerAgent, setTriggerAgent] = useState<string | null>(null)
   const [triggerStatus, setTriggerStatus] = useState<string | null>(null)
+  const [kickoffLoading, setKickoffLoading] = useState(false)
+  const [kickoffDone, setKickoffDone] = useState(false)
+  const [briefEditing, setBriefEditing] = useState(false)
+  const [briefDraft, setBriefDraft] = useState('')
+  const [briefSaving, setBriefSaving] = useState(false)
   const chatBottomRef = useRef<HTMLDivElement>(null)
 
   // Load clientId from localStorage (set after login/onboarding)
@@ -128,6 +133,13 @@ export default function PortalPage() {
       setProfile(DEMO_PROFILE)
       setAgents(DEMO_AGENTS)
       setReports(DEMO_REPORTS)
+    }
+
+    // Check if this is a fresh sign-up (flag set by onboard page)
+    const isNew = typeof window !== 'undefined' ? localStorage.getItem('oa_new_client') : null
+    if (isNew === '1') {
+      localStorage.removeItem('oa_new_client')
+      // Will auto-kickoff once profile loads
     }
   }, [])
 
@@ -146,8 +158,15 @@ export default function PortalPage() {
         fetch(`/api/clients/${id}/messages`),
       ])
 
-      if (profileRes.ok) setProfile(await profileRes.json())
-      else { setIsDemo(true); setProfile(DEMO_PROFILE) }
+      if (profileRes.ok) {
+        const p = await profileRes.json()
+        setProfile(p)
+        setBriefDraft(p.brief || '')
+      } else {
+        setIsDemo(true)
+        setProfile(DEMO_PROFILE)
+        setBriefDraft(DEMO_PROFILE.brief || '')
+      }
 
       if (agentsRes.ok) setAgents(await agentsRes.json())
       else setAgents(DEMO_AGENTS)
@@ -161,6 +180,45 @@ export default function PortalPage() {
       setProfile(DEMO_PROFILE)
       setAgents(DEMO_AGENTS)
       setReports(DEMO_REPORTS)
+    }
+  }
+
+  async function saveBrief() {
+    if (!clientId || isDemo || briefSaving) return
+    setBriefSaving(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief: briefDraft.trim() }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setProfile(prev => prev ? { ...prev, brief: updated.brief } : prev)
+        setBriefEditing(false)
+      }
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setBriefSaving(false)
+    }
+  }
+
+  async function kickoffTeam() {
+    if (!clientId || isDemo || kickoffLoading || kickoffDone) return
+    setKickoffLoading(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/kickoff`, { method: 'POST' })
+      if (res.ok) {
+        setKickoffDone(true)
+        setTriggerStatus('Your team is spinning up — reports will appear in the Reports tab in ~30–60 seconds.')
+        setTimeout(() => setTriggerStatus(null), 8000)
+      }
+    } catch {
+      setTriggerStatus('Kickoff failed — try triggering reports manually below.')
+      setTimeout(() => setTriggerStatus(null), 5000)
+    } finally {
+      setKickoffLoading(false)
     }
   }
 
@@ -384,13 +442,76 @@ export default function PortalPage() {
               </p>
             </div>
 
-            {/* Brief */}
-            {profile.brief && (
-              <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: 12, padding: 24 }}>
-                <h3 style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Business Brief</h3>
-                <p style={{ margin: 0, color: '#aaa', lineHeight: 1.7, fontSize: 14 }}>{profile.brief}</p>
+            {/* Kickoff Banner — shown when no reports yet and not in demo */}
+            {!isDemo && reports.length === 0 && !kickoffDone && (
+              <div style={{ background: '#0d0d1a', border: '1px solid #7c3aed44', borderRadius: 12, padding: 24, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#fff', marginBottom: 6 }}>Ready to start your team?</div>
+                  <div style={{ fontSize: 13, color: '#666' }}>Fire up your agents for the first time. Nikita and your core team will produce their first reports within 60 seconds.</div>
+                </div>
+                <button
+                  onClick={kickoffTeam}
+                  disabled={kickoffLoading}
+                  style={{
+                    background: '#7c3aed', border: 'none', borderRadius: 10, color: '#fff',
+                    padding: '12px 28px', fontSize: 14, fontWeight: 600,
+                    cursor: kickoffLoading ? 'not-allowed' : 'pointer',
+                    opacity: kickoffLoading ? 0.7 : 1, whiteSpace: 'nowrap', flexShrink: 0,
+                  }}
+                >
+                  {kickoffLoading ? 'Starting...' : 'Start Your Team →'}
+                </button>
               </div>
             )}
+
+            {/* Brief */}
+            <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: 12, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Business Brief</h3>
+                {!isDemo && !briefEditing && (
+                  <button
+                    onClick={() => setBriefEditing(true)}
+                    style={{ background: 'none', border: '1px solid #222', borderRadius: 6, color: '#555', fontSize: 12, padding: '4px 12px', cursor: 'pointer' }}
+                  >
+                    {profile.brief ? 'Edit' : 'Add Brief'}
+                  </button>
+                )}
+              </div>
+              {briefEditing ? (
+                <div>
+                  <textarea
+                    value={briefDraft}
+                    onChange={e => setBriefDraft(e.target.value)}
+                    placeholder="Tell your team about your business — what you do, who your customers are, current goals, anything relevant."
+                    rows={5}
+                    style={{
+                      width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8,
+                      color: '#e5e5e5', fontSize: 14, padding: '12px 14px', outline: 'none',
+                      resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                    <button
+                      onClick={saveBrief}
+                      disabled={briefSaving}
+                      style={{ background: '#7c3aed', border: 'none', borderRadius: 8, color: '#fff', padding: '8px 20px', fontSize: 13, fontWeight: 600, cursor: briefSaving ? 'not-allowed' : 'pointer', opacity: briefSaving ? 0.7 : 1 }}
+                    >
+                      {briefSaving ? 'Saving...' : 'Save Brief'}
+                    </button>
+                    <button
+                      onClick={() => { setBriefEditing(false); setBriefDraft(profile.brief || '') }}
+                      style={{ background: 'none', border: '1px solid #222', borderRadius: 8, color: '#555', padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ margin: 0, color: profile.brief ? '#aaa' : '#444', lineHeight: 1.7, fontSize: 14, fontStyle: profile.brief ? 'normal' : 'italic' }}>
+                  {profile.brief || 'No brief yet — add one so your agents understand your business.'}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

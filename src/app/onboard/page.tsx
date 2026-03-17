@@ -98,6 +98,10 @@ export default function OnboardPage() {
       localStorage.setItem('oa_client_id', data.clientId)
       localStorage.setItem('oa_business_name', data.businessName)
       localStorage.setItem('oa_tier', data.tier)
+      localStorage.setItem('oa_new_client', '1')
+
+      // Fire-and-forget kickoff — start the team immediately
+      fetch(`/api/clients/${data.clientId}/kickoff`, { method: 'POST' }).catch(() => {})
 
       setResult(data)
       setStep('done')
@@ -376,9 +380,17 @@ export default function OnboardPage() {
               <p style={{ color: '#666', fontSize: 14, margin: '0 0 8px' }}>
                 {result.businessName} · {result.tier.charAt(0).toUpperCase() + result.tier.slice(1)} plan
               </p>
-              <p style={{ color: '#555', fontSize: 13, margin: '0 0 28px', lineHeight: 1.6 }}>
-                Nikita and your agents are ready to go. Your portal is live.
-              </p>
+              <div style={{ background: '#0d0d1a', border: '1px solid #7c3aed33', borderRadius: 10, padding: '14px 20px', margin: '0 0 28px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 18 }}>⚡</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#a78bfa', marginBottom: 4 }}>First reports in progress</div>
+                    <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>
+                      Nikita, Marcus, and Priya are generating your first reports. They&apos;ll be in your portal in ~60 seconds.
+                    </div>
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={() => router.push('/portal')}
                 style={{
