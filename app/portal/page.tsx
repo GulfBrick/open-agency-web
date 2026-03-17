@@ -148,25 +148,48 @@ function StatusPill({ status }: { status: string }) {
 
 function AgentCard({ agent }: { agent: { id: string; name: string; role: string; dept: string; emoji: string; status: string; lastActive: string; tasksCompleted: number; level?: number; xp?: number } }) {
   const color = DEPT_COLORS[agent.dept] || "#7C3AED";
+  const level = agent.level || 1;
+  const xp = agent.xp || 0;
+  // XP required per level = level * 100 (e.g. level 1 = 100 XP, level 2 = 200 XP etc.)
+  const xpForCurrentLevel = (level - 1) * 100;
+  const xpForNextLevel = level * 100;
+  const xpInLevel = xp - xpForCurrentLevel;
+  const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+  const pct = Math.min(100, Math.max(0, Math.round((xpInLevel / xpNeeded) * 100)));
+
+  const LEVEL_TITLES: Record<number, string> = {
+    1: "Junior", 2: "Associate", 3: "Senior", 4: "Lead", 5: "Director", 6: "VP", 7: "Partner", 8: "Principal",
+  };
+  const levelTitle = LEVEL_TITLES[level] || (level >= 9 ? "Elite" : "Agent");
+  const tasksCount = Math.floor(xp / 25); // 25 XP per task
+
   return (
     <div className="portal-agent-card">
       <div className="portal-agent-avatar" style={{ background: `${color}22`, border: `1px solid ${color}44` }}>
         <span className="portal-agent-emoji">{agent.emoji}</span>
       </div>
-      <div className="portal-agent-info">
-        <div className="portal-agent-name">
+      <div className="portal-agent-info" style={{ flex: 1, minWidth: 0 }}>
+        <div className="portal-agent-name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {agent.name}
-          {agent.level && agent.level > 1 && <span style={{ marginLeft: 6, fontSize: "0.7rem", color: "#7C3AED", fontWeight: 600 }}>Lv.{agent.level}</span>}
+          <span className="portal-agent-level-badge" style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
+            Lv.{level} {levelTitle}
+          </span>
         </div>
         <div className="portal-agent-role">{agent.role} · {agent.dept}</div>
         <div className="portal-agent-meta">
           <StatusPill status={agent.status} />
-          <span className="portal-agent-last">{agent.lastActive}</span>
+          <span className="portal-agent-last">{tasksCount} task{tasksCount !== 1 ? "s" : ""} completed</span>
         </div>
-      </div>
-      <div className="portal-agent-stat">
-        <div className="portal-agent-stat-num">{agent.tasksCompleted}</div>
-        <div className="portal-agent-stat-label">XP</div>
+        {/* XP Progress Bar */}
+        <div className="portal-agent-xp-row">
+          <div className="portal-agent-xp-bar-track">
+            <div
+              className="portal-agent-xp-bar-fill"
+              style={{ width: `${pct}%`, background: color }}
+            />
+          </div>
+          <span className="portal-agent-xp-label">{xpInLevel}/{xpNeeded} XP</span>
+        </div>
       </div>
     </div>
   );
