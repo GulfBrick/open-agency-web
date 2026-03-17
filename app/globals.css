@@ -5606,6 +5606,16 @@ body {
 }
 .int-provider-card:hover { border-color: var(--card-hover-border); }
 .int-provider-card.int-connected { border-color: rgba(16, 185, 129, 0.2); }
+.int-validation-error {
+  margin: 0 24px 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
 .int-provider-top {
   display: flex;
   align-items: center;

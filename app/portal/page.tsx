@@ -54,62 +54,7 @@ interface MessageData {
   createdAt: string;
 }
 
-// ─── Demo Data (fallback) ────────────────────────────────────────────────────
-const DEMO_CLIENT = {
-  name: "Clearline Markets",
-  plan: "Enterprise",
-  price: "$999/mo",
-  startDate: "1 Mar 2026",
-};
-
-const DEMO_AGENTS = [
-  { id: "nikita", name: "Nikita", role: "CEO", dept: "Leadership", emoji: "👩‍💼", status: "active", lastActive: "2 min ago", tasksCompleted: 47 },
-  { id: "marcus", name: "Marcus", role: "CFO", dept: "Finance", emoji: "💰", status: "active", lastActive: "12 min ago", tasksCompleted: 31 },
-  { id: "zara", name: "Zara", role: "Creative Director", dept: "Creative", emoji: "🎨", status: "active", lastActive: "5 min ago", tasksCompleted: 28 },
-  { id: "priya", name: "Priya", role: "CMO", dept: "Marketing", emoji: "📣", status: "active", lastActive: "8 min ago", tasksCompleted: 22 },
-  { id: "kai", name: "Kai", role: "Dev Lead", dept: "Development", emoji: "🚀", status: "active", lastActive: "3 min ago", tasksCompleted: 61 },
-  { id: "lena", name: "Lena", role: "Lead Gen", dept: "Sales", emoji: "📈", status: "idle", lastActive: "1 hr ago", tasksCompleted: 19 },
-];
-
-const DEMO_TASKS = [
-  { id: "t1", title: "Q1 P&L Report — March 2026", agent: "Marcus", emoji: "💰", status: "completed", completedAt: "Today, 9:14 AM", priority: "high", output: "Q1 revenue $247,500 (+18% MoM). Operating costs $89,200. Net profit $158,300 (64% margin). Cash runway: 14 months at current burn." },
-  { id: "t2", title: "Brand & Creative Audit", agent: "Zara", emoji: "🎨", status: "completed", completedAt: "Today, 11:32 AM", priority: "high", output: "Full brand audit complete. Brand consistency at 78% — improvement needed on social media visual identity. 3 creative opportunities identified." },
-  { id: "t3", title: "Content Calendar — Next 2 Weeks", agent: "Priya", emoji: "📣", status: "in_progress", completedAt: null, priority: "medium", output: null },
-  { id: "t4", title: "Daily Lead Generation", agent: "Lena", emoji: "📈", status: "in_progress", completedAt: null, priority: "medium", output: null },
-  { id: "t5", title: "API Rate Limiting — Market Data Endpoints", agent: "Kai", emoji: "🚀", status: "completed", completedAt: "Yesterday, 4:45 PM", priority: "high", output: "Implemented token bucket rate limiter. Limits: 100 req/min per client. Deployed to staging — tests pass." },
-  { id: "t6", title: "Investor Deck — Series A Narrative", agent: "Nikita", emoji: "👩‍💼", status: "queued", completedAt: null, priority: "low", output: null },
-];
-
-const DEMO_REPORTS = [
-  {
-    id: "r1", title: "Weekly Agency Briefing", author: "Nikita", emoji: "👩‍💼", date: "16 Mar 2026",
-    summary: "Strong week. Dev team shipped rate limiting. Marcus flagged margin improvement. Priya's LinkedIn impressions up 340%.",
-    sections: [
-      { title: "Finance", content: "Q1 tracking ahead of target. March revenue projected at $87k." },
-      { title: "Creative", content: "Brand audit complete. Social visual identity needs refresh." },
-      { title: "Marketing", content: "340% LinkedIn impression lift. New content cadence working." },
-      { title: "Next Week", content: "Content calendar rollout. Series A deck kickoff." },
-    ],
-  },
-  {
-    id: "r2", title: "Brand & Creative Audit", author: "Zara", emoji: "🎨", date: "16 Mar 2026",
-    summary: "Full audit complete. Brand consistency at 78%. 3 creative opportunities identified.",
-    sections: [
-      { title: "Brand Consistency", content: "Logo usage correct across web. Social media visuals inconsistent — need style guide enforcement." },
-      { title: "Opportunities", content: "1. Video content series. 2. Refreshed social templates. 3. Updated pitch deck visuals." },
-      { title: "Recommendations", content: "Create brand style guide v2. Monthly visual audits going forward." },
-    ],
-  },
-  {
-    id: "r3", title: "March P&L Statement", author: "Marcus", emoji: "💰", date: "16 Mar 2026",
-    summary: "March financials. Revenue up 18% MoM. Strong margin.",
-    sections: [
-      { title: "Revenue", content: "$87,000 projected. Platform subscriptions + 2 new enterprise clients." },
-      { title: "Costs", content: "Total: $29,700. Cloud infra $8,400, Tooling $3,200, Services $18,100." },
-      { title: "Profit", content: "Projected net profit: $57,300 (65.9% margin)." },
-    ],
-  },
-];
+// No demo data — portal shows only real data from the backend.
 
 const TIER_PRICES: Record<string, string> = { starter: "$299/mo", growth: "$499/mo", enterprise: "$999/mo" };
 

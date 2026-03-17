@@ -46,6 +46,18 @@ interface SavedIntegrations {
   savedAt?: string;
 }
 
+type ValidationStatus = "idle" | "validating" | "connected" | "invalid";
+interface ProviderValidation {
+  github: ValidationStatus;
+  gitlab: ValidationStatus;
+  bitbucket: ValidationStatus;
+}
+interface ProviderError {
+  github: string;
+  gitlab: string;
+  bitbucket: string;
+}
+
 interface RepoEntry {
   name: string;
   url: string;
@@ -92,6 +104,8 @@ function ProviderCard({
   name,
   description,
   connected,
+  validationStatus,
+  validationError,
   onConnect,
   onDisconnect,
   color,
@@ -101,15 +115,20 @@ function ProviderCard({
   name: string;
   description: string;
   connected: boolean;
+  validationStatus?: ValidationStatus;
+  validationError?: string;
   onConnect: () => void;
   onDisconnect: () => void;
   color: string;
   children?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const isValidating = validationStatus === "validating";
+  const isInvalid = validationStatus === "invalid";
+  const isConnected = connected || validationStatus === "connected";
 
   return (
-    <div className={`int-provider-card${connected ? " int-connected" : ""}`} style={{ "--provider-color": color } as React.CSSProperties}>
+    <div className={`int-provider-card${isConnected ? " int-connected" : ""}`} style={{ "--provider-color": color } as React.CSSProperties}>
       <div className="int-provider-top">
         <div className="int-provider-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 10, background: color, flexShrink: 0 }}>{icon}</div>
         <div className="int-provider-info">
@@ -117,23 +136,33 @@ function ProviderCard({
           <div className="int-provider-desc">{description}</div>
         </div>
         <div className="int-provider-actions">
-          {connected ? (
+          {isConnected ? (
             <>
-              <span className="int-status-badge connected">Connected</span>
+              <span className="int-status-badge connected">✓ Connected</span>
               <button className="int-btn-disconnect" onClick={onDisconnect}>Disconnect</button>
             </>
           ) : (
             <button className="int-btn-connect" style={{ background: color }} onClick={() => setExpanded(!expanded)}>
-              Connect {name}
+              {expanded ? "Cancel" : `Connect ${name}`}
             </button>
           )}
         </div>
       </div>
-      {(expanded && !connected) && (
+      {isInvalid && validationError && (
+        <div className="int-validation-error">
+          ✗ {validationError}
+        </div>
+      )}
+      {(expanded && !isConnected) && (
         <div className="int-provider-expand">
           {children}
-          <button className="int-btn-save" style={{ background: color }} onClick={() => { onConnect(); setExpanded(false); }}>
-            Save & Connect
+          <button
+            className="int-btn-save"
+            style={{ background: isValidating ? "#555" : color }}
+            onClick={() => { onConnect(); setExpanded(false); }}
+            disabled={isValidating}
+          >
+            {isValidating ? "Validating..." : "Save & Connect"}
           </button>
         </div>
       )}
@@ -151,6 +180,16 @@ export default function IntegrationsPage() {
   const [saved, setSaved] = useState<SavedIntegrations>({});
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [validation, setValidation] = useState<ProviderValidation>({
+    github: "idle",
+    gitlab: "idle",
+    bitbucket: "idle",
+  });
+  const [validationErrors, setValidationErrors] = useState<ProviderError>({
+    github: "",
+    gitlab: "",
+    bitbucket: "",
+  });
   const [showTokens, setShowTokens] = useState({
     github: false,
     gitlab: false,
@@ -193,13 +232,22 @@ export default function IntegrationsPage() {
 
   const handleSaveProvider = async (provider: "github" | "gitlab" | "bitbucket") => {
     setSaving(true);
+    // Mark as validating immediately
+    setValidation(v => ({ ...v, [provider]: "validating" }));
+    setValidationErrors(e => ({ ...e, [provider]: "" }));
+
     const clientId = typeof window !== "undefined" ? localStorage.getItem("oa_client_id") || "" : "";
-    const tokenMap: Record<string, string> = {
-      github: form.githubToken,
-      gitlab: form.gitlabToken,
-      bitbucket: form.bitbucketAppPassword,
-    };
-    const token = tokenMap[provider];
+    const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
+
+    // For Bitbucket, send as "user:apppassword" combined token
+    let token: string;
+    if (provider === "bitbucket") {
+      token = `${form.bitbucketUser}:${form.bitbucketAppPassword}`;
+    } else if (provider === "github") {
+      token = form.githubToken;
+    } else {
+      token = form.gitlabToken;
+    }
 
     try {
       const res = await fetch("/api/integrations/save", {
@@ -215,17 +263,20 @@ export default function IntegrationsPage() {
       if (data.ok || data.success) {
         saveToLocal(form);
         setSaved(loadFromLocal());
-        const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
+        setValidation(v => ({ ...v, [provider]: "connected" }));
         showToast(data.message || `${names[provider]} connected successfully`);
       } else {
-        showToast(data.error || `Failed to connect ${provider}`);
+        const errMsg = data.error || `Failed to connect ${names[provider]}`;
+        setValidation(v => ({ ...v, [provider]: "invalid" }));
+        setValidationErrors(e => ({ ...e, [provider]: errMsg }));
+        showToast(errMsg);
       }
     } catch {
-      // Fallback to local storage
+      // Backend offline — save locally and mark connected (optimistic)
       saveToLocal(form);
       setSaved(loadFromLocal());
-      const names: Record<string, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket" };
-      showToast(`${names[provider]} saved locally (backend offline)`);
+      setValidation(v => ({ ...v, [provider]: "connected" }));
+      showToast(`${names[provider]} saved (backend offline — will validate on reconnect)`);
     }
     setSaving(false);
   };
@@ -237,6 +288,8 @@ export default function IntegrationsPage() {
     const updated = { ...saved, [provider]: false, savedAt: new Date().toISOString() };
     try { localStorage.setItem(INTEGRATIONS_STORAGE_KEY, JSON.stringify(updated)); } catch { /* noop */ }
     setSaved(updated);
+    setValidation(v => ({ ...v, [provider]: "idle" }));
+    setValidationErrors(e => ({ ...e, [provider]: "" }));
     showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} disconnected`);
   };
 
@@ -321,6 +374,8 @@ export default function IntegrationsPage() {
                 name="GitHub"
                 description="Connect with a Personal Access Token (repo scope)"
                 connected={!!saved.github}
+                validationStatus={validation.github}
+                validationError={validationErrors.github}
                 onConnect={() => handleSaveProvider("github")}
                 onDisconnect={() => handleDisconnect("github")}
                 color="#238636"
@@ -350,6 +405,8 @@ export default function IntegrationsPage() {
                 name="GitLab"
                 description="Connect with a Personal Access Token (api scope)"
                 connected={!!saved.gitlab}
+                validationStatus={validation.gitlab}
+                validationError={validationErrors.gitlab}
                 onConnect={() => handleSaveProvider("gitlab")}
                 onDisconnect={() => handleDisconnect("gitlab")}
                 color="#FC6D26"
@@ -379,6 +436,8 @@ export default function IntegrationsPage() {
                 name="Bitbucket"
                 description="Connect with username + App Password"
                 connected={!!saved.bitbucket}
+                validationStatus={validation.bitbucket}
+                validationError={validationErrors.bitbucket}
                 onConnect={() => handleSaveProvider("bitbucket")}
                 onDisconnect={() => handleDisconnect("bitbucket")}
                 color="#2684FF"
