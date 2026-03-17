@@ -6,59 +6,75 @@ const AGENTS = {
   ceo: [
     { id: 'nikita', name: 'Nikita', role: 'CEO · Owner', initials: 'N', cls: 'ceo', status: 'online', bubble: 'Running the agency...' },
   ],
+  finance: [
+    { id: 'marcus', name: 'Marcus', role: 'Finance Director', initials: 'Ma', cls: 'csuite', status: 'online', bubble: 'Reconciling accounts...' },
+    { id: 'iris',   name: 'Iris',   role: 'Bookkeeping',      initials: 'Ir', cls: 'csuite', status: 'online', bubble: 'Categorising expenses...' },
+    { id: 'felix',  name: 'Felix',  role: 'Forecasting',      initials: 'Fx', cls: 'csuite', status: 'online', bubble: 'Projecting Q2...' },
+  ],
+  marketing: [
+    { id: 'priya', name: 'Priya', role: 'Marketing Director', initials: 'Pr', cls: 'csuite',   status: 'online', bubble: 'Drafting campaigns...' },
+    { id: 'mia',   name: 'Mia',   role: 'Social Media',      initials: 'Mi', cls: 'creative', status: 'online', bubble: 'Scheduling posts...' },
+    { id: 'theo',  name: 'Theo',  role: 'SEO',               initials: 'Th', cls: 'creative', status: 'online', bubble: 'Keyword research...' },
+    { id: 'luna',  name: 'Luna',  role: 'Paid Ads',          initials: 'Lu', cls: 'creative', status: 'online', bubble: 'Optimising bids...' },
+  ],
   creative: [
-    { id: 'nova', name: 'Nova', role: 'Creative Director', initials: 'No', cls: 'creative', status: 'online', bubble: 'Designing assets...' },
-    { id: 'iris', name: 'Iris', role: 'Designer', initials: 'Ir', cls: 'creative', status: 'online', bubble: 'Crafting visuals...' },
-    { id: 'finn', name: 'Finn', role: 'Video Editor', initials: 'F', cls: 'creative', status: 'online', bubble: 'Cutting footage...' },
-    { id: 'jade', name: 'Jade', role: 'Social Media', initials: 'Jd', cls: 'creative', status: 'online', bubble: 'Scheduling posts...' },
-    { id: 'ash', name: 'Ash', role: 'Copywriter', initials: 'Ash', cls: 'creative', status: 'online', bubble: 'Writing copy...' },
+    { id: 'zara', name: 'Zara', role: 'Creative Director', initials: 'Za', cls: 'creative', status: 'online', bubble: 'Brand audit underway...' },
+    { id: 'eli',  name: 'Eli',  role: 'Copywriter',        initials: 'El', cls: 'creative', status: 'online', bubble: 'Writing copy...' },
+    { id: 'nora', name: 'Nora', role: 'Graphic Design',    initials: 'No', cls: 'creative', status: 'online', bubble: 'Designing assets...' },
   ],
   sales: [
-    { id: 'jordan', name: 'Jordan', role: 'Sales Lead', initials: 'J', cls: 'sales', status: 'online', bubble: 'Closing deals...' },
-    { id: 'river', name: 'River', role: 'Closer', initials: 'Ri', cls: 'sales', status: 'online', bubble: 'Sending proposal...' },
-    { id: 'quinn', name: 'Quinn', role: 'Lead Qualifier', initials: 'Q', cls: 'sales', status: 'online', bubble: 'Qualifying leads...' },
-    { id: 'eden', name: 'Eden', role: 'Follow-Up', initials: 'Ed', cls: 'sales', status: 'online', bubble: 'Following up...' },
-    { id: 'blake', name: 'Blake', role: 'Proposals', initials: 'Bl', cls: 'sales', status: 'online', bubble: 'Building deck...' },
+    { id: 'rex',  name: 'Rex',  role: 'Sales Director',  initials: 'Rx', cls: 'sales', status: 'online', bubble: 'Closing deals...' },
+    { id: 'lena', name: 'Lena', role: 'Lead Generation', initials: 'Le', cls: 'sales', status: 'online', bubble: 'Building prospect list...' },
+    { id: 'cleo', name: 'Cleo', role: 'Outreach',        initials: 'Cl', cls: 'sales', status: 'online', bubble: 'Sending cold emails...' },
+    { id: 'sam',  name: 'Sam',  role: 'CRM Management',  initials: 'Sm', cls: 'sales', status: 'online', bubble: 'Updating pipeline...' },
   ],
   dev: [
-    { id: 'kai', name: 'Kai', role: 'Dev Lead', initials: 'K', cls: 'dev', status: 'online', bubble: 'Merging PR #47...' },
-    { id: 'sage', name: 'Sage', role: 'Architect', initials: 'S', cls: 'dev', status: 'online', bubble: 'Designing system...' },
-    { id: 'luna', name: 'Luna', role: 'Frontend', initials: 'L', cls: 'dev', status: 'online', bubble: 'Shipping feature...' },
-    { id: 'rex', name: 'Rex', role: 'Backend', initials: 'R', cls: 'dev', status: 'online', bubble: 'Writing tests...' },
-    { id: 'avery', name: 'Avery', role: 'Fullstack', initials: 'A', cls: 'dev', status: 'offline', bubble: 'Idle...' },
-    { id: 'atlas', name: 'Atlas', role: 'QA', initials: 'At', cls: 'dev', status: 'online', bubble: 'Reviewing code...' },
-    { id: 'orion', name: 'Orion', role: 'Code Review', initials: 'Or', cls: 'dev', status: 'online', bubble: 'Reviewing PR...' },
+    { id: 'kai',  name: 'Kai',  role: 'Dev Lead',     initials: 'K',  cls: 'dev', status: 'online', bubble: 'Merging PR #47...' },
+    { id: 'rio',  name: 'Rio',  role: 'Frontend Dev', initials: 'Ri', cls: 'dev', status: 'online', bubble: 'Shipping feature...' },
+    { id: 'nova', name: 'Nova', role: 'Backend Dev',  initials: 'Nv', cls: 'dev', status: 'online', bubble: 'Writing API...' },
+    { id: 'byte', name: 'Byte', role: 'QA',           initials: 'By', cls: 'dev', status: 'online', bubble: 'Running tests...' },
   ],
-  csuite: [
-    { id: 'marcus', name: 'Marcus', role: 'CFO', initials: 'M', cls: 'csuite', status: 'online', bubble: 'Reconciling accounts...' },
-    { id: 'zara', name: 'Zara', role: 'CTO', initials: 'Z', cls: 'csuite', status: 'online', bubble: 'Reviewing infra...' },
-    { id: 'priya', name: 'Priya', role: 'CMO', initials: 'P', cls: 'csuite', status: 'online', bubble: 'Drafting campaigns...' },
+  ops: [
+    { id: 'otto',   name: 'Otto',   role: 'Operations Manager', initials: 'Ot', cls: 'csuite', status: 'online', bubble: 'Writing SOPs...' },
+    { id: 'vera',   name: 'Vera',   role: 'Admin',              initials: 'Ve', cls: 'csuite', status: 'online', bubble: 'Coordinating tasks...' },
+    { id: 'lex',    name: 'Lex',    role: 'Legal Director',     initials: 'Lx', cls: 'csuite', status: 'online', bubble: 'Reviewing contracts...' },
+    { id: 'cora',   name: 'Cora',   role: 'Compliance',         initials: 'Co', cls: 'csuite', status: 'online', bubble: 'Drafting policy...' },
+    { id: 'jules',  name: 'Jules',  role: 'Documentation',      initials: 'Ju', cls: 'csuite', status: 'online', bubble: 'Writing NDAs...' },
+    { id: 'harper', name: 'Harper', role: 'HR Director',        initials: 'Ha', cls: 'csuite', status: 'online', bubble: 'Building org chart...' },
+    { id: 'drew',   name: 'Drew',   role: 'Talent',             initials: 'Dr', cls: 'csuite', status: 'online', bubble: 'Reviewing applications...' },
+    { id: 'sage',   name: 'Sage',   role: 'People Ops',         initials: 'Sg', cls: 'csuite', status: 'online', bubble: 'Onboarding docs...' },
   ],
 }
 
 // Cycling bubble messages per agent
 const AGENT_BUBBLES: Record<string, string[]> = {
-  nikita:  ['Running the agency...', 'Reviewing briefing...', 'Checking pipeline...', 'On a call with Harry...', 'Agency is live'],
-  nova:    ['Designing assets...', 'Brand refresh...', 'Updating deck...', 'Review in 5...', 'Typography locked'],
-  iris:    ['Crafting visuals...', 'UI polished...', 'Icons done...', 'Design system update', 'Pixel-perfect'],
-  finn:    ['Cutting footage...', 'Export queued...', 'Colour grading...', 'Motion graphics...', 'Render at 80%'],
-  jade:    ['Scheduling posts...', 'Drafting caption...', 'Story uploaded', 'Engagement up...', 'LinkedIn queued'],
-  ash:     ['Writing copy...', 'Blog post done', 'Email draft ready', 'SEO optimised...', 'Headlines polished'],
-  jordan:  ['Closing deals...', 'Call with prospect', 'Pipeline updated', 'Sending follow-up', 'Warm lead active'],
-  river:   ['Sending proposal...', 'Closing call prep', 'Contract sent', 'Following up...', 'Deal in review'],
-  quinn:   ['Qualifying leads...', 'CRM updated', 'New lead scored...', 'Outreach sent...', 'Lead qualified'],
-  eden:    ['Following up...', 'Sequences live...', 'Reply received', 'Sequence updated', 'Task done'],
-  blake:   ['Building deck...', 'Proposal ready...', 'Design updated', 'Pricing confirmed', 'Deck sent'],
-  kai:     ['Merging PR #47...', 'Deploy triggered...', 'CI passing', 'Reviewing PR #51', 'Shipped to prod'],
-  sage:    ['Designing system...', 'Architecture done', 'Schema reviewed', 'Infra plan locked', 'Scaling strategy'],
-  luna:    ['Shipping feature...', 'Component built', 'CSS polished...', 'Mobile responsive', 'Animation smooth'],
-  rex:     ['Writing tests...', 'API endpoint live', 'DB migrated', 'Perf optimised...', 'Test coverage 94%'],
-  avery:   ['Idle...', 'Standing by...', 'Available...', 'Ready to deploy', 'Waiting for task'],
-  atlas:   ['Reviewing code...', 'PR reviewed', 'Bug reported...', 'Test suite green', 'QA done'],
-  orion:   ['Reviewing PR...', 'Comments left', 'Approved PR #49', 'Security check...', 'Review complete'],
+  nikita:  ['Running the agency...', 'Reviewing briefing...', 'Checking pipeline...', 'Agency is live', 'Client update ready'],
   marcus:  ['Reconciling accounts...', 'Invoice raised', 'Burn rate checked', 'P&L updated', 'Cash flow green'],
-  zara:    ['Reviewing infra...', 'Uptime 99.9%', 'Scaling nodes...', 'Security patched', 'Infra optimised'],
+  iris:    ['Categorising expenses...', 'Invoice logged', 'Expense report done', 'Books balanced', 'Reconciliation done'],
+  felix:   ['Q2 projection ready', 'Scenario modelling...', 'Revenue forecast done', 'Growth model updated', 'Risk assessment done'],
   priya:   ['Drafting campaigns...', 'Campaign live', 'ROI calculated...', 'Ad creative done', 'Funnel optimised'],
+  mia:     ['Scheduling posts...', 'Drafting caption...', 'Story uploaded', 'Engagement up...', 'LinkedIn queued'],
+  theo:    ['Keyword research done', 'On-page audit complete', 'Content brief ready', 'Ranking opportunity found', 'SEO report done'],
+  luna:    ['Optimising bids...', 'Ad creative done', 'Budget pacing good', 'ROAS up 12%', 'Audience updated'],
+  zara:    ['Brand audit underway...', 'Visual direction set', 'Creative brief ready', 'Content gap found', 'Design brief done'],
+  eli:     ['Writing copy...', 'Landing page done', 'Email sequence ready', 'Ad copy approved', 'Headlines polished'],
+  nora:    ['Designing assets...', 'Figma frame done', 'Brand kit updated', 'Image brief sent', 'Design complete'],
+  rex:     ['Closing deals...', 'Call with prospect', 'Pipeline updated', 'Strategy updated', 'Hot lead active'],
+  lena:    ['Building prospect list...', 'ICP research done', 'New leads found', 'List enriched', 'Outreach ready'],
+  cleo:    ['Sending cold emails...', 'DMs queued', 'Reply received', 'Follow-up sent', 'Outreach running'],
+  sam:     ['Updating pipeline...', 'CRM logged', 'Deal status updated', 'Activity noted', 'Pipeline clean'],
+  kai:     ['Merging PR #47...', 'Deploy triggered...', 'CI passing', 'Reviewing PR #51', 'Shipped to prod'],
+  rio:     ['Shipping feature...', 'Component built', 'CSS polished...', 'Mobile responsive', 'Animation smooth'],
+  nova:    ['Writing API endpoint...', 'DB migrated', 'Perf optimised...', 'Test coverage 94%', 'Backend deployed'],
+  byte:    ['Running tests...', 'Bug reported...', 'Test suite green', 'Regression done', 'QA complete'],
+  otto:    ['Writing SOPs...', 'Workflow mapped', 'Process automated', 'Bottleneck flagged', 'Ops doc ready'],
+  vera:    ['Coordinating tasks...', 'Calendar updated', 'Docs organised', 'Schedule confirmed', 'Admin done'],
+  lex:     ['Reviewing contracts...', 'Risk flag raised', 'Terms reviewed', 'Legal brief done', 'Contract approved'],
+  cora:    ['Drafting policy...', 'Compliance check done', 'Regulatory note sent', 'Checklist updated', 'Audit ready'],
+  jules:   ['Writing NDAs...', 'Privacy policy done', 'Template ready', 'Agreement drafted', 'Docs complete'],
+  harper:  ['Building org chart...', 'Hiring strategy done', 'Culture framework set', 'Role defined', 'Team structure ready'],
+  drew:    ['Reviewing applications...', 'JD written', 'Interview kit ready', 'Offer letter drafted', 'Candidate scored'],
+  sage:    ['Onboarding docs done...', 'SOP written', 'Performance framework set', 'Review template ready', 'People ops complete'],
 }
 
 const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
@@ -228,7 +244,7 @@ const AGENT_STATS: Record<string, { done: number; active: number; rank: string }
   ash:     { done: 79,  active: 2,  rank: 'Copywriter · Copy' },
 }
 
-function AgentDesk({ agent, activeTask }: { agent: typeof AGENTS.csuite[0]; activeTask?: string }) {
+function AgentDesk({ agent, activeTask }: { agent: typeof AGENTS.ceo[0]; activeTask?: string }) {
   const [hovered, setHovered] = useState(false)
   const [bubbleIdx, setBubbleIdx] = useState(0)
   const isOnline = agent.status === 'online'
@@ -1518,7 +1534,7 @@ export default function Home() {
               </div>
               <div className="floor-desks">
                 <div className="window-glow" />
-                {AGENTS.csuite.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
+                {AGENTS.ops.map(a => <AgentDesk key={a.id} agent={a} activeTask={activeTaskMap[a.id]} />)}
               </div>
             </div>
           </div>

@@ -1,8 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Nav from "@/app/components/Nav";
+
+function GitHubIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 98 96" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ color: "#fff" }}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
+    </svg>
+  );
+}
+
+function GitLabIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 380 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M380 220.013L340.08 96.08l-39.92 123.933H79.84L39.92 96.08 0 220.013l190 138.907L380 220.013z" fill="#FC6D26"/>
+      <path d="M190 358.92L340.08 220.013H39.92L190 358.92z" fill="#E24329"/>
+      <path d="M39.92 220.013L0 220.013 39.92 96.08l40 123.933z" fill="#FCA326"/>
+      <path d="M340.08 220.013L380 220.013 340.08 96.08l-40 123.933z" fill="#FCA326"/>
+      <path d="M190 358.92l150.08-138.907H39.92L190 358.92z" fill="#FC6D26"/>
+    </svg>
+  );
+}
+
+function BitbucketIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.07 4.857A1.143 1.143 0 0 0 .93 6.143l4.343 20.286A1.143 1.143 0 0 0 6.4 27.429h19.429a1.143 1.143 0 0 0 1.143-.972l4.343-20.314a1.143 1.143 0 0 0-1.143-1.286H2.07zm17.501 15.429H12.4l-1.714-8h10.629l-1.743 8z" fill="#2684FF"/>
+    </svg>
+  );
+}
 
 interface IntegrationState {
   githubToken: string;
@@ -69,7 +97,7 @@ function ProviderCard({
   color,
   children,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   name: string;
   description: string;
   connected: boolean;
@@ -83,7 +111,7 @@ function ProviderCard({
   return (
     <div className={`int-provider-card${connected ? " int-connected" : ""}`} style={{ "--provider-color": color } as React.CSSProperties}>
       <div className="int-provider-top">
-        <div className="int-provider-icon">{icon}</div>
+        <div className="int-provider-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 10, background: color, flexShrink: 0 }}>{icon}</div>
         <div className="int-provider-info">
           <div className="int-provider-name">{name}</div>
           <div className="int-provider-desc">{description}</div>
@@ -234,13 +262,19 @@ export default function IntegrationsPage() {
 
   const connectedCount = [saved.github, saved.gitlab, saved.bitbucket].filter(Boolean).length;
 
-  const ACTIVITY_LOG = [
-    { time: "2 min ago", agent: "Kai", action: "Pushed 3 commits to", repo: "main", icon: "🚀" },
-    { time: "15 min ago", agent: "Reviewer", action: "Approved PR #47 on", repo: "feature/rate-limit", icon: "✓" },
-    { time: "1 hr ago", agent: "Frontend", action: "Opened PR #48:", repo: "Dashboard responsive grid", icon: "📝" },
-    { time: "3 hr ago", agent: "QA", action: "Ran test suite —", repo: "94% coverage, all passing", icon: "🧪" },
-    { time: "5 hr ago", agent: "Backend", action: "Deployed to staging:", repo: "API rate limiting v2", icon: "🔧" },
-  ];
+  const [activityLog, setActivityLog] = useState<{ time: string; agent: string; action: string; repo: string; icon: string }[]>([]);
+
+  useEffect(() => {
+    const clientId = typeof window !== "undefined" ? localStorage.getItem("oa_client_id") : null;
+    if (clientId) {
+      fetch(`/api/integrations/activity?clientId=${clientId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (Array.isArray(data)) setActivityLog(data);
+        })
+        .catch(() => { /* no activity available */ });
+    }
+  }, []);
 
   return (
     <>
@@ -283,7 +317,7 @@ export default function IntegrationsPage() {
           {activeTab === "providers" && (
             <div className="int-providers">
               <ProviderCard
-                icon="🐙"
+                icon={<GitHubIcon />}
                 name="GitHub"
                 description="Connect with a Personal Access Token (repo scope)"
                 connected={!!saved.github}
@@ -312,7 +346,7 @@ export default function IntegrationsPage() {
               </ProviderCard>
 
               <ProviderCard
-                icon="🦊"
+                icon={<GitLabIcon />}
                 name="GitLab"
                 description="Connect with a Personal Access Token (api scope)"
                 connected={!!saved.gitlab}
@@ -341,7 +375,7 @@ export default function IntegrationsPage() {
               </ProviderCard>
 
               <ProviderCard
-                icon="🪣"
+                icon={<BitbucketIcon />}
                 name="Bitbucket"
                 description="Connect with username + App Password"
                 connected={!!saved.bitbucket}
@@ -414,8 +448,8 @@ export default function IntegrationsPage() {
                 <div className="int-repos-list">
                   {repos.map((repo, i) => (
                     <div key={i} className="int-repo-item">
-                      <div className="int-repo-icon">
-                        {repo.provider === "github" ? "🐙" : repo.provider === "gitlab" ? "🦊" : "🪣"}
+                      <div className="int-repo-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, background: repo.provider === "github" ? "#238636" : repo.provider === "gitlab" ? "#FC6D26" : "#2684FF" }}>
+                        {repo.provider === "github" ? <GitHubIcon /> : repo.provider === "gitlab" ? <GitLabIcon /> : <BitbucketIcon />}
                       </div>
                       <div className="int-repo-info">
                         <div className="int-repo-name">{repo.name}</div>
@@ -439,19 +473,29 @@ export default function IntegrationsPage() {
                 <span>Recent Git Activity</span>
                 <span className="int-activity-badge">Live</span>
               </div>
-              <div className="int-activity-list">
-                {ACTIVITY_LOG.map((entry, i) => (
-                  <div key={i} className="int-activity-item">
-                    <div className="int-activity-icon">{entry.icon}</div>
-                    <div className="int-activity-content">
-                      <span className="int-activity-agent">{entry.agent}</span>
-                      <span className="int-activity-action">{entry.action}</span>
-                      <span className="int-activity-repo">{entry.repo}</span>
-                    </div>
-                    <div className="int-activity-time">{entry.time}</div>
+              {activityLog.length === 0 ? (
+                <div className="int-repos-empty">
+                  <div className="int-repos-empty-icon">📡</div>
+                  <div className="int-repos-empty-title">No activity yet</div>
+                  <div className="int-repos-empty-desc">
+                    Once your dev agents start working, their commits, PRs, and reviews will appear here.
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="int-activity-list">
+                  {activityLog.map((entry, i) => (
+                    <div key={i} className="int-activity-item">
+                      <div className="int-activity-icon">{entry.icon}</div>
+                      <div className="int-activity-content">
+                        <span className="int-activity-agent">{entry.agent}</span>
+                        <span className="int-activity-action">{entry.action}</span>
+                        <span className="int-activity-repo">{entry.repo}</span>
+                      </div>
+                      <div className="int-activity-time">{entry.time}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

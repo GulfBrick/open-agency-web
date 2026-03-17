@@ -53,7 +53,20 @@ const TIER_AGENTS: Record<string, { dept: string; color: string; agents: AgentKe
   ],
 };
 
-const TIERS = [
+const TIERS: {
+  id: string;
+  name: string;
+  price: number | null;
+  tagline: string;
+  highlight: boolean;
+  badge: string | null;
+  agentCount: number;
+  headline: string;
+  bullets: string[];
+  cta: string;
+  ctaHref: string;
+  whopHref: string;
+}[] = [
   {
     id: "starter",
     name: "Starter",
@@ -102,8 +115,8 @@ const TIERS = [
   },
   {
     id: "agency",
-    name: "Agency",
-    price: 999,
+    name: "Enterprise",
+    price: null,
     tagline: "The full agency. All 21 agents. Every department.",
     highlight: false,
     badge: "Full Power",
@@ -119,9 +132,9 @@ const TIERS = [
       "SLA guarantee",
       "White-glove onboarding",
     ],
-    cta: "Go Agency",
-    ctaHref: "/onboard?plan=agency",
-    whopHref: "https://whop.com/open-agency-enterprise/",
+    cta: "Contact Us",
+    ctaHref: "mailto:openagency.n@gmail.com",
+    whopHref: "mailto:openagency.n@gmail.com",
   },
 ];
 
@@ -211,11 +224,17 @@ export default function PricingPage() {
               )}
               <div className="pricing-card-header">
                 <div className="pricing-tier-name">{tier.name}</div>
-                <div className="pricing-price">
-                  <span className="pricing-dollar">$</span>
-                  <span className="pricing-amount">{tier.price}</span>
-                  <span className="pricing-period">/month</span>
-                </div>
+                {tier.price !== null ? (
+                  <div className="pricing-price">
+                    <span className="pricing-dollar">$</span>
+                    <span className="pricing-amount">{tier.price}</span>
+                    <span className="pricing-period">/month</span>
+                  </div>
+                ) : (
+                  <div className="pricing-price">
+                    <span className="pricing-amount" style={{ fontSize: "2rem" }}>Custom</span>
+                  </div>
+                )}
                 <div className="pricing-tagline">{tier.tagline}</div>
                 <div className="pricing-agent-count">{tier.agentCount} agents</div>
               </div>
@@ -230,9 +249,9 @@ export default function PricingPage() {
               </ul>
 
               <a
-                href={tier.whopHref}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={tier.ctaHref}
+                target={tier.ctaHref.startsWith("mailto:") ? undefined : "_blank"}
+                rel={tier.ctaHref.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                 className={`pricing-cta-btn${tier.highlight ? " pricing-cta-btn--primary" : ""}`}
               >
                 {tier.cta} →
@@ -281,7 +300,7 @@ export default function PricingPage() {
               <div className="compare-feature-col">Feature</div>
               <div className="compare-tier-col">Starter<br /><span className="compare-price">$299/mo</span></div>
               <div className="compare-tier-col highlight">Growth<br /><span className="compare-price">$499/mo</span></div>
-              <div className="compare-tier-col">Agency<br /><span className="compare-price">$999/mo</span></div>
+              <div className="compare-tier-col">Enterprise<br /><span className="compare-price">Custom</span></div>
             </div>
             {COMPARISON_ROWS.map((row) => (
               <div key={row.feature} className="compare-row">

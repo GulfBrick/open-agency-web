@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
@@ -19,7 +20,14 @@ export default function Nav() {
     <nav className="site-nav">
       <div className="site-nav-inner">
         <Link href="/" className="site-nav-logo">
-          <span className="site-nav-logo-mark">OA</span>
+          <Image
+            src="/logo.png"
+            alt="Open Agency"
+            width={36}
+            height={36}
+            style={{ borderRadius: "12px", display: "block" }}
+            priority
+          />
           <span className="site-nav-logo-name">Open Agency</span>
         </Link>
         <div className="site-nav-links">
@@ -34,8 +42,8 @@ export default function Nav() {
           ))}
         </div>
         <div className="site-nav-cta">
-          <Link href="/onboard" className="site-nav-btn">
-            Start Free Trial
+          <Link href="/pricing" className="site-nav-btn">
+            Get Started
           </Link>
         </div>
       </div>
