@@ -498,6 +498,19 @@ export default function PortalPage() {
       <main className="portal-page">
         <div className="portal-container">
 
+          {/* Welcome banner */}
+          <div style={{
+            padding: "14px 20px", marginBottom: 16,
+            background: "rgba(16,185,129,0.08)",
+            border: "1px solid rgba(16,185,129,0.2)",
+            borderRadius: 10,
+            display: "flex", alignItems: "center", gap: 10,
+            fontSize: "0.82rem", color: "#94a3b8",
+          }}>
+            <span style={{ fontSize: "1rem" }}>&#9889;</span>
+            <span><strong style={{ color: "#e2e8f0" }}>Welcome back.</strong> Your team is working.</span>
+          </div>
+
           {/* Header */}
           <div className="portal-header">
             <div className="portal-header-left">

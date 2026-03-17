@@ -520,15 +520,17 @@ function BuildingFloor({
   agents,
   liveBubbles,
   agentTaskStats,
+  locked,
 }: {
   floorDef: (typeof FLOOR_ORDER)[number];
   agents: Agent[];
   liveBubbles?: Record<string, string>;
   agentTaskStats?: Record<string, { done: number; successRate: number }>;
+  locked?: boolean;
 }) {
   const anyOnline = agents.some((a) => isOnline(a.status));
   return (
-    <div className={`floor ${floorDef.cssClass}${anyOnline ? " has-online" : ""}`}>
+    <div className={`floor ${floorDef.cssClass}${anyOnline ? " has-online" : ""}`} style={{ position: "relative" }}>
       <div className="floor-inner">
         <div className="floor-label">
           <div className="floor-number-badge">{floorDef.number}</div>
@@ -549,6 +551,27 @@ function BuildingFloor({
           ))}
         </div>
       </div>
+      {locked && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 10,
+          background: "rgba(10, 10, 20, 0.55)",
+          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+          borderRadius: "inherit",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "rgba(124, 58, 237, 0.15)",
+            border: "1px solid rgba(124, 58, 237, 0.4)",
+            borderRadius: 6, padding: "4px 14px",
+            fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em",
+            color: "#a78bfa", textTransform: "uppercase" as const,
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <span style={{ fontSize: "0.75rem" }}>&#128274;</span> Locked
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1057,6 +1080,80 @@ function NikitaChat({
               &#9654;
             </button>
           </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Nikita Chat Teaser (landing page — gated) ──────────────────────────────
+
+function NikitaChatTeaser() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        className="nikita-chat-toggle"
+        style={{ display: open ? "none" : undefined }}
+        onClick={() => setOpen(true)}
+        title="Chat with Nikita"
+      >
+        &#128172;
+      </button>
+
+      <div className={`nikita-chat${open ? " open" : ""}`}>
+        <div className="nikita-chat-header">
+          <div className="nikita-chat-header-avatar">N</div>
+          <div className="nikita-chat-header-info">
+            <div className="nikita-chat-header-name">Nikita</div>
+            <div className="nikita-chat-header-status">
+              <span className="nikita-chat-header-dot" />
+              CEO · Open Agency
+            </div>
+          </div>
+          <button className="nikita-chat-close" onClick={() => setOpen(false)} title="Close chat">
+            &#10005;
+          </button>
+        </div>
+        <div className="nikita-chat-thread">
+          <div className="nikita-chat-thread-inner" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 220, padding: "32px 20px", textAlign: "center" as const }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: "50%",
+              background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "1.2rem", fontWeight: 800, color: "#fff", marginBottom: 16,
+            }}>N</div>
+            <div style={{ fontSize: "0.9rem", color: "#e2e8f0", fontWeight: 600, marginBottom: 8, lineHeight: 1.4 }}>
+              Hi, I&apos;m Nikita — CEO of Open Agency.
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "rgba(148,163,184,0.8)", lineHeight: 1.5, marginBottom: 20, maxWidth: 280 }}>
+              Subscribe to start working with me and your full team. I&apos;ll brief the agents, dispatch tasks, and report results — all from this chat.
+            </div>
+            <a
+              href="/pricing"
+              style={{
+                display: "inline-block", padding: "10px 24px",
+                background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                color: "#fff", fontWeight: 700, fontSize: "0.82rem",
+                borderRadius: 8, textDecoration: "none",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Get Started →
+            </a>
+          </div>
+        </div>
+        <div className="nikita-chat-bar">
+          <div className="nikita-chat-bar-inner" style={{ opacity: 0.4, pointerEvents: "none" as const }}>
+            <input
+              type="text"
+              className="nikita-chat-input"
+              placeholder="Subscribe to message Nikita..."
+              disabled
+            />
+            <button type="button" className="nikita-chat-send" disabled title="Send">&#9654;</button>
+          </div>
         </div>
       </div>
     </>
@@ -1696,8 +1793,38 @@ export default function Dashboard() {
             {/* FLOORS */}
             {FLOOR_ORDER.map((floorDef) => {
               const floorAgents = agents.filter((a) => a.floor === floorDef.key);
-              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} agentTaskStats={agentTaskStats} />;
+              const isLocked = floorDef.key !== "ceo"; // Only CEO floor visible as teaser
+              return <BuildingFloor key={floorDef.key} floorDef={floorDef} agents={floorAgents} liveBubbles={liveBubbles} agentTaskStats={agentTaskStats} locked={isLocked} />;
             })}
+
+            {/* CTA Banner — gate */}
+            <div style={{
+              margin: "0 auto", padding: "28px 24px",
+              background: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(236,72,153,0.10))",
+              border: "1px solid rgba(124,58,237,0.25)",
+              borderRadius: 12, textAlign: "center" as const,
+              maxWidth: 520,
+            }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#e2e8f0", marginBottom: 6, lineHeight: 1.3 }}>
+                Your AI team is ready. Choose your plan to unlock them.
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "rgba(148,163,184,0.8)", marginBottom: 16 }}>
+                21 agents across 6 departments — standing by for your first brief.
+              </div>
+              <a
+                href="/pricing"
+                style={{
+                  display: "inline-block", padding: "10px 28px",
+                  background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                  color: "#fff", fontWeight: 700, fontSize: "0.85rem",
+                  borderRadius: 8, textDecoration: "none",
+                  letterSpacing: "0.02em",
+                  transition: "opacity 0.2s",
+                }}
+              >
+                View Pricing →
+              </a>
+            </div>
 
             {/* GROUND FLOOR — STATS (6 live cards with animated counters) */}
             <div className="ground-floor">
@@ -2143,16 +2270,8 @@ export default function Dashboard() {
         <span>Open Agency</span> &copy; 2026 &middot; Intelligence at work.
       </div>
 
-      {/* Nikita Chat Sidebar */}
-      <NikitaChat
-        onSend={handleSendMessage}
-        isLoading={chatLoading}
-        messages={chatMessages}
-        isPolling={chatPolling}
-        unreadCount={unreadCount}
-        onOpen={() => setUnreadCount(0)}
-        agentReports={agentReports}
-      />
+      {/* Nikita Chat — Teaser (landing page is gated) */}
+      <NikitaChatTeaser />
 
       {/* New Client Modal */}
       {newClientOpen && (

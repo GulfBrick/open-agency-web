@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Nav from "@/app/components/Nav";
 
 export const metadata = {
@@ -76,6 +75,7 @@ const TIERS = [
     ],
     cta: "Start with Sales",
     ctaHref: "/onboard?plan=starter",
+    whopHref: "https://whop.com/open-agency-starter/",
   },
   {
     id: "growth",
@@ -98,6 +98,7 @@ const TIERS = [
     ],
     cta: "Scale with Growth",
     ctaHref: "/onboard?plan=growth",
+    whopHref: "https://whop.com/open-agency-growth/",
   },
   {
     id: "agency",
@@ -120,6 +121,7 @@ const TIERS = [
     ],
     cta: "Go Agency",
     ctaHref: "/onboard?plan=agency",
+    whopHref: "https://whop.com/open-agency-enterprise/",
   },
 ];
 
@@ -227,9 +229,14 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link href={tier.ctaHref} className={`pricing-cta-btn${tier.highlight ? " pricing-cta-btn--primary" : ""}`}>
+              <a
+                href={tier.whopHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`pricing-cta-btn${tier.highlight ? " pricing-cta-btn--primary" : ""}`}
+              >
                 {tier.cta} →
-              </Link>
+              </a>
             </div>
           ))}
         </section>
@@ -345,9 +352,9 @@ export default function PricingPage() {
           <div className="pricing-bottom-cta-inner">
             <h2 className="pricing-bottom-cta-title">Ready to hire your team?</h2>
             <p className="pricing-bottom-cta-sub">21 agents. 6 departments. Zero HR headaches. Start your 7-day free trial.</p>
-            <Link href="/onboard" className="pricing-bottom-btn">
+            <a href="https://whop.com/open-agency-growth/" target="_blank" rel="noopener noreferrer" className="pricing-bottom-btn">
               Start Free Trial →
-            </Link>
+            </a>
           </div>
         </section>
       </main>
