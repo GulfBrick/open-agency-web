@@ -86,8 +86,8 @@ const TIERS: {
       "Client portal access",
       "Email support",
     ],
-    cta: "Start with Sales",
-    ctaHref: "/onboard?plan=starter",
+    cta: "Get Started — $299/mo",
+    ctaHref: "https://whop.com/open-agency-starter/",
     whopHref: "https://whop.com/open-agency-starter/",
   },
   {
@@ -109,8 +109,8 @@ const TIERS: {
       "Priority support",
       "Daily performance reports",
     ],
-    cta: "Scale with Growth",
-    ctaHref: "/onboard?plan=growth",
+    cta: "Get Started — $499/mo",
+    ctaHref: "https://whop.com/open-agency-growth/",
     whopHref: "https://whop.com/open-agency-growth/",
   },
   {

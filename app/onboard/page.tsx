@@ -1,9 +1,37 @@
-"use client";
+﻿"use client";
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/app/components/Nav";
+
+function GitHubIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 98 96" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ color: "#e2e8f0" }}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
+    </svg>
+  );
+}
+
+function GitLabIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 380 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M380 220.013L340.08 96.08l-39.92 123.933H79.84L39.92 96.08 0 220.013l190 138.907L380 220.013z" fill="#FC6D26"/>
+      <path d="M190 358.92L340.08 220.013H39.92L190 358.92z" fill="#E24329"/>
+      <path d="M39.92 220.013L0 220.013 39.92 96.08l40 123.933z" fill="#FCA326"/>
+      <path d="M340.08 220.013L380 220.013 340.08 96.08l-40 123.933z" fill="#FCA326"/>
+      <path d="M190 358.92l150.08-138.907H39.92L190 358.92z" fill="#FC6D26"/>
+    </svg>
+  );
+}
+
+function BitbucketIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.07 4.857A1.143 1.143 0 0 0 .93 6.143l4.343 20.286A1.143 1.143 0 0 0 6.4 27.429h19.429a1.143 1.143 0 0 0 1.143-.972l4.343-20.314a1.143 1.143 0 0 0-1.143-1.286H2.07zm17.501 15.429H12.4l-1.714-8h10.629l-1.743 8z" fill="#2684FF"/>
+    </svg>
+  );
+}
 
 const DEPARTMENTS = [
   { id: "sales", label: "Sales Team", icon: "📈", agents: ["Rex (Director)", "Lena (Lead Gen)", "Cleo (Outreach)", "Sam (CRM)"], desc: "Prospect, qualify, close" },
@@ -363,7 +391,7 @@ function OnboardContent() {
 
                 <div className="onboard-integration-section">
                   <div className="onboard-integration-header">
-                    <span className="onboard-integration-icon">🐙</span>
+                    <span className="onboard-integration-icon"><GitHubIcon /></span>
                     <div>
                       <div className="onboard-integration-name">GitHub</div>
                       <div className="onboard-integration-hint">Personal Access Token with <code>repo</code> scope</div>
@@ -380,7 +408,7 @@ function OnboardContent() {
 
                 <div className="onboard-integration-section">
                   <div className="onboard-integration-header">
-                    <span className="onboard-integration-icon">🦊</span>
+                    <span className="onboard-integration-icon"><GitLabIcon /></span>
                     <div>
                       <div className="onboard-integration-name">GitLab</div>
                       <div className="onboard-integration-hint">Personal Access Token with <code>api</code> scope</div>
@@ -397,7 +425,7 @@ function OnboardContent() {
 
                 <div className="onboard-integration-section">
                   <div className="onboard-integration-header">
-                    <span className="onboard-integration-icon">🪣</span>
+                    <span className="onboard-integration-icon"><BitbucketIcon /></span>
                     <div>
                       <div className="onboard-integration-name">Bitbucket</div>
                       <div className="onboard-integration-hint">Username + App Password</div>
