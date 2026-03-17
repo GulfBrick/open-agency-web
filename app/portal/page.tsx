@@ -406,74 +406,68 @@ export default function PortalPage() {
     }
   }, [loadClientData]);
 
-  // ─── Build display data ───────────────────────────────────
+  // ─── Build display data (real data only — no demo fallbacks) ─────────────
 
-  const clientName = clientProfile?.businessName || DEMO_CLIENT.name;
-  const clientTier = clientProfile?.tier || "enterprise";
-  const clientPrice = TIER_PRICES[clientTier] || DEMO_CLIENT.price;
+  const clientName = clientProfile?.businessName || "Your Business";
+  const clientTier = clientProfile?.tier || "";
+  const clientPrice = clientTier ? (TIER_PRICES[clientTier] || "") : "";
   const clientSince = clientProfile?.createdAt
     ? new Date(clientProfile.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    : DEMO_CLIENT.startDate;
+    : null;
 
-  // Agents
-  const displayAgents = liveAgents.length > 0
-    ? liveAgents.map(a => ({
-        id: a.agentId,
-        name: a.name,
-        role: a.role,
-        dept: a.department,
-        emoji: AGENT_EMOJIS[a.agentId] || "🤖",
-        status: "active",
-        lastActive: `Lv.${a.level} · ${a.xp} XP`,
-        tasksCompleted: a.xp,
-        level: a.level,
-        xp: a.xp,
-      }))
-    : DEMO_AGENTS;
+  // Agents — real data only
+  const displayAgents = liveAgents.map(a => ({
+    id: a.agentId,
+    name: a.name,
+    role: a.role,
+    dept: a.department,
+    emoji: AGENT_EMOJIS[a.agentId] || "🤖",
+    status: "active",
+    lastActive: `Lv.${a.level} · ${a.xp} XP`,
+    tasksCompleted: a.xp,
+    level: a.level,
+    xp: a.xp,
+  }));
 
-  // Tasks
-  const displayTasks = liveTasks.length > 0
-    ? liveTasks.map(t => {
-        const outputText = t.output
-          ? (typeof t.output === "object" && t.output !== null && "summary" in (t.output as Record<string, unknown>))
-            ? String((t.output as Record<string, unknown>).summary || "") + "\n" + String((t.output as Record<string, unknown>).output || "")
-            : typeof t.output === "string" ? t.output : JSON.stringify(t.output).slice(0, 500)
-          : null;
-        return {
-          id: t.id,
-          title: t.type,
-          agent: t.agentId.charAt(0).toUpperCase() + t.agentId.slice(1),
-          emoji: AGENT_EMOJIS[t.agentId] || "🤖",
-          status: t.status === "complete" ? "completed" : t.status,
-          completedAt: t.completedAt ? new Date(t.completedAt).toLocaleString() : null,
-          priority: "medium",
-          output: outputText,
-        };
-      })
-    : DEMO_TASKS;
+  // Tasks — real data only
+  const displayTasks = liveTasks.map(t => {
+    const outputText = t.output
+      ? (typeof t.output === "object" && t.output !== null && "summary" in (t.output as Record<string, unknown>))
+        ? String((t.output as Record<string, unknown>).summary || "") + "\n" + String((t.output as Record<string, unknown>).output || "")
+        : typeof t.output === "string" ? t.output : JSON.stringify(t.output).slice(0, 500)
+      : null;
+    return {
+      id: t.id,
+      title: t.type,
+      agent: t.agentId.charAt(0).toUpperCase() + t.agentId.slice(1),
+      emoji: AGENT_EMOJIS[t.agentId] || "🤖",
+      status: t.status === "complete" ? "completed" : t.status,
+      completedAt: t.completedAt ? new Date(t.completedAt).toLocaleString() : null,
+      priority: "medium",
+      output: outputText,
+    };
+  });
 
-  // Reports
-  const displayReports = liveReports.length > 0
-    ? liveReports.map(r => {
-        const c = typeof r.content === "string" ? r.content : r.content;
-        const summary = typeof c === "object" && c !== null ? (c.summary || "") : String(c).slice(0, 200);
-        const output = typeof c === "object" && c !== null ? (c.output || "") : String(c);
-        const nextActions = typeof c === "object" && c !== null && Array.isArray(c.next_actions) ? c.next_actions : [];
-        const sections = [
-          { title: "Report", content: String(output).slice(0, 2000) },
-          ...(nextActions.length > 0 ? [{ title: "Next Actions", content: nextActions.join("\n") }] : []),
-        ];
-        return {
-          id: r.id,
-          title: r.type.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
-          author: r.agentId.charAt(0).toUpperCase() + r.agentId.slice(1),
-          emoji: AGENT_EMOJIS[r.agentId] || "📊",
-          date: new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-          summary: String(summary),
-          sections,
-        };
-      })
-    : DEMO_REPORTS;
+  // Reports — real data only
+  const displayReports = liveReports.map(r => {
+    const c = typeof r.content === "string" ? r.content : r.content;
+    const summary = typeof c === "object" && c !== null ? (c.summary || "") : String(c).slice(0, 200);
+    const output = typeof c === "object" && c !== null ? (c.output || "") : String(c);
+    const nextActions = typeof c === "object" && c !== null && Array.isArray(c.next_actions) ? c.next_actions : [];
+    const sections = [
+      { title: "Report", content: String(output).slice(0, 2000) },
+      ...(nextActions.length > 0 ? [{ title: "Next Actions", content: nextActions.join("\n") }] : []),
+    ];
+    return {
+      id: r.id,
+      title: r.type.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+      author: r.agentId.charAt(0).toUpperCase() + r.agentId.slice(1),
+      emoji: AGENT_EMOJIS[r.agentId] || "📊",
+      date: new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      summary: String(summary),
+      sections,
+    };
+  });
 
   // Stats
   const completedTasks = displayTasks.filter(t => t.status === "completed" || t.status === "complete").length;
@@ -498,6 +492,41 @@ export default function PortalPage() {
       <main className="portal-page">
         <div className="portal-container">
 
+          {/* Auth gate — no clientId = show login wall */}
+          {!loading && !clientId && (
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              minHeight: "60vh", gap: "1.5rem", textAlign: "center", padding: "2rem",
+            }}>
+              <div style={{ fontSize: "3rem" }}>👩‍💼</div>
+              <h1 style={{ fontSize: "1.8rem", fontWeight: 700, color: "#e2e8f0", margin: 0 }}>Your portal is waiting</h1>
+              <p style={{ color: "#94a3b8", fontSize: "1rem", maxWidth: 420, margin: 0 }}>
+                Log in with your email to access your client portal — your agents, tasks, and reports.
+              </p>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+                <a href="/login" style={{
+                  padding: "0.75rem 2rem", borderRadius: 8, background: "#7C3AED",
+                  color: "#fff", fontWeight: 600, textDecoration: "none", fontSize: "1rem",
+                }}>Login →</a>
+                <a href="/pricing" style={{
+                  padding: "0.75rem 2rem", borderRadius: 8, background: "transparent",
+                  border: "1px solid rgba(124,58,237,0.4)", color: "#a78bfa",
+                  fontWeight: 600, textDecoration: "none", fontSize: "1rem",
+                }}>View Pricing</a>
+              </div>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+              <div style={{ color: "#94a3b8", fontSize: "1rem" }}>Loading your portal…</div>
+            </div>
+          )}
+
+          {/* Portal content — only shown when logged in */}
+          {!loading && clientId && (<>
+
           {/* Welcome banner */}
           <div style={{
             padding: "14px 20px", marginBottom: 16,
@@ -517,8 +546,8 @@ export default function PortalPage() {
               <div className="portal-header-label">Client Portal</div>
               <h1 className="portal-header-name">{clientName}</h1>
               <div className="portal-header-meta">
-                <span className="portal-plan-badge">{clientTier.charAt(0).toUpperCase() + clientTier.slice(1)} · {clientPrice}</span>
-                <span className="portal-header-since">Since {clientSince}</span>
+                {clientTier && <span className="portal-plan-badge">{clientTier.charAt(0).toUpperCase() + clientTier.slice(1)}{clientPrice ? ` · ${clientPrice}` : ""}</span>}
+                {clientSince && <span className="portal-header-since">Since {clientSince}</span>}
               </div>
             </div>
             <div className="portal-header-right">
@@ -575,7 +604,7 @@ export default function PortalPage() {
               <div className="portal-stat-num" style={{ color: "#3B82F6" }}>
                 {agencyStatus?.finances?.profit != null
                   ? agencyStatus.finances.profit === 0 ? "$0" : `$${(agencyStatus.finances.profit / 1000).toFixed(0)}k`
-                  : "$158k"}
+                  : "—"}
               </div>
               <div className="portal-stat-label">Net Profit</div>
             </div>
@@ -717,19 +746,12 @@ export default function PortalPage() {
           </div>
 
           {/* Status Banner */}
-          {isLive ? (
-            <div className="portal-demo-banner" style={{ borderColor: "#10B98122", background: "#10B98108" }}>
-              <span style={{ color: "#10B981" }}>Connected to live agency data. </span>
-              <Link href="/integrations" className="portal-demo-link">Connect your tools →</Link>
-            </div>
-          ) : (
-            <div className="portal-demo-banner">
-              <span>Preview mode — showing demo data. </span>
-              <Link href="/login" className="portal-demo-link">Login to see your data →</Link>
-              {" or "}
-              <Link href="/pricing" className="portal-demo-link">Sign up →</Link>
-            </div>
-          )}
+          <div className="portal-demo-banner" style={{ borderColor: "#10B98122", background: "#10B98108" }}>
+            <span style={{ color: "#10B981" }}>Live data. </span>
+            <Link href="/integrations" className="portal-demo-link">Connect your tools →</Link>
+          </div>
+
+          </>)} {/* end: !loading && clientId */}
 
         </div>
       </main>

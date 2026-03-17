@@ -271,7 +271,7 @@ export default function PricingPage() {
               <div key={tier.id} className="pricing-tier-agents">
                 <div className="pricing-tier-agents-header">
                   <span className="pricing-tier-agents-name">{tier.name}</span>
-                  <span className="pricing-tier-agents-price">${tier.price}/mo</span>
+                  <span className="pricing-tier-agents-price">{tier.price !== null ? `$${tier.price}/mo` : "Custom pricing"}</span>
                   <span className="pricing-tier-agents-count">{tier.agentCount} agents</span>
                 </div>
                 {depts.map((dept) => (
