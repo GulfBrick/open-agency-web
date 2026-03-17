@@ -141,8 +141,17 @@ export default function OnboardPage() {
       flexDirection: 'column',
     }}>
       <nav style={{ borderBottom: '1px solid #1a1a1a', padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60 }}>
-        <a href="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 18 }}>
-          Open<span style={{ color: '#7c3aed' }}>Agency</span>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Open Agency"
+            style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>
+            Open<span style={{ color: '#7c3aed' }}>Agency</span>
+          </span>
         </a>
         <span style={{ color: '#333', fontSize: 20 }}>|</span>
         <span style={{ color: '#666', fontSize: 14 }}>Onboarding</span>

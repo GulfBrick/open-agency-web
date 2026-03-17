@@ -4,7 +4,7 @@ const TIERS = [
   {
     id: 'starter',
     label: 'Starter',
-    price: 299,
+    price: '$299',
     period: '/month',
     color: '#6366f1',
     tagline: 'One smart department, fully managed.',
@@ -18,12 +18,14 @@ const TIERS = [
       'Message Nikita any time',
     ],
     cta: 'Get Started',
+    ctaHref: 'https://whop.com/open-agency-starter/',
     highlight: false,
+    badge: null,
   },
   {
     id: 'growth',
     label: 'Growth',
-    price: 499,
+    price: '$499',
     period: '/month',
     color: '#7c3aed',
     tagline: 'Three departments. Real momentum.',
@@ -39,14 +41,15 @@ const TIERS = [
       'Git integration — dev team can push to your repo',
     ],
     cta: 'Get Started',
+    ctaHref: 'https://whop.com/open-agency-growth/',
     highlight: true,
     badge: 'Most Popular',
   },
   {
     id: 'enterprise',
     label: 'Enterprise',
-    price: 999,
-    period: '/month',
+    price: 'Custom',
+    period: '',
     color: '#dc2626',
     tagline: 'The full agency. All 27 agents. All departments.',
     features: [
@@ -59,8 +62,10 @@ const TIERS = [
       'Priority response from Nikita',
       'Custom agent briefing and onboarding session',
     ],
-    cta: 'Get Started',
+    cta: 'Contact Us',
+    ctaHref: 'mailto:openagency.n@gmail.com',
     highlight: false,
+    badge: null,
   },
 ]
 
@@ -79,7 +84,7 @@ const FAQ = [
   },
   {
     q: 'Is there a trial?',
-    a: 'We offer a 7-day money-back guarantee. If your agents haven\'t produced something useful in 7 days, full refund — no questions.',
+    a: "We offer a 7-day money-back guarantee. If your agents haven't produced something useful in 7 days, full refund — no questions.",
   },
   {
     q: 'Do the agents actually do work, or just advise?',
@@ -97,14 +102,20 @@ export default function PricingPage() {
     }}>
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #1a1a1a', padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60, position: 'sticky', top: 0, background: '#0a0a0a', zIndex: 100 }}>
-        <a href="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 18 }}>
-          Open<span style={{ color: '#7c3aed' }}>Agency</span>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Open Agency"
+            style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>
+            Open<span style={{ color: '#7c3aed' }}>Agency</span>
+          </span>
         </a>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 20, alignItems: 'center' }}>
           <a href="/login" style={{ color: '#666', textDecoration: 'none', fontSize: 13 }}>Client Login</a>
-          <a href="/onboard" style={{ background: '#7c3aed', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, padding: '7px 16px', borderRadius: 8 }}>
-            Get Started
-          </a>
         </div>
       </nav>
 
@@ -149,8 +160,8 @@ export default function PricingPage() {
                 {tier.label}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
-                <span style={{ fontSize: 42, fontWeight: 800, color: '#fff' }}>${tier.price}</span>
-                <span style={{ fontSize: 14, color: '#555' }}>{tier.period}</span>
+                <span style={{ fontSize: 42, fontWeight: 800, color: '#fff' }}>{tier.price}</span>
+                {tier.period && <span style={{ fontSize: 14, color: '#555' }}>{tier.period}</span>}
               </div>
               <p style={{ margin: 0, fontSize: 14, color: '#666', lineHeight: 1.5 }}>{tier.tagline}</p>
             </div>
@@ -166,7 +177,9 @@ export default function PricingPage() {
 
             <div style={{ marginTop: 'auto' }}>
               <a
-                href={`/onboard?tier=${tier.id}`}
+                href={tier.ctaHref}
+                target={tier.id === 'enterprise' ? undefined : '_blank'}
+                rel={tier.id === 'enterprise' ? undefined : 'noopener noreferrer'}
                 style={{
                   display: 'block',
                   background: tier.highlight ? tier.color : 'transparent',
@@ -219,18 +232,7 @@ export default function PricingPage() {
         </div>
 
         <div style={{ marginTop: 48, textAlign: 'center' }}>
-          <a
-            href="/onboard"
-            style={{
-              display: 'inline-block',
-              background: '#7c3aed', border: 'none', borderRadius: 12, color: '#fff',
-              fontSize: 16, fontWeight: 700, padding: '16px 36px',
-              textDecoration: 'none',
-            }}
-          >
-            Start your agency today →
-          </a>
-          <p style={{ margin: '14px 0 0', fontSize: 13, color: '#444' }}>
+          <p style={{ margin: 0, fontSize: 14, color: '#444' }}>
             Already a client? <a href="/login" style={{ color: '#7c3aed', textDecoration: 'none' }}>Log in here →</a>
           </p>
         </div>
