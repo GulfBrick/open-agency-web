@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 
 const DEPARTMENTS = [
   { id: 'marketing', label: 'Marketing', icon: '📣', desc: 'Priya, Mia, Theo & Luna' },
-  { id: 'sales', label: 'Sales', icon: '💰', desc: 'Rex, Lena, Cleo & Sam' },
-  { id: 'development', label: 'Development', icon: '🏗️', desc: 'Kai, Rio, Nova & Byte' },
+  { id: 'sales', label: 'Sales', icon: '💼', desc: 'Rex, Lena, Cleo & Sam' },
+  { id: 'development', label: 'Development', icon: '💻', desc: 'Kai, Rio, Nova & Byte' },
   { id: 'creative', label: 'Creative', icon: '🎨', desc: 'Zara, Eli & Nora' },
 ]
 
@@ -17,6 +18,7 @@ const TIERS = [
     price: '$299/mo',
     desc: 'Nikita + 1 department',
     color: '#6366f1',
+    recommended: false,
   },
   {
     id: 'growth',
@@ -32,12 +34,13 @@ const TIERS = [
     price: '$999/mo',
     desc: 'Full agency — all 27 agents',
     color: '#dc2626',
+    recommended: false,
   },
 ]
 
 type Step = 'business' | 'tier' | 'brief' | 'done'
 
-export default function OnboardPage() {
+function OnboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState<Step>('business')
@@ -47,12 +50,6 @@ export default function OnboardPage() {
   const [email, setEmail] = useState('')
   const [businessName, setBusinessName] = useState('')
   const [tier, setTier] = useState('growth')
-
-  // Read tier from query param (e.g. /onboard?tier=enterprise from pricing page)
-  useEffect(() => {
-    const t = searchParams.get('tier')
-    if (t && ['starter', 'growth', 'enterprise'].includes(t)) setTier(t)
-  }, [searchParams])
   const [department, setDepartment] = useState('marketing')
   const [brief, setBrief] = useState('')
   const [timezone, setTimezone] = useState(
@@ -60,6 +57,12 @@ export default function OnboardPage() {
   )
 
   const [result, setResult] = useState<{ clientId: string; businessName: string; tier: string } | null>(null)
+
+  // Read tier from query param (e.g. /onboard?tier=enterprise from pricing page)
+  useEffect(() => {
+    const t = searchParams.get('tier')
+    if (t && ['starter', 'growth', 'enterprise'].includes(t)) setTier(t)
+  }, [searchParams])
 
   async function handleSubmit() {
     if (!email.trim() || !businessName.trim() || loading) return
@@ -81,7 +84,7 @@ export default function OnboardPage() {
       const data = await res.json()
 
       if (res.status === 409) {
-        // Already exists — just log them in
+        // Already exists — log them in
         localStorage.setItem('oa_client_id', data.clientId)
         localStorage.setItem('oa_business_name', businessName.trim())
         localStorage.setItem('oa_tier', tier)
@@ -131,6 +134,9 @@ export default function OnboardPage() {
     marginBottom: 8,
   }
 
+  const steps: Step[] = ['business', 'tier', 'brief']
+  const stepIndex = steps.indexOf(step)
+
   return (
     <div style={{
       background: '#0a0a0a',
@@ -142,11 +148,12 @@ export default function OnboardPage() {
     }}>
       <nav style={{ borderBottom: '1px solid #1a1a1a', padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo.png"
             alt="Open Agency"
-            style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }}
+            width={32}
+            height={32}
+            style={{ borderRadius: 8, objectFit: 'cover' }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
           <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>
@@ -162,36 +169,40 @@ export default function OnboardPage() {
 
           {/* Step indicator */}
           {step !== 'done' && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 36, justifyContent: 'center' }}>
-              {(['business', 'tier', 'brief'] as Step[]).map((s, i) => (
-                <div
-                  key={s}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: step === s ? '#7c3aed' : ['business', 'tier', 'brief'].indexOf(step) > i ? '#7c3aed44' : '#1a1a1a',
-                    border: step === s ? '2px solid #7c3aed' : '2px solid #222',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: step === s ? '#fff' : '#555',
-                  }}
-                >
-                  {i + 1}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 36, justifyContent: 'center', alignItems: 'center' }}>
+              {steps.map((s, i) => (
+                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: step === s ? '#7c3aed' : stepIndex > i ? '#7c3aed44' : '#1a1a1a',
+                      border: step === s ? '2px solid #7c3aed' : '2px solid #222',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: step === s ? '#fff' : '#555',
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div style={{ width: 32, height: 1, background: stepIndex > i ? '#7c3aed44' : '#222' }} />
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Step: Business Details */}
+          {/* Step 1: Business Details */}
           {step === 'business' && (
             <div>
               <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Tell us about your business</h1>
               <p style={{ color: '#555', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>
-                Your AI team needs to know who they're working for.
+                Your AI team needs to know who they are working for.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -214,6 +225,7 @@ export default function OnboardPage() {
                     onChange={e => setBusinessName(e.target.value)}
                     placeholder="Acme Corp"
                     style={inputStyle}
+                    onKeyDown={e => e.key === 'Enter' && email.trim() && businessName.trim() && setStep('tier')}
                   />
                 </div>
 
@@ -233,13 +245,13 @@ export default function OnboardPage() {
                     opacity: (!email.trim() || !businessName.trim()) ? 0.6 : 1,
                   }}
                 >
-                  Next: Choose Your Plan →
+                  Next: Choose Your Plan
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step: Tier selection */}
+          {/* Step 2: Tier selection */}
           {step === 'tier' && (
             <div>
               <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Choose your plan</h1>
@@ -312,24 +324,24 @@ export default function OnboardPage() {
                   onClick={() => setStep('business')}
                   style={{ background: 'none', border: '1px solid #222', borderRadius: 10, color: '#666', fontSize: 14, padding: '12px 20px', cursor: 'pointer' }}
                 >
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={() => setStep('brief')}
                   style={{ flex: 1, background: '#7c3aed', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 600, padding: '13px 24px', cursor: 'pointer' }}
                 >
-                  Next: Brief Your Team →
+                  Next: Brief Your Team
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step: Business brief */}
+          {/* Step 3: Business brief */}
           {step === 'brief' && (
             <div>
               <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Brief your team</h1>
               <p style={{ color: '#555', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>
-                The more context you give, the better your agents will perform. This can be 2 sentences or 2 paragraphs — whatever helps.
+                The more context you give, the better your agents will perform. Two sentences or two paragraphs — whatever helps.
               </p>
 
               <div style={{ marginBottom: 20 }}>
@@ -359,7 +371,7 @@ export default function OnboardPage() {
                   onClick={() => setStep('tier')}
                   style={{ background: 'none', border: '1px solid #222', borderRadius: 10, color: '#666', fontSize: 14, padding: '12px 20px', cursor: 'pointer' }}
                 >
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={handleSubmit}
@@ -373,7 +385,7 @@ export default function OnboardPage() {
                     opacity: loading ? 0.7 : 1,
                   }}
                 >
-                  {loading ? 'Setting up your team...' : 'Launch My Agency →'}
+                  {loading ? 'Setting up your team...' : 'Launch My Agency'}
                 </button>
               </div>
             </div>
@@ -387,15 +399,15 @@ export default function OnboardPage() {
                 Your team is online.
               </h2>
               <p style={{ color: '#666', fontSize: 14, margin: '0 0 8px' }}>
-                {result.businessName} · {result.tier.charAt(0).toUpperCase() + result.tier.slice(1)} plan
+                {result.businessName} — {result.tier.charAt(0).toUpperCase() + result.tier.slice(1)} plan
               </p>
-              <div style={{ background: '#0d0d1a', border: '1px solid #7c3aed33', borderRadius: 10, padding: '14px 20px', margin: '0 0 28px', textAlign: 'left' }}>
+              <div style={{ background: '#0d0d1a', border: '1px solid #7c3aed33', borderRadius: 10, padding: '14px 20px', margin: '16px 0 28px', textAlign: 'left' }}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <span style={{ fontSize: 18 }}>⚡</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#a78bfa', marginBottom: 4 }}>First reports in progress</div>
                     <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>
-                      Nikita, Marcus, and Priya are generating your first reports. They&apos;ll be in your portal in ~60 seconds.
+                      Nikita, Marcus, and Priya are generating your first reports. They will be in your portal shortly.
                     </div>
                   </div>
                 </div>
@@ -408,12 +420,24 @@ export default function OnboardPage() {
                   cursor: 'pointer',
                 }}
               >
-                Enter Your Portal →
+                Enter Your Portal
               </button>
             </div>
           )}
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OnboardPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", color: '#555' }}>
+        Loading...
+      </div>
+    }>
+      <OnboardContent />
+    </Suspense>
   )
 }

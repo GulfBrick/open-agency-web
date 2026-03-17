@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 const TIERS = [
   {
     id: 'starter',
@@ -92,6 +94,13 @@ const FAQ = [
   },
 ]
 
+const VALUE_PROPS = [
+  { icon: '🤖', title: '27 agents', desc: 'Across 7 departments' },
+  { icon: '⚡', title: 'Always on', desc: 'Your team never sleeps' },
+  { icon: '📈', title: 'Agent XP', desc: 'They get better over time' },
+  { icon: '🔒', title: 'Your data', desc: 'Isolated, encrypted, private' },
+]
+
 export default function PricingPage() {
   return (
     <div style={{
@@ -103,11 +112,12 @@ export default function PricingPage() {
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #1a1a1a', padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60, position: 'sticky', top: 0, background: '#0a0a0a', zIndex: 100 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo.png"
             alt="Open Agency"
-            style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }}
+            width={32}
+            height={32}
+            style={{ borderRadius: 8, objectFit: 'cover' }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
           <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>
@@ -204,12 +214,7 @@ export default function PricingPage() {
       {/* Value props */}
       <div style={{ background: '#080808', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', padding: '48px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32, textAlign: 'center' }}>
-          {[
-            { icon: '🤖', title: '27 agents', desc: 'Across 7 departments' },
-            { icon: '⚡', title: 'Always on', desc: 'Your team never sleeps' },
-            { icon: '📈', title: 'Agent XP', desc: 'They get better over time' },
-            { icon: '🔒', title: 'Your data', desc: 'Isolated, encrypted, private' },
-          ].map(v => (
+          {VALUE_PROPS.map(v => (
             <div key={v.title}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>{v.icon}</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{v.title}</div>

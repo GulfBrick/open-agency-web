@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -36,7 +37,6 @@ export default function LoginPage() {
         return
       }
 
-      // Store clientId in localStorage
       localStorage.setItem('oa_client_id', data.clientId)
       localStorage.setItem('oa_business_name', data.businessName)
       localStorage.setItem('oa_tier', data.tier)
@@ -61,12 +61,22 @@ export default function LoginPage() {
     }}>
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #1a1a1a', padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60 }}>
-        <a href="/" style={{ color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 18 }}>
-          Open<span style={{ color: '#7c3aed' }}>Agency</span>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <Image
+            src="/logo.png"
+            alt="Open Agency"
+            width={32}
+            height={32}
+            style={{ borderRadius: 8, objectFit: 'cover' }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>
+            Open<span style={{ color: '#7c3aed' }}>Agency</span>
+          </span>
         </a>
       </nav>
 
-      {/* Content */}
+      {/* Centered content */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -79,12 +89,12 @@ export default function LoginPage() {
           {step === 'email' ? (
             <>
               <div style={{ marginBottom: 32, textAlign: 'center' }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>👩‍💼</div>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>👤</div>
                 <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>
                   Access Your Portal
                 </h1>
                 <p style={{ color: '#555', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-                  Enter the email address you used to sign up. We'll take you straight to your dashboard.
+                  Enter the email address you used to sign up. We will take you straight to your dashboard.
                 </p>
               </div>
 
@@ -150,7 +160,7 @@ export default function LoginPage() {
 
               <div style={{ marginTop: 28, textAlign: 'center', borderTop: '1px solid #1a1a1a', paddingTop: 24 }}>
                 <p style={{ color: '#444', fontSize: 13, margin: '0 0 12px' }}>
-                  Don't have an account yet?
+                  Don&apos;t have an account yet?
                 </p>
                 <a
                   href="/pricing"
@@ -161,14 +171,14 @@ export default function LoginPage() {
                     fontWeight: 600,
                   }}
                 >
-                  View plans & pricing →
+                  View plans &amp; pricing →
                 </a>
               </div>
             </>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>You're in.</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>You&apos;re in.</h2>
               <p style={{ color: '#555', fontSize: 14 }}>Taking you to your portal...</p>
             </div>
           )}
